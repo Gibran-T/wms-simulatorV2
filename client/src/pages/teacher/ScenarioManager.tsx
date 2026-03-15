@@ -87,7 +87,7 @@ export default function ScenarioManager() {
             const mid = Number(moduleId);
             const isOpen = collapsed[mid] !== true;
             return (
-                        <div className="border border-border rounded-md overflow-hidden">
+              <div key={moduleId} className="border border-border rounded-md overflow-hidden">
                 <button type="button" onClick={() => toggleCollapse(mid)}
                   className="w-full flex items-center justify-between px-4 py-3 bg-secondary hover:bg-secondary/80 transition-colors">
                   <span className="text-xs font-bold text-foreground flex items-center gap-2">
