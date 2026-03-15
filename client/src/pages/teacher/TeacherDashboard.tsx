@@ -9,6 +9,7 @@ import {
   TrendingDown, Minus,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const SLIDE_COUNT_PER_MODULE = 17; // each module has 17 slides
@@ -40,6 +41,7 @@ function TrendBadge({ current, previous }: { current: number | null; previous?: 
 export default function TeacherDashboard() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const { data: scenarios } = trpc.scenarios.list.useQuery();
   const { data: cohorts } = trpc.cohorts.list.useQuery();
@@ -115,7 +117,7 @@ export default function TeacherDashboard() {
   ];
 
   return (
-    <FioriShell title="Tableau de Bord — Enseignant" breadcrumbs={[]}>
+    <FioriShell title={t("Tableau de Bord — Enseignant", "Teacher Dashboard")} breadcrumbs={[]}>
       {/* ── KPI Cards ───────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {cards.map((card) => (

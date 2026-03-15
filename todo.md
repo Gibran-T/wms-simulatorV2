@@ -209,3 +209,6 @@
 - [x] Student Scenarios: mostrar estado "Complété" com score e opção de reiniciar
 - [x] Student Scenarios: mostrar duração estimada e critério de aprovação (≥60%) por cenário
 - [x] Student Scenarios: seletor de módulo visível para navegar entre M1-M5
+
+## Bug Fix: FioriShell JSX Structure (2026-03-15)
+- [x] Fix: FioriShell.tsx — mobile menu conditional `{mobileMenuOpen && (` missing closing `)}` before Page Header section (line 379). Page Header, main content, and footer were all nested inside the mobile menu conditional, causing rendering issues on desktop.

@@ -377,9 +377,8 @@ export default function FioriShell({ children, title, breadcrumbs }: FioriShellP
           </nav>
         </div>
       )}
-
       {/* ── Page Header (breadcrumbs + title) ─────────────────────────────── */}
-      {(title || breadcrumbs) && (
+      {(title || (breadcrumbs && breadcrumbs.length > 0)) && (
         <div className={`fixed top-[44px] left-0 right-0 z-40 border-b px-6 py-2.5 ${
           theme === "dark"
             ? "bg-[#0d2137] border-[#1a3a5c]"
@@ -408,7 +407,7 @@ export default function FioriShell({ children, title, breadcrumbs }: FioriShellP
       )}
 
       {/* ── Main Content ───────────────────────────────────────────────────── */}
-      <main className={`flex-1 ${title || breadcrumbs ? "mt-[88px]" : "mt-[44px]"} p-6`}>
+      <main className={`flex-1 ${(title || (breadcrumbs && breadcrumbs.length > 0)) ? "mt-[88px]" : "mt-[44px]"} p-6`}>
         {children}
       </main>
 
