@@ -212,3 +212,19 @@
 
 ## Bug Fix: FioriShell JSX Structure (2026-03-15)
 - [x] Fix: FioriShell.tsx — mobile menu conditional `{mobileMenuOpen && (` missing closing `)}` before Page Header section (line 379). Page Header, main content, and footer were all nested inside the mobile menu conditional, causing rendering issues on desktop.
+
+## Bug Fix: Language Toggle na Página de Login (2026-03-15)
+- [ ] Fix: Home.tsx — dropdown de língua não está conectado ao LanguageContext global (não muda textos)
+- [ ] Fix: Todos os textos da Home.tsx devem usar t() para FR/EN
+
+## Bug Fix: FR/EN Toggle Global — Auditoria Completa (2026-03-15 — Sessão 2)
+- [x] Fix: TeacherDashboard — todos os textos traduzidos com t()
+- [x] Fix: FioriShell — nav items já usavam t() (já estava correto)
+- [x] Fix: CohortManager — textos traduzidos com t()
+- [x] Fix: AssignmentManager — textos traduzidos com t()
+- [x] Fix: ScenarioManager — textos traduzidos com t()
+- [ ] Fix: ModeSelectionScreen — pendente
+- [ ] Fix: Module2ModeSelectionPage — pendente
+- [ ] Fix: Module3ModeSelectionPage — pendente
+- [ ] Fix: PutawayForm — pendente
+- [ ] Fix: PutawayFormPage — pendente

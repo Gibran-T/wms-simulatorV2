@@ -1,20 +1,17 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Home() {
   const { user, loading } = useAuth();
-  const [mandant, setMandant] = useState("800");
-  const [utilisateur, setUtilisateur] = useState("");
-  const [numeroEtudiant, setNumeroEtudiant] = useState("");
-  const [motDePasse, setMotDePasse] = useState("");
-  const [langue, setLangue] = useState("FR");
+  const { language, setLanguage } = useLanguage();
+  const [mandant] = useState("800");
+
+  // Helper for bilingual text (strings only)
+  const t = (fr: string, en: string) => language === "FR" ? fr : en;
 
   const handleLogin = () => {
-    window.location.href = getLoginUrl();
-  };
-
-  const handleTeacherLogin = () => {
     window.location.href = getLoginUrl();
   };
 
@@ -26,7 +23,7 @@ export default function Home() {
       >
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-[#0070f2] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-xs text-gray-400">Chargement...</p>
+          <p className="text-xs text-gray-400">{t("Chargement...", "Loading...")}</p>
         </div>
       </div>
     );
@@ -36,6 +33,14 @@ export default function Home() {
     window.location.href = user.role === "admin" ? "/teacher" : "/student/scenarios";
     return null;
   }
+
+  const modules = [
+    { num: "M1", fr: "Fondements ERP/WMS", en: "ERP/WMS Foundations" },
+    { num: "M2", fr: "Exécution d'entrepôt", en: "Warehouse Execution" },
+    { num: "M3", fr: "Contrôle des stocks et réapprovisionnement", en: "Inventory Control & Replenishment" },
+    { num: "M4", fr: "Indicateurs de performance logistique", en: "Logistics Performance Indicators" },
+    { num: "M5", fr: "Simulation opérationnelle intégrée", en: "Integrated Operational Simulation" },
+  ];
 
   return (
     <div
@@ -48,7 +53,6 @@ export default function Home() {
         style={{ borderColor: "#1a3a5c", background: "rgba(10,22,40,0.95)" }}
       >
         <div className="flex items-center gap-3">
-          {/* College logo area */}
           <div
             className="w-8 h-8 rounded flex items-center justify-center text-white font-bold text-xs"
             style={{ background: "#0070f2" }}
@@ -57,7 +61,7 @@ export default function Home() {
           </div>
           <div>
             <p className="text-white text-xs font-semibold leading-tight">Collège de la Concorde — Montréal</p>
-            <p className="text-gray-400 text-[10px]">Simulateur pédagogique ERP/WMS</p>
+            <p className="text-gray-400 text-[10px]">{t("Simulateur pédagogique ERP/WMS", "ERP/WMS Pedagogical Simulator")}</p>
           </div>
         </div>
         <div className="text-right">
@@ -76,35 +80,38 @@ export default function Home() {
                 className="inline-flex items-center gap-2 px-3 py-1 rounded text-xs font-semibold mb-4"
                 style={{ background: "rgba(0,112,242,0.15)", color: "#4da6ff", border: "1px solid rgba(0,112,242,0.3)" }}
               >
-                PROGRAMME 1 — TEC.LOG
+                {t("PROGRAMME 1 — TEC.LOG", "PROGRAM 1 — TEC.LOG")}
               </div>
               <h1 className="text-3xl font-bold text-white leading-tight mb-2">
-                Gestion intégrée des stocks<br />
-                <span style={{ color: "#4da6ff" }}>et performance logistique</span>
+                {language === "FR" ? (
+                  <>Gestion intégrée des stocks<br /><span style={{ color: "#4da6ff" }}>et performance logistique</span></>
+                ) : (
+                  <>Integrated stock management<br /><span style={{ color: "#4da6ff" }}>and logistics performance</span></>
+                )}
               </h1>
               <p className="text-gray-400 text-sm leading-relaxed mt-4">
-                Simulateur ERP/WMS pédagogique inspiré de SAP S/4HANA.<br />
-                Apprenez la gestion d'entrepôt par la pratique transactionnelle réelle.
+                {t(
+                  "Simulateur ERP/WMS pédagogique inspiré de SAP S/4HANA.",
+                  "Pedagogical ERP/WMS simulator inspired by SAP S/4HANA."
+                )}<br />
+                {t(
+                  "Apprenez la gestion d'entrepôt par la pratique transactionnelle réelle.",
+                  "Learn warehouse management through real transactional practice."
+                )}
               </p>
             </div>
 
             {/* Module list */}
             <div className="space-y-2 mt-8">
-              {[
-                { num: "M1", title: "Fondements ERP/WMS", color: "#4da6ff" },
-                { num: "M2", title: "Exécution d'entrepôt", color: "#4da6ff" },
-                { num: "M3", title: "Contrôle des stocks et réapprovisionnement", color: "#4da6ff" },
-                { num: "M4", title: "Indicateurs de performance logistique", color: "#4da6ff" },
-                { num: "M5", title: "Simulation opérationnelle intégrée", color: "#4da6ff" },
-              ].map((m) => (
+              {modules.map((m) => (
                 <div key={m.num} className="flex items-center gap-3">
                   <div
                     className="w-7 h-7 rounded text-xs font-bold flex items-center justify-center shrink-0"
-                    style={{ background: "rgba(0,112,242,0.2)", color: m.color, border: "1px solid rgba(0,112,242,0.3)" }}
+                    style={{ background: "rgba(0,112,242,0.2)", color: "#4da6ff", border: "1px solid rgba(0,112,242,0.3)" }}
                   >
                     {m.num}
                   </div>
-                  <p className="text-gray-300 text-xs">{m.title}</p>
+                  <p className="text-gray-300 text-xs">{language === "FR" ? m.fr : m.en}</p>
                 </div>
               ))}
             </div>
@@ -145,11 +152,11 @@ export default function Home() {
               {/* Mandant */}
               <div>
                 <label className="block text-[10px] font-semibold mb-1" style={{ color: "#8ab4d4" }}>
-                  Mandant
+                  {t("Mandant", "Client")}
                 </label>
                 <input
                   value={mandant}
-                  onChange={(e) => setMandant(e.target.value)}
+                  readOnly
                   className="w-full px-3 py-1.5 text-sm rounded focus:outline-none"
                   style={{
                     background: "#0a1628",
@@ -160,70 +167,14 @@ export default function Home() {
                 />
               </div>
 
-              {/* Utilisateur */}
+              {/* Langue / Language */}
               <div>
                 <label className="block text-[10px] font-semibold mb-1" style={{ color: "#8ab4d4" }}>
-                  Utilisateur
-                </label>
-                <input
-                  value={utilisateur}
-                  onChange={(e) => setUtilisateur(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm rounded focus:outline-none"
-                  placeholder="Votre identifiant"
-                  style={{
-                    background: "#0a1628",
-                    border: "1px solid #1a3a5c",
-                    color: "#e0e8f0",
-                  }}
-                />
-              </div>
-
-              {/* Numéro étudiant */}
-              <div>
-                <label className="block text-[10px] font-semibold mb-1" style={{ color: "#8ab4d4" }}>
-                  Numéro étudiant
-                </label>
-                <input
-                  value={numeroEtudiant}
-                  onChange={(e) => setNumeroEtudiant(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm rounded focus:outline-none"
-                  placeholder="Ex: 2025-12345"
-                  style={{
-                    background: "#0a1628",
-                    border: "1px solid #1a3a5c",
-                    color: "#e0e8f0",
-                    fontFamily: "monospace",
-                  }}
-                />
-              </div>
-
-              {/* Mot de passe */}
-              <div>
-                <label className="block text-[10px] font-semibold mb-1" style={{ color: "#8ab4d4" }}>
-                  Mot de passe
-                </label>
-                <input
-                  type="password"
-                  value={motDePasse}
-                  onChange={(e) => setMotDePasse(e.target.value)}
-                  className="w-full px-3 py-1.5 text-sm rounded focus:outline-none"
-                  placeholder="••••••••"
-                  style={{
-                    background: "#0a1628",
-                    border: "1px solid #1a3a5c",
-                    color: "#e0e8f0",
-                  }}
-                />
-              </div>
-
-              {/* Langue */}
-              <div>
-                <label className="block text-[10px] font-semibold mb-1" style={{ color: "#8ab4d4" }}>
-                  Langue
+                  {t("Langue", "Language")}
                 </label>
                 <select
-                  value={langue}
-                  onChange={(e) => setLangue(e.target.value)}
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as "FR" | "EN")}
                   className="w-full px-3 py-1.5 text-sm rounded focus:outline-none"
                   style={{
                     background: "#0a1628",
@@ -246,28 +197,31 @@ export default function Home() {
                   className="w-full py-2 text-sm font-semibold rounded transition-opacity hover:opacity-90"
                   style={{ background: "#0070f2", color: "#fff" }}
                 >
-                  Connexion Étudiant
+                  {t("Connexion Étudiant", "Student Login")}
                 </button>
                 <button
-                  onClick={handleTeacherLogin}
+                  onClick={handleLogin}
                   className="w-full py-2 text-sm font-semibold rounded transition-opacity hover:opacity-90"
                   style={{ background: "transparent", color: "#4da6ff", border: "1px solid #1a3a5c" }}
                 >
-                  Connexion Enseignant / Admin
+                  {t("Connexion Enseignant / Admin", "Teacher / Admin Login")}
                 </button>
               </div>
 
               {/* Info note */}
               <p className="text-[10px] text-center" style={{ color: "#4a6a8a" }}>
-                Authentification sécurisée via Manus OAuth.<br />
-                Usage pédagogique uniquement.
+                {t(
+                  "Authentification sécurisée via Manus OAuth.",
+                  "Secure authentication via Manus OAuth."
+                )}<br />
+                {t("Usage pédagogique uniquement.", "For educational use only.")}
               </p>
             </div>
 
             {/* Bottom badge */}
             <div className="mt-3 text-center">
               <p className="text-[10px]" style={{ color: "#2a4a6a" }}>
-                © 2026 Collège de la Concorde — Montréal · Tous droits réservés
+                © 2026 Collège de la Concorde — Montréal · {t("Tous droits réservés", "All rights reserved")}
               </p>
             </div>
           </div>
@@ -280,7 +234,10 @@ export default function Home() {
         style={{ borderColor: "#1a3a5c", background: "rgba(10,22,40,0.95)" }}
       >
         <p className="text-[10px]" style={{ color: "#2a4a6a" }}>
-          Programme 1 — TEC.LOG | Gestion intégrée des stocks et performance logistique
+          {t(
+            "Programme 1 — TEC.LOG | Gestion intégrée des stocks et performance logistique",
+            "Program 1 — TEC.LOG | Integrated stock management and logistics performance"
+          )}
         </p>
         <p className="text-[10px]" style={{ color: "#2a4a6a" }}>
           v1.0 — Mini-WMS ERP/WMS Simulator
