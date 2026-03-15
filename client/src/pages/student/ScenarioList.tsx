@@ -169,7 +169,11 @@ export default function ScenarioList() {
   const { t, language } = useLanguage();
   const isTeacherOrAdmin = user?.role === "teacher" || user?.role === "admin";
 
-  const [selectedModule, setSelectedModule] = useState(1);
+  const [selectedModule, setSelectedModule] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const m = parseInt(params.get("module") ?? "1", 10);
+    return [1, 2, 3, 4, 5].includes(m) ? m : 1;
+  });
   const [showGlossary, setShowGlossary] = useState(false);
   const [editingStudentNum, setEditingStudentNum] = useState(false);
   const [studentNumInput, setStudentNumInput] = useState("");
