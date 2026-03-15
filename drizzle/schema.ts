@@ -310,3 +310,17 @@ export const kpiInterpretations = mysqlTable("kpi_interpretations", {
 });
 
 export type KpiInterpretation = typeof kpiInterpretations.$inferSelect;
+
+// ─── Pre-authorized Emails (auto-assign role on first login) ─────────────────
+export const preAuthorizedEmails = mysqlTable("pre_authorized_emails", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  role: mysqlEnum("role", ["user", "admin", "student", "teacher"]).default("teacher").notNull(),
+  note: varchar("note", { length: 255 }), // e.g. "Nadia — email secondaire"
+  addedBy: int("addedBy"), // userId of admin who added this
+  usedAt: timestamp("usedAt"), // when first login happened
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PreAuthorizedEmail = typeof preAuthorizedEmails.$inferSelect;
+export type InsertPreAuthorizedEmail = typeof preAuthorizedEmails.$inferInsert;

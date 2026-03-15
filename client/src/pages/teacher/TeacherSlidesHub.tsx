@@ -8,8 +8,6 @@ const modules = [
     id: 1,
     icon: BookOpen,
     color: "#0070f2",
-    bg: "bg-blue-50",
-    border: "border-blue-200",
     titleFr: "Module 1 — Fondements ERP/WMS",
     titleEn: "Module 1 — ERP/WMS Foundations",
     descFr: "Introduction aux systèmes WMS/ERP, flux logistiques, transactions SAP (ME21N, MIGO, VA01, VL02N) et cycle opérationnel complet.",
@@ -24,8 +22,6 @@ const modules = [
     id: 2,
     icon: Layers,
     color: "#1565c0",
-    bg: "bg-blue-50",
-    border: "border-blue-300",
     titleFr: "Module 2 — Exécution d'entrepôt",
     titleEn: "Module 2 — Warehouse Execution",
     descFr: "Gestion des emplacements, règles de rangement FIFO/LIFO, capacité des bins, précision d'inventaire et traçabilité des lots.",
@@ -40,8 +36,6 @@ const modules = [
     id: 3,
     icon: TrendingUp,
     color: "#107e3e",
-    bg: "bg-emerald-50",
-    border: "border-emerald-200",
     titleFr: "Module 3 — Contrôle des stocks",
     titleEn: "Module 3 — Inventory Control",
     descFr: "Inventaire cyclique, calcul des écarts, ajustements de stock, point de réapprovisionnement (ROP), stock de sécurité et EOQ.",
@@ -56,8 +50,6 @@ const modules = [
     id: 4,
     icon: BarChart2,
     color: "#e9730c",
-    bg: "bg-orange-50",
-    border: "border-orange-200",
     titleFr: "Module 4 — Indicateurs de performance",
     titleEn: "Module 4 — Performance Indicators",
     descFr: "KPIs logistiques : OTIF, Fill Rate, DSI, LPH, taux d'erreur. Analyse Lean, Root Cause Analysis et tableaux de bord.",
@@ -72,8 +64,6 @@ const modules = [
     id: 5,
     icon: FileText,
     color: "#7b1fa2",
-    bg: "bg-purple-50",
-    border: "border-purple-200",
     titleFr: "Module 5 — Simulation intégrée",
     titleEn: "Module 5 — Integrated Simulation",
     descFr: "Simulation opérationnelle complète intégrant tous les modules. Gestion de crise logistique, scénarios réels et certification finale.",
@@ -99,16 +89,16 @@ export default function TeacherSlidesHub() {
       ]}
     >
       {/* Header */}
-      <div className="mb-6 p-5 rounded-lg bg-gradient-to-r from-[#0f2a44] to-[#1a3f6f] text-white flex items-center justify-between">
+      <div className="mb-6 p-5 rounded-lg bg-primary text-primary-foreground flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-white/10 rounded-lg flex items-center justify-center">
-            <Presentation size={24} className="text-white" />
+            <Presentation size={24} className="text-primary-foreground" />
           </div>
           <div>
             <h1 className="text-lg font-bold">
               {t("Programme TEC.LOG — Slides Pédagogiques", "TEC.LOG Program — Pedagogical Slides")}
             </h1>
-            <p className="text-sm text-white/70 mt-0.5">
+            <p className="text-sm text-primary-foreground/70 mt-0.5">
               {t(
                 "5 modules · 80 slides bilingues · Mode Professeur avec notes de cours",
                 "5 modules · 80 bilingual slides · Professor Mode with lecture notes"
@@ -119,27 +109,27 @@ export default function TeacherSlidesHub() {
         <div className="hidden md:flex items-center gap-6 text-center">
           <div>
             <p className="text-2xl font-bold">5</p>
-            <p className="text-xs text-white/60">{t("Modules", "Modules")}</p>
+            <p className="text-xs text-primary-foreground/60">{t("Modules", "Modules")}</p>
           </div>
-          <div className="w-px h-10 bg-white/20" />
+          <div className="w-px h-10 bg-primary-foreground/20" />
           <div>
             <p className="text-2xl font-bold">80</p>
-            <p className="text-xs text-white/60">{t("Slides", "Slides")}</p>
+            <p className="text-xs text-primary-foreground/60">{t("Slides", "Slides")}</p>
           </div>
-          <div className="w-px h-10 bg-white/20" />
+          <div className="w-px h-10 bg-primary-foreground/20" />
           <div>
             <p className="text-2xl font-bold">25h</p>
-            <p className="text-xs text-white/60">{t("Formation", "Training")}</p>
+            <p className="text-xs text-primary-foreground/60">{t("Formation", "Training")}</p>
           </div>
         </div>
       </div>
 
       {/* Instructions */}
-      <div className="mb-5 p-3 rounded-md bg-amber-50 border border-amber-200 flex items-start gap-3">
-        <div className="w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+      <div className="mb-5 p-3 rounded-md bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
+        <div className="w-5 h-5 rounded-full bg-amber-500 flex items-center justify-center shrink-0 mt-0.5">
           <span className="text-white text-[10px] font-bold">i</span>
         </div>
-        <p className="text-xs text-amber-800">
+        <p className="text-xs text-amber-700 dark:text-amber-400">
           {t(
             "Cliquez sur un module pour ouvrir les slides en mode Professeur. Utilisez la touche P pour afficher/masquer les notes de cours. Les slides sont disponibles en français et en anglais via le bouton FR/EN.",
             "Click a module to open slides in Professor Mode. Use the P key to show/hide lecture notes. Slides are available in French and English via the FR/EN button."
@@ -151,15 +141,15 @@ export default function TeacherSlidesHub() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {modules.map((mod) => {
           const Icon = mod.icon;
-          const title = lang === "fr" ? mod.titleFr : mod.titleEn;
-          const desc = lang === "fr" ? mod.descFr : mod.descEn;
-          const topics = lang === "fr" ? mod.topics : mod.topicsEn;
+          const title = lang === "FR" ? mod.titleFr : mod.titleEn;
+          const desc = lang === "FR" ? mod.descFr : mod.descEn;
+          const topics = lang === "FR" ? mod.topics : mod.topicsEn;
 
           return (
             <button
               key={mod.id}
               onClick={() => navigate(`/student/slides/${mod.id}`)}
-              className={`group text-left rounded-lg border-2 ${mod.border} ${mod.bg} hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0070f2] overflow-hidden`}
+              className="group text-left rounded-lg border border-border bg-card hover:shadow-md hover:border-primary/50 transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring overflow-hidden"
             >
               {/* Top accent bar */}
               <div className="h-1 w-full" style={{ backgroundColor: mod.color }} />
@@ -179,30 +169,30 @@ export default function TeacherSlidesHub() {
                         >
                           {mod.badge}
                         </span>
-                        <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                           <Clock size={9} />
                           {mod.duration} · {mod.slides} {t("slides", "slides")}
                         </span>
                       </div>
-                      <h3 className="text-sm font-bold text-[#0f2a44] leading-snug">{title}</h3>
+                      <h3 className="text-sm font-bold text-foreground leading-snug">{title}</h3>
                     </div>
                   </div>
                   <ChevronRight
                     size={16}
-                    className="text-gray-400 group-hover:text-gray-600 group-hover:translate-x-0.5 transition-all shrink-0 mt-1"
+                    className="text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0 mt-1"
                   />
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-gray-600 leading-relaxed mb-4 line-clamp-2">{desc}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mb-4 line-clamp-2">{desc}</p>
 
                 {/* Topics */}
                 <div className="flex flex-wrap gap-1.5 mb-4">
                   {topics.map((topic) => (
                     <span
                       key={topic}
-                      className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-white border"
-                      style={{ borderColor: `${mod.color}40`, color: mod.color }}
+                      className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-secondary border border-border"
+                      style={{ color: mod.color }}
                     >
                       {topic}
                     </span>
@@ -222,17 +212,20 @@ export default function TeacherSlidesHub() {
           );
         })}
 
-        {/* Quick access card — all modules table */}
-        <div className="rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 p-5 flex flex-col items-center justify-center text-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center">
-            <Presentation size={20} className="text-gray-500" />
+        {/* Quick access card — all modules */}
+        <div className="rounded-lg border-2 border-dashed border-border bg-secondary/30 p-5 flex flex-col items-center justify-center text-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+            <Presentation size={20} className="text-muted-foreground" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-600">
+            <p className="text-sm font-semibold text-foreground">
               {t("Vue d'ensemble", "Overview")}
             </p>
-            <p className="text-xs text-gray-400 mt-1">
-              {t("Accédez directement à un slide spécifique via la liste des slides dans chaque module.", "Access a specific slide directly via the slide list in each module.")}
+            <p className="text-xs text-muted-foreground mt-1">
+              {t(
+                "Accédez directement à un slide spécifique via la liste des slides dans chaque module.",
+                "Access a specific slide directly via the slide list in each module."
+              )}
             </p>
           </div>
           <div className="grid grid-cols-5 gap-1.5 w-full mt-1">
@@ -251,15 +244,15 @@ export default function TeacherSlidesHub() {
       </div>
 
       {/* Bottom tip */}
-      <div className="mt-6 p-4 rounded-md border border-[#d9d9d9] bg-white flex items-center gap-4">
-        <div className="w-8 h-8 rounded-md bg-[#e8f0fe] flex items-center justify-center shrink-0">
-          <Presentation size={16} className="text-[#0070f2]" />
+      <div className="mt-6 p-4 rounded-md border border-border bg-card flex items-center gap-4">
+        <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+          <Presentation size={16} className="text-primary" />
         </div>
         <div className="flex-1">
-          <p className="text-xs font-semibold text-[#0f2a44]">
+          <p className="text-xs font-semibold text-foreground">
             {t("Raccourcis clavier dans le SlideViewer", "Keyboard shortcuts in SlideViewer")}
           </p>
-          <p className="text-[10px] text-gray-500 mt-0.5">
+          <p className="text-[10px] text-muted-foreground mt-0.5">
             {t(
               "← → : naviguer entre les slides · P : mode Professeur (notes) · Échap : retour à la liste · FR/EN : changer la langue",
               "← → : navigate slides · P : Professor mode (notes) · Esc : back to list · FR/EN : change language"

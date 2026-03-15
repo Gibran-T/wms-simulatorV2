@@ -17,7 +17,9 @@ import {
   scoringEvents,
   transactions,
   users,
+  preAuthorizedEmails,
   type InsertUser,
+  type InsertPreAuthorizedEmail,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -95,6 +97,58 @@ export async function updateUserRole(userId: number, role: "student" | "teacher"
   const db = await getDb();
   if (!db) return;
   await db.update(users).set({ role }).where(eq(users.id, userId));
+}
+
+// ─── Pre-authorized Emails ────────────────────────────────────────────────────
+export async function getPreAuthorizedEmails() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(preAuthorizedEmails);
+}
+
+export async function addPreAuthorizedEmail(
+  email: string,
+  role: "student" | "teacher" | "admin",
+  note: string | null,
+  addedBy: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const normalized = email.trim().toLowerCase();
+  await db
+    .insert(preAuthorizedEmails)
+    .values({ email: normalized, role, note, addedBy })
+    .onDuplicateKeyUpdate({ set: { role, note, addedBy } });
+}
+
+export async function removePreAuthorizedEmail(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(preAuthorizedEmails).where(eq(preAuthorizedEmails.id, id));
+}
+
+export async function checkAndApplyPreAuthorization(
+  email: string | null | undefined,
+  userId: number
+): Promise<void> {
+  if (!email) return;
+  const db = await getDb();
+  if (!db) return;
+  const normalized = email.trim().toLowerCase();
+  const match = await db
+    .select()
+    .from(preAuthorizedEmails)
+    .where(eq(preAuthorizedEmails.email, normalized))
+    .limit(1);
+  if (match.length === 0) return;
+  const preAuth = match[0];
+  // Apply the pre-authorized role
+  await db.update(users).set({ role: preAuth.role }).where(eq(users.id, userId));
+  // Mark as used
+  await db
+    .update(preAuthorizedEmails)
+    .set({ usedAt: new Date() })
+    .where(eq(preAuthorizedEmails.id, preAuth.id));
 }
 
 // ─── Cohorts ──────────────────────────────────────────────────────────────────

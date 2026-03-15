@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id, openId, name, email, loginMethod, role, lastSignedIn FROM users ORDER BY lastSignedIn DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT id, openId, name, email, loginMethod, role, lastSignedIn FROM users ORDER BY lastSignedIn DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "openId": "bWzyxCbGKiEzPL4QUFQ2yZ",
+      "name": "Thiago Gibran",
+      "email": "gibranlog@gmail.com",
+      "loginMethod": "google",
+      "role": "admin",
+      "lastSignedIn": "2026-03-15 19:46:31"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tname\temail\tloginMethod\trole\tlastSignedIn\n1\tbWzyxCbGKiEzPL4QUFQ2yZ\tThiago Gibran\tgibranlog@gmail.com\tgoogle\tadmin\t2026-03-15 19:46:31\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}

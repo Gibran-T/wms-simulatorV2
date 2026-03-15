@@ -165,3 +165,38 @@
 - [x] Criar página /student/slides — hub de slides para alunos com acesso a todos os 5 módulos
 - [x] Registrar rota /student/slides no App.tsx
 - [x] Adicionar botão "Slides" na interface do aluno (FioriShell nav + ScenarioList)
+
+## Bug Fix: FR/EN Toggle + Dark Mode Global (2026-03-15)
+- [ ] Fix: LanguageContext — toggle FR/EN deve mudar TODOS os textos da interface (professor e aluno)
+- [ ] Fix: Todos os componentes devem usar `useLang()` / `t()` para textos traduzíveis
+- [ ] Fix: ThemeContext — dark mode deve funcionar em ambos os ambientes (professor e aluno)
+- [ ] Fix: Cenários duplicados na lista do professor (ScenarioManager)
+
+## QA Sênior — Diagnóstico e Correções (2026-03-15)
+- [ ] Fix: FR/EN toggle não muda textos da interface do professor (TeacherDashboard, ScenarioManager, etc.)
+- [ ] Fix: FR/EN toggle não muda textos da interface do aluno (ScenarioList, MissionControl, StepForm, etc.)
+- [ ] Fix: Dark mode não aplica corretamente em ambos os ambientes
+- [ ] Fix: Cenários duplicados na lista do professor (ScenarioManager)
+- [ ] Auditoria completa: mapear todos os componentes que NÃO usam t() para tradução
+
+## QA Global: Dark Mode + FR/EN em Todo o Sistema (2026-03-15)
+
+- [x] TeacherDashboard — dark mode (bg-card, text-foreground, border-border)
+- [x] ScenarioManager — dark mode
+- [x] Cenários duplicados removidos do banco (11 duplicatas)
+- [ ] MissionControl — dark mode + FR/EN
+- [ ] StepForm — dark mode + FR/EN
+- [ ] RunReport — dark mode + FR/EN
+- [ ] MonitorDashboard — dark mode + FR/EN
+- [ ] ScenarioList (aluno) — dark mode + FR/EN completo
+- [ ] index.css — adicionar variáveis Fiori para dark mode (.dark block)
+- [ ] Testar dark mode em todas as páginas
+- [ ] Testar FR/EN em todas as páginas
+
+## Feature: Gerenciamento de Usuários no AdminPanel
+- [ ] Backend: admin.listAllUsers — listar todos os usuários com id, nome, email, role, lastSignedIn
+- [ ] Backend: admin.changeUserRole — promover/rebaixar role (já existe, verificar)
+- [ ] Frontend AdminPanel: tabela de usuários com botões de promoção/rebaixamento de role
+- [ ] Frontend AdminPanel: badge colorido por role (admin=vermelho, teacher=azul, student=verde)
+- [ ] Frontend AdminPanel: confirmação antes de mudar role
+- [ ] Testar: Nadia faz login → aparece como student → admin promove para teacher

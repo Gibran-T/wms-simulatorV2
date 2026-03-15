@@ -36,6 +36,14 @@ export function registerOAuthRoutes(app: Express) {
         lastSignedIn: new Date(),
       });
 
+      // Check if this email is pre-authorized and apply role automatically
+      if (userInfo.email) {
+        const user = await db.getUserByOpenId(userInfo.openId);
+        if (user) {
+          await db.checkAndApplyPreAuthorization(userInfo.email, user.id);
+        }
+      }
+
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
         name: userInfo.name || "",
         expiresInMs: ONE_YEAR_MS,

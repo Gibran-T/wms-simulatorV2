@@ -51,7 +51,7 @@ export default function ScenarioManager() {
         {/* Scenarios List */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[#0f2a44] flex items-center gap-2"><BookOpen size={15} /> Scénarios disponibles</h2>
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2"><BookOpen size={15} /> Scénarios disponibles</h2>
             <button onClick={() => setShowForm(!showForm)}
               className="flex items-center gap-1.5 bg-[#0070f2] text-white text-xs font-semibold px-3 py-2 rounded-md hover:bg-[#0058c7] transition-colors">
               <Plus size={13} /> Nouveau scénario
@@ -59,8 +59,8 @@ export default function ScenarioManager() {
           </div>
 
           {showForm && (
-            <div className="bg-white border border-[#d9d9d9] rounded-md p-4 space-y-3">
-              <p className="text-xs font-semibold text-[#0f2a44]">Créer un nouveau scénario</p>
+            <div className="bg-card border border-border rounded-md p-4 space-y-3">
+              <p className="text-xs font-semibold text-foreground">Créer un nouveau scénario</p>
               <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 placeholder="Nom du scénario" className="fiori-field-input w-full" />
               <textarea value={form.descriptionFr} onChange={e => setForm(f => ({ ...f, descriptionFr: e.target.value }))}
@@ -77,7 +77,7 @@ export default function ScenarioManager() {
                   className="bg-[#0070f2] text-white text-xs font-semibold px-4 py-2 rounded-md hover:bg-[#0058c7] disabled:opacity-50">
                   {createScenario.isPending ? "Création..." : "Créer"}
                 </button>
-                <button onClick={() => setShowForm(false)} className="text-xs text-gray-500 hover:text-gray-700 px-3 py-2">Annuler</button>
+                <button onClick={() => setShowForm(false)} className="text-xs text-muted-foreground hover:text-foreground px-3 py-2">Annuler</button>
               </div>
             </div>
           )}
@@ -87,39 +87,39 @@ export default function ScenarioManager() {
             const mid = Number(moduleId);
             const isOpen = collapsed[mid] !== true;
             return (
-              <div key={mid} className="border border-[#d9d9d9] rounded-md overflow-hidden">
+                        <div className="border border-border rounded-md overflow-hidden">
                 <button type="button" onClick={() => toggleCollapse(mid)}
-                  className="w-full flex items-center justify-between px-4 py-3 bg-[#f5f7fa] hover:bg-[#eef1f6] transition-colors">
-                  <span className="text-xs font-bold text-[#0f2a44] flex items-center gap-2">
+                  className="w-full flex items-center justify-between px-4 py-3 bg-secondary hover:bg-secondary/80 transition-colors">
+                  <span className="text-xs font-bold text-foreground flex items-center gap-2">
                     <BookOpen size={13} className="text-[#0070f2]" />
                     Module {mid} — {mid === 1 ? "Fondements ERP/WMS" : mid === 2 ? "Exécution d'entrepôt et gestion des emplacements" : mid === 3 ? "Contrôle des stocks et réapprovisionnement" : mid === 4 ? "Indicateurs de performance logistique" : mid === 5 ? "Simulation opérationnelle intégrée" : `Module ${mid}`}
-                    <span className="text-[10px] font-normal text-gray-400 ml-1">({moduleScenarios?.length ?? 0} scénarios)</span>
+                    <span className="text-[10px] font-normal text-muted-foreground ml-1">({moduleScenarios?.length ?? 0} scénarios)</span>
                   </span>
-                  {isOpen ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
+                  {isOpen ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
                 </button>
                 {isOpen && (
-                  <div className="divide-y divide-[#f0f0f0]">
+                  <div className="divide-y divide-border">
                     {moduleScenarios?.map((s) => (
-                      <div key={s.id} className="bg-white p-4">
+                      <div key={s.id} className="bg-card p-4">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-[#0f2a44] truncate">{s.name}</p>
-                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{s.descriptionFr}</p>
+                            <p className="text-sm font-semibold text-foreground truncate">{s.name}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{s.descriptionFr}</p>
                             <div className="flex items-center gap-2 mt-1.5">
                               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${difficultyBadge[s.difficulty ?? "facile"] ?? ""}`}>
                                 {s.difficulty}
                               </span>
-                              <span className="text-[10px] text-gray-400">M{s.moduleId}</span>
+                              <span className="text-[10px] text-muted-foreground">M{s.moduleId}</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <div className="flex flex-col gap-1">
-                              <div className="flex rounded border border-[#d9d9d9] overflow-hidden text-[10px]">
+                              <div className="flex rounded border border-border overflow-hidden text-[10px]">
                                 <button type="button"
                                   onClick={() => setAssignTargets(prev => ({ ...prev, [s.id]: { type: "cohort", id: "" } }))}
                                   className={`px-2 py-1 transition-colors ${
                                     (assignTargets[s.id]?.type ?? "cohort") === "cohort"
-                                      ? "bg-[#0070f2] text-white" : "bg-white text-gray-500 hover:bg-gray-50"
+                                      ? "bg-[#0070f2] text-white" : "bg-card text-muted-foreground hover:bg-secondary"
                                   }`}>
                                   <Users size={10} className="inline mr-0.5" />Cohorte
                                 </button>
@@ -127,7 +127,7 @@ export default function ScenarioManager() {
                                   onClick={() => setAssignTargets(prev => ({ ...prev, [s.id]: { type: "student", id: "" } }))}
                                   className={`px-2 py-1 transition-colors ${
                                     assignTargets[s.id]?.type === "student"
-                                      ? "bg-[#0070f2] text-white" : "bg-white text-gray-500 hover:bg-gray-50"
+                                      ? "bg-[#0070f2] text-white" : "bg-card text-muted-foreground hover:bg-secondary"
                                   }`}>
                                   <UserCheck size={10} className="inline mr-0.5" />Étudiant
                                 </button>
@@ -136,7 +136,7 @@ export default function ScenarioManager() {
                                 <select
                                   value={assignTargets[s.id]?.id ?? ""}
                                   onChange={e => setAssignTargets(prev => ({ ...prev, [s.id]: { type: "cohort", id: e.target.value } }))}
-                                  className="text-xs border border-[#d9d9d9] rounded px-2 py-1.5 focus:outline-none focus:border-[#0070f2] min-w-[160px]">
+                                  className="text-xs border border-border rounded px-2 py-1.5 focus:outline-none focus:border-[#0070f2] min-w-[160px] bg-background text-foreground">
                                   <option value="">— Sélectionner cohorte —</option>
                                   {cohorts?.length === 0 && <option disabled>Aucune cohorte créée</option>}
                                   {cohorts?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -145,7 +145,7 @@ export default function ScenarioManager() {
                                 <select
                                   value={assignTargets[s.id]?.id ?? ""}
                                   onChange={e => setAssignTargets(prev => ({ ...prev, [s.id]: { type: "student", id: e.target.value } }))}
-                                  className="text-xs border border-[#d9d9d9] rounded px-2 py-1.5 focus:outline-none focus:border-[#0070f2] min-w-[160px]">
+                                  className="text-xs border border-border rounded px-2 py-1.5 focus:outline-none focus:border-[#0070f2] min-w-[160px] bg-background text-foreground">
                                   <option value="">— Sélectionner étudiant —</option>
                                   {students?.length === 0 && <option disabled>Aucun étudiant inscrit</option>}
                                   {students?.map((u: any) => <option key={u.id} value={u.id}>{u.name}</option>)}
@@ -170,7 +170,7 @@ export default function ScenarioManager() {
         {/* Right panel: Cohorts + Students */}
         <div className="space-y-6">
           <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-[#0f2a44] flex items-center gap-2"><Users size={15} /> Cohortes</h2>
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2"><Users size={15} /> Cohortes</h2>
             <div className="flex gap-2">
               <input value={cohortName} onChange={e => setCohortName(e.target.value)}
                 placeholder="Nom de la cohorte" className="fiori-field-input flex-1 text-xs" />
@@ -180,32 +180,32 @@ export default function ScenarioManager() {
               </button>
             </div>
             <div className="space-y-2">
-              {cohorts?.length === 0 && <p className="text-xs text-gray-400 italic">Aucune cohorte. Créez-en une ci-dessus.</p>}
+              {cohorts?.length === 0 && <p className="text-xs text-muted-foreground italic">Aucune cohorte. Créez-en une ci-dessus.</p>}
               {cohorts?.map((c: any) => (
-                <div key={c.id} className="bg-white border border-[#d9d9d9] rounded-md p-3">
-                  <p className="text-xs font-semibold text-[#0f2a44]">{c.name}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">ID: {c.id}</p>
+                <div key={c.id} className="bg-card border border-border rounded-md p-3">
+                  <p className="text-xs font-semibold text-foreground">{c.name}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">ID: {c.id}</p>
                 </div>
               ))}
             </div>
           </div>
           <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-[#0f2a44] flex items-center gap-2"><UserCheck size={15} /> Étudiants inscrits</h2>
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2"><UserCheck size={15} /> Étudiants inscrits</h2>
             <div className="space-y-2">
-              {students?.length === 0 && <p className="text-xs text-gray-400 italic">Aucun étudiant inscrit.</p>}
+              {students?.length === 0 && <p className="text-xs text-muted-foreground italic">Aucun étudiant inscrit.</p>}
               {students?.map((u: any) => (
-                <div key={u.id} className="bg-white border border-[#d9d9d9] rounded-md p-3 flex items-center gap-2">
+                <div key={u.id} className="bg-card border border-border rounded-md p-3 flex items-center gap-2">
                   <div className="w-6 h-6 rounded-full bg-[#0070f2]/10 flex items-center justify-center text-[10px] font-bold text-[#0070f2] flex-shrink-0">
                     {u.name?.charAt(0)?.toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-[#0f2a44] truncate">{u.name}</p>
-                    <p className="text-[10px] text-gray-400 truncate">{u.email ?? "—"}</p>
+                    <p className="text-xs font-semibold text-foreground truncate">{u.name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{u.email ?? "—"}</p>
                   </div>
                   {u.studentNumber ? (
-                    <span className="text-[10px] font-mono bg-[#e8f4fd] text-[#0070f2] px-1.5 py-0.5 rounded flex-shrink-0" title="Numéro étudiant">{u.studentNumber}</span>
+                    <span className="text-[10px] font-mono bg-blue-50 dark:bg-blue-950/40 text-[#0070f2] px-1.5 py-0.5 rounded flex-shrink-0" title="Numéro étudiant">{u.studentNumber}</span>
                   ) : (
-                    <span className="text-[10px] text-gray-300 italic flex-shrink-0">N° —</span>
+                    <span className="text-[10px] text-muted-foreground italic flex-shrink-0">N° —</span>
                   )}
                 </div>
               ))}

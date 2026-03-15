@@ -53,6 +53,16 @@
   --fiori-gray-light: #f7f7f7;
   --fiori-gray-mid: #ededed;
   --fiori-gray-border: #d9d9d9;
+  /* Semantic surface tokens (light) */
+  --fiori-surface: #ffffff;
+  --fiori-surface-secondary: #f5f7fa;
+  --fiori-surface-hover: #eef1f6;
+  --fiori-text-primary: #0f2a44;
+  --fiori-text-secondary: #6b7280;
+  --fiori-text-muted: #9ca3af;
+  --fiori-border: #d9d9d9;
+  --fiori-field-bg: #ffffff;
+  --fiori-field-border: #d9d9d9;
 
   --primary: var(--color-blue-700);
   --primary-foreground: var(--color-blue-50);
@@ -90,6 +100,17 @@
 }
 
 .dark {
+  /* Fiori semantic tokens — dark mode overrides */
+  --fiori-surface: oklch(0.21 0.006 285.885);
+  --fiori-surface-secondary: oklch(0.18 0.005 285.823);
+  --fiori-surface-hover: oklch(0.25 0.006 286.033);
+  --fiori-text-primary: oklch(0.85 0.005 65);
+  --fiori-text-secondary: oklch(0.65 0.01 65);
+  --fiori-text-muted: oklch(0.55 0.008 65);
+  --fiori-border: oklch(1 0 0 / 12%);
+  --fiori-field-bg: oklch(0.24 0.006 286.033);
+  --fiori-field-border: oklch(1 0 0 / 20%);
+
   --primary: var(--color-blue-700);
   --primary-foreground: var(--color-blue-50);
   --sidebar-primary: var(--color-blue-500);
@@ -162,11 +183,35 @@
   .step-circle { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; border: 2px solid; }
   .step-circle.completed { background: #107e3e; border-color: #107e3e; color: white; }
   .step-circle.active { background: #0070f2; border-color: #0070f2; color: white; box-shadow: 0 0 0 4px rgba(0,112,242,0.2); }
-  .step-circle.locked { background: #f7f7f7; border-color: #d9d9d9; color: #9ca3af; }
+  .step-circle.locked { background: var(--fiori-surface-secondary); border-color: var(--fiori-border); color: var(--fiori-text-muted); }
   .progress-bar-fill { height: 100%; border-radius: 9999px; background: linear-gradient(90deg, #0070f2, #107e3e); transition: width 0.5s ease; }
   .alert-compliant { background: #d4edda; border: 1px solid #107e3e; border-left: 4px solid #107e3e; color: #107e3e; border-radius: 4px; padding: 0.75rem 1rem; }
   .alert-blocked { background: #fde8e8; border: 1px solid #bb0000; border-left: 4px solid #bb0000; color: #bb0000; border-radius: 4px; padding: 0.75rem 1rem; }
-  .alert-info { background: #e8f4fd; border: 1px solid #0070f2; border-left: 4px solid #0070f2; color: #0f2a44; border-radius: 4px; padding: 0.75rem 1rem; }
+  .alert-info { background: #e8f4fd; border: 1px solid #0070f2; border-left: 4px solid #0070f2; color: var(--fiori-text-primary); border-radius: 4px; padding: 0.75rem 1rem; }
+
+  /* ─── Dark mode overrides for Fiori components ─────────────────────────── */
+  .dark .badge-valid { background: rgba(16,126,62,0.2); }
+  .dark .badge-blocked { background: rgba(187,0,0,0.2); }
+  .dark .badge-pending { background: rgba(233,115,12,0.2); }
+  .dark .alert-compliant { background: rgba(16,126,62,0.15); color: #4ade80; border-color: #4ade80; }
+  .dark .alert-blocked { background: rgba(187,0,0,0.15); color: #f87171; border-color: #f87171; }
+  .dark .alert-info { background: rgba(0,112,242,0.15); color: #93c5fd; border-color: #93c5fd; }
+
+  /* ─── Fiori field inputs — dark mode aware ──────────────────────────────── */
+  .fiori-field-input {
+    background-color: var(--fiori-field-bg);
+    border: 1px solid var(--fiori-field-border);
+    color: var(--fiori-text-primary);
+    border-radius: 4px;
+    padding: 0.375rem 0.625rem;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .fiori-field-input:focus {
+    border-color: var(--fiori-blue);
+    box-shadow: 0 0 0 2px rgba(0,112,242,0.15);
+  }
 
   /**
    * Custom container utility that centers content and adds responsive padding.

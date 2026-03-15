@@ -1,0 +1,9 @@
+{
+  "query": "DELETE s1 FROM scenarios s1 INNER JOIN scenarios s2 WHERE s1.id > s2.id AND s1.name = s2.name AND s1.moduleId = s2.moduleId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute DELETE s1 FROM scenarios s1 INNER JOIN scenarios s2 WHERE s1.id > s2.id AND s1.name = s2.name AND s1.moduleId = s2.moduleId;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 75
+}

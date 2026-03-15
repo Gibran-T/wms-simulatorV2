@@ -1,0 +1,30 @@
+{
+  "query": "SELECT moduleId, COUNT(*) as total FROM scenarios GROUP BY moduleId ORDER BY moduleId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT moduleId, COUNT(*) as total FROM scenarios GROUP BY moduleId ORDER BY moduleId;",
+  "rows": [
+    {
+      "moduleId": "1",
+      "total": "5"
+    },
+    {
+      "moduleId": "2",
+      "total": "3"
+    },
+    {
+      "moduleId": "3",
+      "total": "3"
+    },
+    {
+      "moduleId": "19",
+      "total": "3"
+    },
+    {
+      "moduleId": "24",
+      "total": "3"
+    }
+  ],
+  "messages": [],
+  "stdout": "moduleId\ttotal\n1\t5\n2\t3\n3\t3\n19\t3\n24\t3\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

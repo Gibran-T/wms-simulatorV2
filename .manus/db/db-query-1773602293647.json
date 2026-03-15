@@ -1,0 +1,65 @@
+{
+  "query": "SELECT name, moduleId, COUNT(*) as cnt FROM scenarios GROUP BY name, moduleId HAVING cnt > 1 ORDER BY cnt DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT name, moduleId, COUNT(*) as cnt FROM scenarios GROUP BY name, moduleId HAVING cnt > 1 ORDER BY cnt DESC LIMIT 20;",
+  "rows": [
+    {
+      "name": "M3 — Scénario 3 : Réapprovisionnement selon paramètres Min/Max et stock de sécurité",
+      "moduleId": "3",
+      "cnt": "3"
+    },
+    {
+      "name": "Scénario 3 — Stock insuffisant",
+      "moduleId": "1",
+      "cnt": "3"
+    },
+    {
+      "name": "M2 — Scénario 1 : Rangement structuré et affectation d'emplacement",
+      "moduleId": "2",
+      "cnt": "3"
+    },
+    {
+      "name": "Scénario 5 — Non-conformités multiples",
+      "moduleId": "1",
+      "cnt": "3"
+    },
+    {
+      "name": "Scénario 2 — Réception fantôme (GR non postée)",
+      "moduleId": "1",
+      "cnt": "3"
+    },
+    {
+      "name": "Scénario 1 — Cycle propre",
+      "moduleId": "1",
+      "cnt": "3"
+    },
+    {
+      "name": "Scénario 4 — Écart d'inventaire",
+      "moduleId": "1",
+      "cnt": "3"
+    },
+    {
+      "name": "M2 — Scénario 3 : Application de la méthode FIFO en gestion multi-lots",
+      "moduleId": "2",
+      "cnt": "3"
+    },
+    {
+      "name": "M3 — Scénario 2 : Analyse d'écart et ajustement d'inventaire",
+      "moduleId": "3",
+      "cnt": "3"
+    },
+    {
+      "name": "M2 — Scénario 2 : Validation de la capacité d'emplacement",
+      "moduleId": "2",
+      "cnt": "3"
+    },
+    {
+      "name": "M3 — Scénario 1 : Inventaire cyclique simple",
+      "moduleId": "3",
+      "cnt": "3"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tmoduleId\tcnt\nM3 — Scénario 3 : Réapprovisionnement selon paramètres Min/Max et stock de sécurité\t3\t3\nScénario 3 — Stock insuffisant\t1\t3\nM2 — Scénario 1 : Rangement structuré et affectation d'emplacement\t2\t3\nScénario 5 — Non-conformités multiples\t1\t3\nScénario 2 — Réception fantôme (GR non postée)\t1\t3\nScénario 1 — Cycle propre\t1\t3\nScénario 4 — Écart d'inventaire\t1\t3\nM2 — Scénario 3 : Application de la méthode FIFO en gestion multi-lots\t2\t3\nM3 — Scénario 2 : Analyse d'écart et ajustement d'inventaire\t3\t3\nM2 — Scénario 2 : Validation de la capacité d'emplacement\t2\t3\nM3 — Scénario 1 : Inventaire cyclique simple\t3\t3\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

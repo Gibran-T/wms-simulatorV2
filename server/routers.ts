@@ -38,6 +38,9 @@ import {
   getProfileByUserId,
   upsertProfile,
   resetRun,
+  getPreAuthorizedEmails,
+  addPreAuthorizedEmail,
+  removePreAuthorizedEmail,
 } from "./db";
 import {
   calculateBinLoad,
@@ -301,6 +304,30 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
         await updateUserRole(input.userId, input.role);
+        return { success: true };
+      }),
+
+    // Pre-authorized emails — auto-assign role on first login
+    listPreAuthorized: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      return getPreAuthorizedEmails();
+    }),
+    addPreAuthorized: protectedProcedure
+      .input(z.object({
+        email: z.string().email(),
+        role: z.enum(["student", "teacher", "admin"]).default("teacher"),
+        note: z.string().max(255).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        await addPreAuthorizedEmail(input.email, input.role, input.note ?? null, ctx.user.id);
+        return { success: true };
+      }),
+    removePreAuthorized: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        await removePreAuthorizedEmail(input.id);
         return { success: true };
       }),
   }),
