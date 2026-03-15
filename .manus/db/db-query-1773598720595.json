@@ -1,0 +1,37 @@
+{
+  "query": "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'cycle_counts' ORDER BY ORDINAL_POSITION;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'cycle_counts' ORDER BY ORDINAL_POSITION;",
+  "rows": [
+    {
+      "COLUMN_NAME": "id"
+    },
+    {
+      "COLUMN_NAME": "runId"
+    },
+    {
+      "COLUMN_NAME": "sku"
+    },
+    {
+      "COLUMN_NAME": "binCode"
+    },
+    {
+      "COLUMN_NAME": "systemQty"
+    },
+    {
+      "COLUMN_NAME": "countedQty"
+    },
+    {
+      "COLUMN_NAME": "varianceQty"
+    },
+    {
+      "COLUMN_NAME": "status"
+    },
+    {
+      "COLUMN_NAME": "createdAt"
+    }
+  ],
+  "messages": [],
+  "stdout": "COLUMN_NAME\nid\nrunId\nsku\nbinCode\nsystemQty\ncountedQty\nvarianceQty\nstatus\ncreatedAt\n",
+  "stderr": "",
+  "execution_time_ms": 57
+}

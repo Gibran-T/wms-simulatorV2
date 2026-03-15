@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE cycle_counts \n  CHANGE COLUMN binCode bin VARCHAR(64) NOT NULL,\n  CHANGE COLUMN countedQty physicalQty DECIMAL(10,2) NOT NULL,\n  CHANGE COLUMN varianceQty variance DECIMAL(10,2) NOT NULL,\n  CHANGE COLUMN status resolved BOOLEAN NOT NULL DEFAULT false;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute \nALTER TABLE cycle_counts \n  CHANGE COLUMN binCode bin VARCHAR(64) NOT NULL,\n  CHANGE COLUMN countedQty physicalQty DECIMAL(10,2) NOT NULL,\n  CHANGE COLUMN varianceQty variance DECIMAL(10,2) NOT NULL,\n  CHANGE COLUMN status resolved BOOLEAN NOT NULL DEFAULT false;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 685
+}

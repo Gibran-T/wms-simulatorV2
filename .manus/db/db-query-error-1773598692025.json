@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, runId, sku, bin, systemQty, physicalQty, variance, resolved, createdAt FROM cycle_counts WHERE runId = 2;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT id, runId, sku, bin, systemQty, physicalQty, variance, resolved, createdAt FROM cycle_counts WHERE runId = 2;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'bin' in 'field list'"
+  ]
+}

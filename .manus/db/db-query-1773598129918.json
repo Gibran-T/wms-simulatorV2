@@ -1,0 +1,79 @@
+{
+  "query": "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME;",
+  "rows": [
+    {
+      "TABLE_NAME": "__drizzle_migrations"
+    },
+    {
+      "TABLE_NAME": "assignments"
+    },
+    {
+      "TABLE_NAME": "bin_capacity"
+    },
+    {
+      "TABLE_NAME": "cohorts"
+    },
+    {
+      "TABLE_NAME": "cycle_counts"
+    },
+    {
+      "TABLE_NAME": "inventory_adjustments"
+    },
+    {
+      "TABLE_NAME": "inventory_counts"
+    },
+    {
+      "TABLE_NAME": "kpi_interpretations"
+    },
+    {
+      "TABLE_NAME": "kpi_snapshots"
+    },
+    {
+      "TABLE_NAME": "master_bins"
+    },
+    {
+      "TABLE_NAME": "master_skus"
+    },
+    {
+      "TABLE_NAME": "module_progress"
+    },
+    {
+      "TABLE_NAME": "modules"
+    },
+    {
+      "TABLE_NAME": "profiles"
+    },
+    {
+      "TABLE_NAME": "progress"
+    },
+    {
+      "TABLE_NAME": "putaway_records"
+    },
+    {
+      "TABLE_NAME": "replenishment_params"
+    },
+    {
+      "TABLE_NAME": "replenishment_suggestions"
+    },
+    {
+      "TABLE_NAME": "scenario_runs"
+    },
+    {
+      "TABLE_NAME": "scenarios"
+    },
+    {
+      "TABLE_NAME": "scoring_events"
+    },
+    {
+      "TABLE_NAME": "transactions"
+    },
+    {
+      "TABLE_NAME": "users"
+    }
+  ],
+  "messages": [],
+  "stdout": "TABLE_NAME\n__drizzle_migrations\nassignments\nbin_capacity\ncohorts\ncycle_counts\ninventory_adjustments\ninventory_counts\nkpi_interpretations\nkpi_snapshots\nmaster_bins\nmaster_skus\nmodule_progress\nmodules\nprofiles\nprogress\nputaway_records\nreplenishment_params\nreplenishment_suggestions\nscenario_runs\nscenarios\nscoring_events\ntransactions\nusers\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

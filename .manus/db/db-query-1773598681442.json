@@ -1,0 +1,13 @@
+{
+  "query": "SHOW TABLES LIKE 'cycle_counts';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SHOW TABLES LIKE 'cycle_counts';",
+  "rows": [
+    {
+      "Tables_in_S5Kvdsbv47gJwCwLVS8V8T (cycle_counts)": "cycle_counts"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_S5Kvdsbv47gJwCwLVS8V8T (cycle_counts)\ncycle_counts\n",
+  "stderr": "",
+  "execution_time_ms": 66
+}

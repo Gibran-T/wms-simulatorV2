@@ -15,7 +15,7 @@ import type { SlideContent } from "@/data/modules";
 import {
   ChevronLeft, ChevronRight, Home, Moon, Sun, Globe,
   BookOpen, GraduationCap, Clock, Tag, Lightbulb,
-  List, X, Menu
+  List, X
 } from "lucide-react";
 
 // ── Slide type badge colors ──────────────────────────────────────────────────
@@ -91,27 +91,13 @@ export default function SlideViewer() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const moduleId = parseInt(params.moduleId || "1", 10);
 
-  // ── Auth guard: redirect to login if not authenticated ──────────────────
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      window.location.href = getLoginUrl();
-    }
-  }, [isAuthenticated, authLoading]);
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
+  // ── ALL hooks must be declared before any conditional returns ──────────────
   const [slideIndex, setSlideIndex] = useState(0);
   const [professorMode, setProfessorMode] = useState(false);
   const [showNav, setShowNav] = useState(false);
   const [animKey, setAnimKey] = useState(0);
 
-  const modData = isAuthenticated ? getModuleById(moduleId) : undefined;
+  const modData = getModuleById(moduleId);
 
   const goTo = useCallback((idx: number) => {
     if (!modData) return;
@@ -120,12 +106,20 @@ export default function SlideViewer() {
     setAnimKey(k => k + 1);
     setShowNav(false);
   }, [modData]);
+
   const goNext = useCallback(() => goTo(slideIndex + 1), [goTo, slideIndex]);
   const goPrev = useCallback(() => goTo(slideIndex - 1), [goTo, slideIndex]);
 
+  // ── Auth guard: redirect to login if not authenticated ──────────────────
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      window.location.href = getLoginUrl();
+    }
+  }, [isAuthenticated, authLoading]);
+
   // Keyboard navigation
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || authLoading) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === " ") {
         e.preventDefault();
@@ -141,9 +135,19 @@ export default function SlideViewer() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [goNext, goPrev, navigate, isAuthenticated]);
+  }, [goNext, goPrev, navigate, isAuthenticated, authLoading]);
+
+  // ── Conditional returns AFTER all hooks ────────────────────────────────
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!isAuthenticated) return null;
+
   const mod = modData;
   const slide: SlideContent | undefined = mod?.slides[slideIndex];
   const totalSlides = mod?.slides.length ?? 0;

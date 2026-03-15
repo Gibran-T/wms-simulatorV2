@@ -147,3 +147,9 @@
 - [x] SlideViewer com guard de login + modo professor/aluno
 - [x] 5 módulos × ~17 slides bilingues (FR/EN) integrados
 - [x] Seed completo: 5 módulos, 39 cenários, 10 SKUs, 13 bins
+
+## Bug Fixes (2026-03-15 — Teste de Funcionalidade)
+- [x] Fix: SlideViewer — hooks chamados após early return condicional (React hooks rule violation)
+- [x] Fix: Banco de dados — tabela cycle_counts com colunas desatualizadas (bin, physicalQty, variance, resolved)
+- [x] Fix: Banco de dados — tabela profiles com coluna desatualizada (studentNumber)
+- [x] Fix: Banco de dados — tabela progress reestruturada (runId, stepCode, completed, completedAt)

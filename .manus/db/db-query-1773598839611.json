@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE progress \n  CHANGE COLUMN userId runId INT NOT NULL,\n  CHANGE COLUMN moduleId stepCode VARCHAR(32) NOT NULL,\n  CHANGE COLUMN completedSteps completed BOOLEAN NOT NULL DEFAULT false,\n  ADD COLUMN completedAt TIMESTAMP NULL;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute \nALTER TABLE progress \n  CHANGE COLUMN userId runId INT NOT NULL,\n  CHANGE COLUMN moduleId stepCode VARCHAR(32) NOT NULL,\n  CHANGE COLUMN completedSteps completed BOOLEAN NOT NULL DEFAULT false,\n  ADD COLUMN completedAt TIMESTAMP NULL;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1761
+}
