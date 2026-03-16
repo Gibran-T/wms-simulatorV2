@@ -4,6 +4,10 @@ import { useParams, useLocation } from "wouter";
 import { CheckCircle, AlertTriangle, Trophy, ArrowLeft, FlaskConical, TrendingUp, BookOpen, Lightbulb, RotateCcw } from "lucide-react";
 import { useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine, Legend,
+} from "recharts";
 
 const STEP_LABELS_FR: Record<string, string> = {
   PO: "Bon de commande (ME21N)", GR: "Réception marchandises (MIGO)", STOCK: "Stock Disponible",
@@ -13,6 +17,155 @@ const STEP_LABELS_EN: Record<string, string> = {
   PO: "Purchase Order (ME21N)", GR: "Goods Receipt (MIGO)", STOCK: "Available Stock",
   SO: "Sales Order (VA01)", GI: "Goods Issue (VL02N)", CC: "Cycle Count (MI01)", COMPLIANCE: "System Compliance"
 };
+
+// ─── Score Evolution Chart component ─────────────────────────────────────────
+function ScoreEvolutionChart({ scenarioId, currentRunId }: { scenarioId: number; currentRunId: number }) {
+  const { t } = useLanguage();
+  const { data, isLoading } = trpc.runs.myScoreEvolution.useQuery({ scenarioId });
+
+  if (isLoading) return (
+    <div className="bg-card border border-border rounded-md p-5">
+      <div className="flex items-center gap-2 mb-3">
+        <TrendingUp size={14} className="text-primary" />
+        <p className="text-xs font-semibold text-foreground uppercase tracking-wider">
+          {t("Mon évolution", "My Progress")}
+        </p>
+      </div>
+      <div className="flex justify-center py-8">
+        <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    </div>
+  );
+
+  if (!data || data.totalAttempts < 1) return null;
+
+  const chartData = data.attempts.map(a => ({
+    name: `${t("#", "#")}${a.attempt}`,
+    score: a.score,
+    penalties: a.penalties,
+    status: a.status,
+    startedAt: a.startedAt,
+    isCurrent: a.runId === currentRunId,
+  }));
+
+  const trend = data.trend;
+
+  return (
+    <div className="bg-card border border-border rounded-md p-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <TrendingUp size={14} className="text-primary" />
+          <p className="text-xs font-semibold text-foreground uppercase tracking-wider">
+            {t("Mon évolution sur ce scénario", "My progress on this scenario")}
+          </p>
+        </div>
+        <div className="flex items-center gap-3 text-xs">
+          <span className="text-muted-foreground">
+            {t("Tentatives", "Attempts")}: <strong className="text-foreground">{data.totalAttempts}</strong>
+          </span>
+          <span className="text-muted-foreground">
+            {t("Meilleur", "Best")}: <strong className={data.bestScore >= 60 ? "text-emerald-500" : "text-rose-500"}>{data.bestScore}/100</strong>
+          </span>
+          {data.totalAttempts >= 2 && (
+            <span className={`font-bold ${
+              trend > 0 ? "text-emerald-500" : trend < 0 ? "text-rose-500" : "text-muted-foreground"
+            }`}>
+              {trend > 0 ? `▲ +${trend}` : trend < 0 ? `▼ ${trend}` : "—"}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Chart */}
+      {data.totalAttempts === 1 ? (
+        <p className="text-xs text-muted-foreground text-center py-4">
+          {t(
+            "Complétez une 2ème tentative pour voir votre courbe d'évolution.",
+            "Complete a 2nd attempt to see your progress curve."
+          )}
+        </p>
+      ) : (
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart data={chartData} margin={{ top: 8, right: 20, bottom: 8, left: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis
+              dataKey="name"
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+            />
+            <YAxis
+              domain={[0, 100]}
+              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              tickFormatter={v => `${v}`}
+            />
+            {/* Pass threshold line */}
+            <ReferenceLine
+              y={60}
+              stroke="#10b981"
+              strokeDasharray="6 3"
+              label={{ value: t("Seuil 60", "Pass 60"), position: "insideTopRight", fontSize: 10, fill: "#10b981" }}
+            />
+            <Tooltip
+              content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null;
+                const d = payload[0]?.payload;
+                return (
+                  <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs">
+                    <p className="font-semibold text-foreground mb-1">{t("Tentative", "Attempt")} {label}</p>
+                    <p className="text-primary font-bold">{t("Score", "Score")}: {d?.score}/100</p>
+                    {d?.penalties > 0 && <p className="text-rose-500">{t("Erreurs", "Errors")}: {d.penalties}</p>}
+                    {d?.startedAt && <p className="text-muted-foreground">{new Date(d.startedAt).toLocaleDateString()}</p>}
+                    {d?.isCurrent && <p className="text-amber-500 font-semibold">{t("← Tentative actuelle", "← Current attempt")}</p>}
+                  </div>
+                );
+              }}
+            />
+            <Line
+              type="monotone"
+              dataKey="score"
+              name={t("Score", "Score")}
+              stroke="#0078d4"
+              strokeWidth={2.5}
+              dot={(props: any) => {
+                const isCurrent = props.payload?.isCurrent;
+                const score = props.payload?.score;
+                const color = score >= 60 ? "#10b981" : "#d13438";
+                return (
+                  <circle
+                    key={props.key}
+                    cx={props.cx}
+                    cy={props.cy}
+                    r={isCurrent ? 7 : 5}
+                    fill={isCurrent ? "#f59e0b" : color}
+                    stroke="#fff"
+                    strokeWidth={2}
+                  />
+                );
+              }}
+              activeDot={{ r: 8 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
+
+      {/* Legend */}
+      <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-emerald-500" />
+          <span>{t("Score ≥ 60 (Réussi)", "Score ≥ 60 (Passed)")}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-rose-500" />
+          <span>{t("Score < 60 (À améliorer)", "Score < 60 (Needs improvement)")}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-amber-500" />
+          <span>{t("Tentative actuelle", "Current attempt")}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function RunReport() {
   const { runId } = useParams<{ runId: string }>();
@@ -308,6 +461,9 @@ export default function RunReport() {
             ))}
           </div>
         </div>
+
+        {/* Score Evolution Chart — only shown when student has > 1 attempt */}
+        {!isDemo && scenario && <ScoreEvolutionChart scenarioId={scenario.id} currentRunId={parseInt(runId)} />}
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between pb-4">

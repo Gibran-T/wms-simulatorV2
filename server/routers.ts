@@ -397,6 +397,47 @@ export const appRouter = router({
       return enriched;
     }),
 
+    /** Student's own score evolution across multiple attempts on a scenario */
+    myScoreEvolution: protectedProcedure
+      .input(z.object({ scenarioId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const allRuns = await getRunsByUser(ctx.user.id);
+        // Only eval (non-demo) runs for this scenario, sorted by date
+        const filtered = allRuns
+          .filter(r => r.run.scenarioId === input.scenarioId && !r.run.isDemo)
+          .sort((a, b) => new Date(a.run.startedAt).getTime() - new Date(b.run.startedAt).getTime());
+
+        const attempts = await Promise.all(
+          filtered.map(async (r, idx) => {
+            const events = await getScoringEventsByRun(r.run.id);
+            const score = calculateTotalScore(events);
+            const penalties = events.filter(e => e.pointsDelta < 0).length;
+            const bonuses   = events.filter(e => e.pointsDelta > 0).length;
+            const state     = await buildRunState(r.run.id);
+            const progress  = calculateProgressPct(state.completedSteps);
+            return {
+              attempt:     idx + 1,
+              runId:       r.run.id,
+              score,
+              penalties,
+              bonuses,
+              progressPct: progress,
+              status:      r.run.status,
+              startedAt:   r.run.startedAt,
+              completedAt: r.run.completedAt,
+            };
+          })
+        );
+
+        const scores = attempts.map(a => a.score);
+        const bestScore = scores.length ? Math.max(...scores) : 0;
+        const lastScore = scores.length ? scores[scores.length - 1] : 0;
+        const trend     = scores.length >= 2 ? lastScore - scores[scores.length - 2] : 0;
+        const passed    = bestScore >= 60;
+
+        return { attempts, bestScore, lastScore, trend, passed, totalAttempts: attempts.length };
+      }),
+
     /** Detailed report: per-step scores, errors, and recommendations */
     detailedReport: protectedProcedure
       .input(z.object({ runId: z.number() }))
@@ -1341,6 +1382,84 @@ export const appRouter = router({
     }),
 
     // Evaluation-only analytics (excludes demo sessions)
+    // ─── Student score evolution across multiple attempts ──────────────────
+    studentScoreEvolution: teacherProcedure
+      .input(z.object({
+        userId: z.number().optional(),   // undefined = all students
+        scenarioId: z.number().optional(), // undefined = all scenarios
+      }))
+      .query(async ({ input }) => {
+        const allRuns = await getAllRunsForMonitor();
+        const evalRuns = allRuns.filter((r) => !r.run.isDemo);
+
+        // Build unique student list
+        const studentMap = new Map<number, string>();
+        for (const r of evalRuns) {
+          studentMap.set(r.run.userId, r.user.name ?? `User#${r.run.userId}`);
+        }
+        const students = Array.from(studentMap.entries())
+          .map(([id, name]) => ({ id, name }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        // Build unique scenario list
+        const scenarioMap = new Map<number, string>();
+        for (const r of evalRuns) {
+          scenarioMap.set(r.run.scenarioId, r.scenario.name);
+        }
+        const scenarioList = Array.from(scenarioMap.entries())
+          .map(([id, name]) => ({ id, name }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        // Filter runs by selected student/scenario
+        let filtered = evalRuns;
+        if (input.userId) filtered = filtered.filter(r => r.run.userId === input.userId);
+        if (input.scenarioId) filtered = filtered.filter(r => r.run.scenarioId === input.scenarioId);
+
+        // Sort by startedAt ascending
+        filtered = [...filtered].sort((a, b) =>
+          new Date(a.run.startedAt).getTime() - new Date(b.run.startedAt).getTime()
+        );
+
+        // Enrich each run with score + penalties
+        const enriched = await Promise.all(
+          filtered.map(async (r, idx) => {
+            const events = await getScoringEventsByRun(r.run.id);
+            const score = calculateTotalScore(events);
+            const penalties = events.filter(e => e.pointsDelta < 0).length;
+            const bonuses  = events.filter(e => e.pointsDelta > 0).length;
+            return {
+              attempt: idx + 1,
+              runId: r.run.id,
+              userId: r.run.userId,
+              userName: r.user.name ?? `User#${r.run.userId}`,
+              scenarioId: r.run.scenarioId,
+              scenarioName: r.scenario.name,
+              score,
+              penalties,
+              bonuses,
+              status: r.run.status,
+              startedAt: r.run.startedAt,
+              completedAt: r.run.completedAt,
+            };
+          })
+        );
+
+        // If viewing all students on same scenario, group by student for multi-line chart
+        const byStudent = new Map<number, typeof enriched>();
+        for (const e of enriched) {
+          if (!byStudent.has(e.userId)) byStudent.set(e.userId, []);
+          byStudent.get(e.userId)!.push(e);
+        }
+        // Re-number attempts per student
+        const lines = Array.from(byStudent.entries()).map(([userId, runs]) => ({
+          userId,
+          userName: runs[0].userName,
+          attempts: runs.map((r, i) => ({ ...r, attempt: i + 1 })),
+        }));
+
+        return { students, scenarioList, lines, totalAttempts: enriched.length };
+      }),
+
     analytics: teacherProcedure.query(async () => {
       const runs = await getAllRunsForMonitor();
       const evalRuns = runs.filter((r) => !r.run.isDemo);

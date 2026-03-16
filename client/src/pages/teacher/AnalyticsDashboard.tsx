@@ -5,7 +5,7 @@
  */
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, LineChart, Line, RadarChart, Radar,
@@ -15,8 +15,15 @@ import {
 import {
   Users, TrendingUp, CheckCircle2, ShieldCheck, Award, Activity,
   BarChart2, RefreshCw, BookOpen, AlertTriangle, Clock, Target,
-  Loader2,
+  Loader2, TrendingUp as TrendingUpIcon, ChevronDown,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -132,6 +139,240 @@ function EmptyState({ label }: { label: string }) {
         <BarChart2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
         <p>{label}</p>
       </div>
+    </div>
+  );
+}
+
+// ─── Multi-line color palette for per-student lines ─────────────────────────
+const LINE_COLORS = [
+  "#0078d4", "#107c10", "#d13438", "#8764b8", "#ff8c00",
+  "#008272", "#f59e0b", "#10b981", "#f43f5e", "#6366f1",
+];
+
+// ─── Custom Evolution Tooltip ─────────────────────────────────────────────────
+function EvoTooltip({ active, payload, label }: any) {
+  const { t } = useLanguage();
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs min-w-[180px]">
+      <p className="font-semibold text-foreground mb-2">
+        {t("Tentative", "Attempt")} #{label}
+      </p>
+      {payload.map((p: any, i: number) => {
+        const d = p.payload;
+        return (
+          <div key={i} className="mb-1.5 border-b border-border last:border-0 pb-1.5 last:pb-0">
+            <p style={{ color: p.color }} className="font-semibold">{p.name}</p>
+            <p className="text-foreground">{t("Score", "Score")}: <strong>{p.value}/100</strong></p>
+            {d.penalties !== undefined && (
+              <p className="text-rose-500">{t("Erreurs", "Errors")}: {d.penalties}</p>
+            )}
+            {d.startedAt && (
+              <p className="text-muted-foreground">{new Date(d.startedAt).toLocaleDateString()}</p>
+            )}
+            {d.status && (
+              <p className={d.status === "completed" ? "text-emerald-500" : "text-amber-500"}>
+                {d.status === "completed" ? t("Complété", "Completed") : t("En cours", "In Progress")}
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Score Evolution Section (self-contained with its own data fetching) ───────
+function ScoreEvolutionSection() {
+  const { t } = useLanguage();
+  const [selectedUserId,    setSelectedUserId]    = useState<string>("all");
+  const [selectedScenarioId, setSelectedScenarioId] = useState<string>("all");
+
+  const userId     = selectedUserId     === "all" ? undefined : parseInt(selectedUserId);
+  const scenarioId = selectedScenarioId === "all" ? undefined : parseInt(selectedScenarioId);
+
+  const { data, isLoading } = trpc.monitor.studentScoreEvolution.useQuery(
+    { userId, scenarioId },
+    { placeholderData: (prev: any) => prev }
+  );
+
+  const students     = data?.students     ?? [];
+  const scenarioList = data?.scenarioList ?? [];
+  const lines        = data?.lines        ?? [];
+
+  // Build a flat data array indexed by attempt number for the chart
+  // Each row = one attempt number; columns = one per student
+  const maxAttempts = lines.reduce((m, l) => Math.max(m, l.attempts.length), 0);
+  const chartData = useMemo(() => {
+    if (maxAttempts === 0) return [];
+    return Array.from({ length: maxAttempts }, (_, i) => {
+      const row: Record<string, any> = { attempt: i + 1 };
+      for (const line of lines) {
+        const a = line.attempts[i];
+        if (a) {
+          row[line.userName] = a.score;
+          row[`__meta_${line.userName}`] = a; // for tooltip
+        }
+      }
+      return row;
+    });
+  }, [lines, maxAttempts]);
+
+  // Pass line reference (60 pts)
+  const PASS_LINE = 60;
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-5">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ backgroundColor: `${C.primary}20` }}>
+            <TrendingUpIcon className="w-4 h-4" style={{ color: C.primary }} />
+          </div>
+          <h2 className="text-base font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            {t("Évolution du score — Tentatives multiples", "Score Evolution — Multiple Attempts")}
+          </h2>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Student selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
+              {t("Étudiant :", "Student:")}
+            </span>
+            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+              <SelectTrigger className="w-44 h-8 text-xs">
+                <SelectValue placeholder={t("Tous les étudiants", "All students")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("Tous les étudiants", "All students")}</SelectItem>
+                {students.map(s => (
+                  <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Scenario selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
+              {t("Scénario :", "Scenario:")}
+            </span>
+            <Select value={selectedScenarioId} onValueChange={setSelectedScenarioId}>
+              <SelectTrigger className="w-52 h-8 text-xs">
+                <SelectValue placeholder={t("Tous les scénarios", "All scenarios")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("Tous les scénarios", "All scenarios")}</SelectItem>
+                {scenarioList.map(s => (
+                  <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* Chart */}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      ) : chartData.length === 0 ? (
+        <div className="flex items-center justify-center h-64 text-muted-foreground text-sm">
+          <div className="text-center">
+            <TrendingUpIcon className="w-10 h-10 mx-auto mb-3 opacity-20" />
+            <p className="font-medium">{t("Aucune tentative enregistrée", "No attempts recorded")}</p>
+            <p className="text-xs mt-1">{t("Sélectionnez un étudiant ou un scénario pour voir l'évolution", "Select a student or scenario to view progression")}</p>
+          </div>
+        </div>
+      ) : (
+        <>
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={chartData} margin={{ top: 10, right: 30, bottom: 20, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis
+                dataKey="attempt"
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                label={{
+                  value: t("Tentative #", "Attempt #"),
+                  position: "insideBottom",
+                  offset: -10,
+                  fontSize: 11,
+                  fill: "var(--muted-foreground)",
+                }}
+              />
+              <YAxis
+                domain={[0, 100]}
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                label={{
+                  value: t("Score", "Score"),
+                  angle: -90,
+                  position: "insideLeft",
+                  fontSize: 11,
+                  fill: "var(--muted-foreground)",
+                }}
+              />
+              <Tooltip content={<EvoTooltip />} />
+              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+              {/* Pass line reference */}
+              <Line
+                type="monotone"
+                dataKey={() => PASS_LINE}
+                name={t("Seuil de réussite (60)", "Pass threshold (60)")}
+                stroke={C.success}
+                strokeDasharray="6 3"
+                strokeWidth={1.5}
+                dot={false}
+                legendType="plainline"
+              />
+              {/* One line per student */}
+              {lines.map((line, idx) => (
+                <Line
+                  key={line.userId}
+                  type="monotone"
+                  dataKey={line.userName}
+                  name={line.userName}
+                  stroke={LINE_COLORS[idx % LINE_COLORS.length]}
+                  strokeWidth={2.5}
+                  dot={{ r: 5, fill: LINE_COLORS[idx % LINE_COLORS.length], strokeWidth: 2, stroke: "#fff" }}
+                  activeDot={{ r: 7 }}
+                  connectNulls
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+
+          {/* Summary stats below chart */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-border">
+            {lines.map((line, idx) => {
+              const scores = line.attempts.map(a => a.score);
+              const best   = Math.max(...scores);
+              const last   = scores[scores.length - 1] ?? 0;
+              const trend  = scores.length >= 2 ? last - scores[scores.length - 2] : 0;
+              return (
+                <div key={line.userId} className="bg-secondary/30 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: LINE_COLORS[idx % LINE_COLORS.length] }} />
+                    <span className="text-xs font-semibold text-foreground truncate">{line.userName}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">{t("Tentatives", "Attempts")}: <strong className="text-foreground">{line.attempts.length}</strong></span>
+                    <span className="text-muted-foreground">{t("Meilleur", "Best")}: <strong className={best >= 60 ? "text-emerald-500" : "text-rose-500"}>{best}</strong></span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs mt-0.5">
+                    <span className="text-muted-foreground">{t("Dernier", "Last")}: <strong className={last >= 60 ? "text-emerald-500" : "text-rose-500"}>{last}</strong></span>
+                    <span className={`font-bold ${trend > 0 ? "text-emerald-500" : trend < 0 ? "text-rose-500" : "text-muted-foreground"}`}>
+                      {trend > 0 ? `▲ +${trend}` : trend < 0 ? `▼ ${trend}` : "—"}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -748,6 +989,9 @@ export default function AnalyticsDashboard() {
             </div>
           </div>
         )}
+
+        {/* ── Row 6: Score Evolution Line Chart ─────────────────────────── */}
+        <ScoreEvolutionSection />
 
         {/* ── Footer ────────────────────────────────────────────────────────── */}
         <div className="text-center py-4 text-xs text-muted-foreground border-t border-border">

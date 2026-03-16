@@ -276,3 +276,20 @@
 - [x] Nav item "Analytics" adicionado ao FioriShell (sidebar do professor)
 - [x] Rota `/teacher/analytics` registrada no App.tsx
 - [x] Auto-refresh a cada 60 segundos + botão "Actualiser / Refresh"
+
+## Feature: Score Evolution Line Chart (2026-03-16)
+- [x] Backend: `monitor.studentScoreEvolution` — retorna tentativas ordenadas por data para um aluno + cenário
+- [x] Frontend: seção "Évolution du score" no AnalyticsDashboard com seletor de aluno + seletor de cenário
+- [x] Gráfico de linha: eixo X = tentativas (1ª, 2ª, 3ª…), eixo Y = score (0-100), linha por aluno selecionado
+- [x] Mostrar linha de aprovação (60 pts) como referência horizontal
+- [x] Tooltip com data, score, penalidades e status (Réussi/Échoué)
+- [x] FR/EN bilíngue via t()
+
+## Feature: Student Score Evolution View (2026-03-16)
+- [x] Backend: `runs.myScoreEvolution` — retorna todas as tentativas do aluno logado para um cenário específico (score, penalidades, data, status)
+- [x] Frontend: seção "Mon évolution" na página RunReport — gráfico de linha mostrando score por tentativa
+- [x] Mostrar linha de aprovação (60 pts) como referência horizontal
+- [x] Tooltip com data, score, penalidades e status por tentativa
+- [x] Ponto atual destacado em amarelo no gráfico do aluno
+- [x] FR/EN bilíngue via t()
+- [ ] Push to GitHub after all features complete
