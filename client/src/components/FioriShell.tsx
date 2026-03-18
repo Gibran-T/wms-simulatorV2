@@ -140,7 +140,7 @@ export default function FioriShell({ children, title, breadcrumbs }: FioriShellP
 
         {/* Nav — desktop (collapsible) */}
         {!navCollapsed && (
-          <nav className="hidden md:flex items-center gap-0.5 flex-1 overflow-hidden">
+          <nav className="hidden md:flex items-center gap-0.5 flex-1 overflow-x-auto scrollbar-none min-w-0">
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = location === item.href || location.startsWith(item.href + "/");
@@ -148,12 +148,13 @@ export default function FioriShell({ children, title, breadcrumbs }: FioriShellP
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
+                  title={item.label}
+                  className={`flex items-center gap-1 px-2 py-1.5 rounded text-[10px] font-medium transition-colors whitespace-nowrap shrink-0 ${
                     active ? "bg-white/20 text-white" : "text-white/70 hover:text-white hover:bg-white/10"
                   }`}
                 >
-                  <Icon size={12} />
-                  {item.label}
+                  <Icon size={12} className="shrink-0" />
+                  <span className="hidden lg:inline">{item.label}</span>
                 </Link>
               );
             })}

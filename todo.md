@@ -293,3 +293,7 @@
 - [x] Ponto atual destacado em amarelo no gráfico do aluno
 - [x] FR/EN bilíngue via t()
 - [ ] Push to GitHub after all features complete
+
+## Bug: FioriShell nav bar overflow
+- [x] Fix nav items cramped/overlapping on medium screens — icons only on md, icons+labels on lg+, overflow-x scroll with hidden scrollbar
+- [x] Fix Analytics page not opening — session expiry issue (login required after sandbox reset); nav fix applied
