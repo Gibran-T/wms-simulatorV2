@@ -74,8 +74,19 @@ import {
   RESERVE_BINS,
   calculateKpis,
   scoreKpiInterpretation,
+  canExecuteStepM2,
+  canExecuteStepM3,
+  computeReplenishmentSuggestion,
+  scoreM5Decision,
   type KpiData,
 } from "./rulesEngine";
+import {
+  addInventoryCount,
+  addInventoryAdjustment,
+  addReplenishmentSuggestion,
+  addKpiSnapshot,
+  addKpiInterpretation,
+} from "./db";
 import { calculateTotalScore, getScoringRule, getScoreLabel } from "./scoringEngine";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -1637,6 +1648,399 @@ export const appRouter = router({
       );
       return enriched;
     }),
+  }),
+
+  // ─── Module 2: Advanced Warehouse Operations ───────────────────────────────
+  m2: router({
+    /** M2 Step 3: FIFO Pick */
+    submitFifoPick: protectedProcedure
+      .input(z.object({
+        runId: z.number(),
+        sku: z.string(),
+        fromBin: z.string(),
+        toBin: z.string(),
+        qty: z.number().positive(),
+        lotNumber: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const state = await buildRunState(input.runId);
+        const check = canExecuteStepM2("FIFO_PICK" as any, state);
+        if (!check.allowed) {
+          if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "OUT_OF_SEQUENCE", pointsDelta: -5, message: check.reasonFr ?? "" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: check.reasonFr });
+        }
+        // FIFO validation: lotNumber must be the oldest lot in fromBin
+        const putawayList = await getPutawayByRun(input.runId);
+        const lotsInBin = putawayList
+          .filter((p) => p.sku === input.sku && p.toBin === input.fromBin)
+          .sort((a, b) => new Date(a.receivedAt).getTime() - new Date(b.receivedAt).getTime());
+        const oldestLot = lotsInBin[0]?.lotNumber;
+        if (oldestLot && oldestLot !== input.lotNumber) {
+          if (!run.isDemo) {
+            await addScoringEvent({ runId: input.runId, eventType: "FIFO_VIOLATION", pointsDelta: -10, message: `FIFO violation: lot ${input.lotNumber} prélevé avant lot ${oldestLot}` });
+            throw new TRPCError({ code: "BAD_REQUEST", message: `Violation FIFO : le lot ${oldestLot} doit être prélevé en premier (plus ancien)` });
+          }
+        }
+        await addTransaction({ runId: input.runId, docType: "PICKING", moveType: "LT0A", sku: input.sku, bin: input.fromBin, qty: String(-input.qty), posted: true, docRef: `FIFO-${input.lotNumber}`, comment: `Prélèvement FIFO de ${input.fromBin} vers ${input.toBin}` });
+        await addTransaction({ runId: input.runId, docType: "PICKING_M1", moveType: "LT0A", sku: input.sku, bin: input.toBin, qty: String(input.qty), posted: true, docRef: `FIFO-${input.lotNumber}`, comment: `Arrivée FIFO en ${input.toBin}` });
+        await markStepComplete(input.runId, "FIFO_PICK");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "FIFO_PICK_COMPLETED", pointsDelta: 15, message: "Prélèvement FIFO validé" });
+        return { success: true };
+      }),
+
+    /** M2 Step 4: Stock Accuracy */
+    submitStockAccuracy: protectedProcedure
+      .input(z.object({
+        runId: z.number(),
+        sku: z.string(),
+        systemQty: z.number(),
+        countedQty: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const state = await buildRunState(input.runId);
+        const check = canExecuteStepM2("STOCK_ACCURACY" as any, state);
+        if (!check.allowed) {
+          if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "OUT_OF_SEQUENCE", pointsDelta: -5, message: check.reasonFr ?? "" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: check.reasonFr });
+        }
+        const variance = input.countedQty - input.systemQty;
+        await addInventoryCount({ runId: input.runId, sku: input.sku, systemQty: input.systemQty, countedQty: input.countedQty, varianceQty: variance });
+        await markStepComplete(input.runId, "STOCK_ACCURACY");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "STOCK_ACCURACY_COMPLETED", pointsDelta: variance === 0 ? 15 : 10, message: `Précision inventaire: variance ${variance >= 0 ? "+" : ""}${variance}` });
+        return { success: true, variance };
+      }),
+
+    /** M2 Step 5: Compliance Advanced */
+    submitComplianceAdv: protectedProcedure
+      .input(z.object({ runId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const state = await buildRunState(input.runId);
+        const check = canExecuteStepM2("COMPLIANCE_ADV" as any, state);
+        if (!check.allowed) {
+          if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "OUT_OF_SEQUENCE", pointsDelta: -5, message: check.reasonFr ?? "" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: check.reasonFr });
+        }
+        await markStepComplete(input.runId, "COMPLIANCE_ADV");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "COMPLIANCE_ADV_COMPLETED", pointsDelta: 20, message: "Conformité avancée M2 validée" });
+        return { success: true };
+      }),
+  }),
+
+  // ─── Module 3: Cycle Count & Replenishment ─────────────────────────────────
+  m3: router({
+    /** M3 Step 1: CC_LIST — generate count list */
+    submitCcList: protectedProcedure
+      .input(z.object({ runId: z.number(), skus: z.array(z.string()).min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const state = await buildRunState(input.runId);
+        const check = canExecuteStepM3("CC_LIST" as any, state.completedSteps as any);
+        if (!check.allowed) {
+          if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "OUT_OF_SEQUENCE", pointsDelta: -5, message: check.reasonFr ?? "" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: check.reasonFr });
+        }
+        await markStepComplete(input.runId, "CC_LIST");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "CC_LIST_COMPLETED", pointsDelta: 10, message: `Liste de comptage générée pour ${input.skus.length} SKU(s)` });
+        return { success: true, skus: input.skus };
+      }),
+
+    /** M3 Step 2: CC_COUNT — enter physical counts */
+    submitCcCount: protectedProcedure
+      .input(z.object({
+        runId: z.number(),
+        counts: z.array(z.object({
+          sku: z.string(),
+          bin: z.string(),
+          systemQty: z.number(),
+          countedQty: z.number(),
+        })).min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const state = await buildRunState(input.runId);
+        const check = canExecuteStepM3("CC_COUNT" as any, state.completedSteps as any);
+        if (!check.allowed) {
+          if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "OUT_OF_SEQUENCE", pointsDelta: -5, message: check.reasonFr ?? "" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: check.reasonFr });
+        }
+        for (const c of input.counts) {
+          const variance = c.countedQty - c.systemQty;
+          await addInventoryCount({ runId: input.runId, sku: c.sku, systemQty: c.systemQty, countedQty: c.countedQty, varianceQty: variance });
+        }
+        await markStepComplete(input.runId, "CC_COUNT");
+        const totalVariance = input.counts.reduce((s, c) => s + Math.abs(c.countedQty - c.systemQty), 0);
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "CC_COUNT_COMPLETED", pointsDelta: totalVariance === 0 ? 20 : 15, message: `Comptage physique: variance totale ${totalVariance}` });
+        return { success: true, totalVariance };
+      }),
+
+    /** M3 Step 3: CC_RECON — reconcile & adjust */
+    submitCcRecon: protectedProcedure
+      .input(z.object({
+        runId: z.number(),
+        adjustments: z.array(z.object({
+          sku: z.string(),
+          bin: z.string(),
+          varianceQty: z.number(),
+          justification: z.string(),
+        })),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const state = await buildRunState(input.runId);
+        const check = canExecuteStepM3("CC_RECON" as any, state.completedSteps as any);
+        if (!check.allowed) {
+          if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "OUT_OF_SEQUENCE", pointsDelta: -5, message: check.reasonFr ?? "" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: check.reasonFr });
+        }
+        for (const adj of input.adjustments) {
+          if (adj.varianceQty !== 0) {
+            await addInventoryAdjustment({ runId: input.runId, sku: adj.sku, varianceQty: adj.varianceQty, adjustmentQty: adj.varianceQty, reason: adj.justification });
+            await addTransaction({ runId: input.runId, docType: "ADJ", moveType: "MI07", sku: adj.sku, bin: adj.bin, qty: String(adj.varianceQty), posted: true, docRef: `ADJ-${adj.sku}`, comment: adj.justification });
+          }
+        }
+        await markStepComplete(input.runId, "CC_RECON");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "CC_RECON_COMPLETED", pointsDelta: 15, message: "Réconciliation et ajustements validés" });
+        return { success: true };
+      }),
+
+    /** M3 Step 4: REPLENISH \u2014 replenishment suggestion */
+    submitReplenish: protectedProcedure
+      .input(z.object({
+        runId: z.number(),
+        sku: z.string(),
+        systemQty: z.number(),
+        minQty: z.number(),
+        maxQty: z.number(),
+        safetyStock: z.number(),
+        studentQty: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const state = await buildRunState(input.runId);
+        const check = canExecuteStepM3("REPLENISH" as any, state.completedSteps as any);
+        if (!check.allowed) {
+          if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "OUT_OF_SEQUENCE", pointsDelta: -5, message: check.reasonFr ?? "" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: check.reasonFr });
+        }
+        const suggestion = computeReplenishmentSuggestion({ sku: input.sku, systemQty: input.systemQty, minQty: input.minQty, maxQty: input.maxQty, safetyStock: input.safetyStock });
+        const diff = Math.abs(input.studentQty - suggestion.suggestedQty);
+        const points = diff === 0 ? 20 : diff <= 10 ? 15 : diff <= 25 ? 10 : 5;
+        await addReplenishmentSuggestion({ runId: input.runId, sku: input.sku, systemQty: input.systemQty, suggestedQty: suggestion.suggestedQty, reason: suggestion.reason });
+        await markStepComplete(input.runId, "REPLENISH");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "REPLENISH_COMPLETED", pointsDelta: points, message: `R\u00e9approvisionnement: sugg\u00e9r\u00e9 ${suggestion.suggestedQty}, \u00e9tudiant ${input.studentQty}` });
+        return { success: true, suggestion, diff };
+      }),
+
+    /** M3 Step 5: COMPLIANCE_M3 */
+    submitComplianceM3: protectedProcedure
+      .input(z.object({ runId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const state = await buildRunState(input.runId);
+        const check = canExecuteStepM3("COMPLIANCE_M3" as any, state.completedSteps as any);
+        if (!check.allowed) {
+          if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "OUT_OF_SEQUENCE", pointsDelta: -5, message: check.reasonFr ?? "" });
+          throw new TRPCError({ code: "BAD_REQUEST", message: check.reasonFr });
+        }
+        await markStepComplete(input.runId, "COMPLIANCE_M3");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "COMPLIANCE_M3_COMPLETED", pointsDelta: 15, message: "Conformité Module 3 validée" });
+        return { success: true };
+      }),
+  }),
+
+  // ─── Module 4: KPI Step Markers ────────────────────────────────────────────
+  m4: router({
+    /** M4 Step 1: KPI_DATA — acknowledge data entry */
+    submitKpiData: protectedProcedure
+      .input(z.object({ runId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        await markStepComplete(input.runId, "KPI_DATA");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "KPI_DATA_COMPLETED", pointsDelta: 10, message: "Données KPI saisies" });
+        return { success: true };
+      }),
+
+    /** M4 Step 2: KPI_ROTATION — rotation rate interpretation */
+    submitKpiRotation: protectedProcedure
+      .input(z.object({ runId: z.number(), studentAnswer: z.string().min(1), kpiData: z.object({ annualConsumption: z.number(), averageStock: z.number(), ordersFulfilled: z.number(), totalOrders: z.number(), operationalErrors: z.number(), totalOperations: z.number(), avgLeadTimeDays: z.number(), stockValue: z.number() }).optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const kpiData: KpiData = input.kpiData ?? { annualConsumption: 2400, averageStock: 400, ordersFulfilled: 285, totalOrders: 300, operationalErrors: 12, totalOperations: 300, avgLeadTimeDays: 3.5, stockValue: 48000 };
+        const kpiResult = calculateKpis(kpiData);
+        const result = scoreKpiInterpretation("rotationRate", input.studentAnswer, kpiResult);
+        await addKpiInterpretation({ runId: input.runId, kpiKey: "rotationRate", studentAnswer: input.studentAnswer, isCorrect: result.isCorrect, pointsDelta: result.pointsDelta, feedback: result.feedback });
+        await markStepComplete(input.runId, "KPI_ROTATION");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "KPI_ROTATION_COMPLETED", pointsDelta: result.pointsDelta, message: `Taux de rotation: ${result.isCorrect ? "correct" : "incorrect"}` });
+        return result;
+      }),
+
+    /** M4 Step 3: KPI_SERVICE — service level interpretation */
+    submitKpiService: protectedProcedure
+      .input(z.object({ runId: z.number(), studentAnswer: z.string().min(1), kpiData: z.object({ annualConsumption: z.number(), averageStock: z.number(), ordersFulfilled: z.number(), totalOrders: z.number(), operationalErrors: z.number(), totalOperations: z.number(), avgLeadTimeDays: z.number(), stockValue: z.number() }).optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const kpiData: KpiData = input.kpiData ?? { annualConsumption: 2400, averageStock: 400, ordersFulfilled: 285, totalOrders: 300, operationalErrors: 12, totalOperations: 300, avgLeadTimeDays: 3.5, stockValue: 48000 };
+        const kpiResult = calculateKpis(kpiData);
+        const result = scoreKpiInterpretation("serviceLevel", input.studentAnswer, kpiResult);
+        await addKpiInterpretation({ runId: input.runId, kpiKey: "serviceLevel", studentAnswer: input.studentAnswer, isCorrect: result.isCorrect, pointsDelta: result.pointsDelta, feedback: result.feedback });
+        await markStepComplete(input.runId, "KPI_SERVICE");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "KPI_SERVICE_COMPLETED", pointsDelta: result.pointsDelta, message: `Taux de service: ${result.isCorrect ? "correct" : "incorrect"}` });
+        return result;
+      }),
+
+    /** M4 Step 4: KPI_DIAGNOSTIC — error rate interpretation */
+    submitKpiDiagnostic: protectedProcedure
+      .input(z.object({ runId: z.number(), studentAnswer: z.string().min(1), kpiData: z.object({ annualConsumption: z.number(), averageStock: z.number(), ordersFulfilled: z.number(), totalOrders: z.number(), operationalErrors: z.number(), totalOperations: z.number(), avgLeadTimeDays: z.number(), stockValue: z.number() }).optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const kpiData: KpiData = input.kpiData ?? { annualConsumption: 2400, averageStock: 400, ordersFulfilled: 285, totalOrders: 300, operationalErrors: 12, totalOperations: 300, avgLeadTimeDays: 3.5, stockValue: 48000 };
+        const kpiResult = calculateKpis(kpiData);
+        const result = scoreKpiInterpretation("diagnostic", input.studentAnswer, kpiResult);
+        await addKpiInterpretation({ runId: input.runId, kpiKey: "diagnostic", studentAnswer: input.studentAnswer, isCorrect: result.isCorrect, pointsDelta: result.pointsDelta, feedback: result.feedback });
+        await markStepComplete(input.runId, "KPI_DIAGNOSTIC");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "KPI_DIAGNOSTIC_COMPLETED", pointsDelta: result.pointsDelta, message: `Diagnostic: ${result.isCorrect ? "correct" : "incorrect"}` });
+        return result;
+      }),
+
+    /** M4 Step 5: COMPLIANCE_M4 */
+    submitComplianceM4: protectedProcedure
+      .input(z.object({ runId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        await markStepComplete(input.runId, "COMPLIANCE_M4");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "COMPLIANCE_M4_COMPLETED", pointsDelta: 15, message: "Conformité Module 4 validée" });
+        return { success: true };
+      }),
+  }),
+
+  // ─── Module 5: Integrated Simulation ──────────────────────────────────────
+  m5: router({
+    /** M5 Step 1: M5_RECEPTION */
+    submitReception: protectedProcedure
+      .input(z.object({ runId: z.number(), sku: z.string(), qty: z.number().positive(), docRef: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        await addTransaction({ runId: input.runId, docType: "GR", moveType: "MIGO", sku: input.sku, bin: "REC-01", qty: String(input.qty), posted: true, docRef: input.docRef, comment: "M5 Réception fournisseur" });
+        await markStepComplete(input.runId, "M5_RECEPTION");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "M5_RECEPTION_COMPLETED", pointsDelta: 10, message: "Réception M5 validée" });
+        return { success: true };
+      }),
+
+    /** M5 Step 2: M5_PUTAWAY */
+    submitPutaway: protectedProcedure
+      .input(z.object({ runId: z.number(), sku: z.string(), fromBin: z.string(), toBin: z.string(), qty: z.number().positive(), lotNumber: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        await addTransaction({ runId: input.runId, docType: "PUTAWAY", moveType: "LT01", sku: input.sku, bin: input.toBin, qty: String(input.qty), posted: true, docRef: `PUT-${input.lotNumber}`, comment: `M5 Rangement ${input.fromBin}→${input.toBin}` });
+        await addPutawayRecord({ runId: input.runId, sku: input.sku, fromBin: input.fromBin, toBin: input.toBin, qty: input.qty, lotNumber: input.lotNumber, receivedAt: new Date() });
+        await markStepComplete(input.runId, "M5_PUTAWAY");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "M5_PUTAWAY_COMPLETED", pointsDelta: 10, message: "Rangement M5 validé" });
+        return { success: true };
+      }),
+
+    /** M5 Step 3: M5_CYCLE_COUNT */
+    submitCycleCount: protectedProcedure
+      .input(z.object({ runId: z.number(), sku: z.string(), bin: z.string(), systemQty: z.number(), countedQty: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const variance = input.countedQty - input.systemQty;
+        await addInventoryCount({ runId: input.runId, sku: input.sku, systemQty: input.systemQty, countedQty: input.countedQty, varianceQty: variance });
+        await markStepComplete(input.runId, "M5_CYCLE_COUNT");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "M5_CYCLE_COUNT_COMPLETED", pointsDelta: variance === 0 ? 15 : 10, message: `M5 Inventaire: variance ${variance}` });
+        return { success: true, variance };
+      }),
+
+    /** M5 Step 4: M5_REPLENISH */
+    submitReplenish: protectedProcedure
+      .input(z.object({ runId: z.number(), sku: z.string(), systemQty: z.number(), minQty: z.number(), maxQty: z.number(), safetyStock: z.number(), studentQty: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const suggestion = computeReplenishmentSuggestion({ sku: input.sku, systemQty: input.systemQty, minQty: input.minQty, maxQty: input.maxQty, safetyStock: input.safetyStock });
+        const diff = Math.abs(input.studentQty - suggestion.suggestedQty);
+        const points = diff === 0 ? 15 : diff <= 10 ? 10 : 5;
+        await addReplenishmentSuggestion({ runId: input.runId, sku: input.sku, systemQty: input.systemQty, suggestedQty: suggestion.suggestedQty, reason: suggestion.reason });
+        await markStepComplete(input.runId, "M5_REPLENISH");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "M5_REPLENISH_COMPLETED", pointsDelta: points, message: `M5 Réappro: suggéré ${suggestion.suggestedQty}, étudiant ${input.studentQty}` });
+        return { success: true, suggestion, diff };
+      }),
+
+    /** M5 Step 5: M5_KPI */
+    submitKpi: protectedProcedure
+      .input(z.object({ runId: z.number(), kpiData: z.object({ annualConsumption: z.number(), averageStock: z.number(), ordersFulfilled: z.number(), totalOrders: z.number(), operationalErrors: z.number(), totalOperations: z.number(), avgLeadTimeDays: z.number(), stockValue: z.number() }) }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const kpiResult = calculateKpis(input.kpiData);
+        await addKpiSnapshot({ runId: input.runId, rotationRate: kpiResult.rotationRate, serviceLevel: kpiResult.serviceLevel, errorRate: kpiResult.errorRate, averageLeadTime: kpiResult.averageLeadTime, stockImmobilizedValue: kpiResult.stockImmobilizedValue });
+        await markStepComplete(input.runId, "M5_KPI");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "M5_KPI_COMPLETED", pointsDelta: 10, message: "KPI M5 calculés" });
+        return { success: true, kpiResult };
+      }),
+
+    /** M5 Step 6: M5_DECISION — strategic decision */
+    submitDecision: protectedProcedure
+      .input(z.object({ runId: z.number(), studentDecision: z.string().min(10), kpiData: z.object({ annualConsumption: z.number(), averageStock: z.number(), ordersFulfilled: z.number(), totalOrders: z.number(), operationalErrors: z.number(), totalOperations: z.number(), avgLeadTimeDays: z.number(), stockValue: z.number() }).optional() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const kpiData: KpiData = input.kpiData ?? { annualConsumption: 2400, averageStock: 400, ordersFulfilled: 285, totalOrders: 300, operationalErrors: 12, totalOperations: 300, avgLeadTimeDays: 3.5, stockValue: 48000 };
+        const kpiResult = calculateKpis(kpiData);
+        const result = scoreM5Decision(input.studentDecision, kpiResult);
+        await markStepComplete(input.runId, "M5_DECISION");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "M5_DECISION_COMPLETED", pointsDelta: result.score, message: `Décision stratégique: ${result.score}/30 pts` });
+        return { success: true, ...result };
+      }),
+
+    /** M5 Step 7: COMPLIANCE_M5 */
+    submitComplianceM5: protectedProcedure
+      .input(z.object({ runId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const run = await getRunById(input.runId);
+        if (!run) throw new TRPCError({ code: "NOT_FOUND" });
+        if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        await markStepComplete(input.runId, "COMPLIANCE_M5");
+        if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "COMPLIANCE_M5_COMPLETED", pointsDelta: 20, message: "Validation finale M5 complétée" });
+        return { success: true };
+      }),
   }),
 });
 

@@ -1,0 +1,8 @@
+{
+  "query": "SELECT id, code, zone, label FROM bins ORDER BY zone, code;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT id, code, zone, label FROM bins ORDER BY zone, code;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table 's5kvdsbv47gjwcwlvs8v8t.bins' doesn't exist"
+  ]
+}

@@ -672,3 +672,109 @@ export async function getStudentStats(userId: number) {
     avgScore: scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null,
   };
 }
+
+// ─── M3: Inventory Counts ─────────────────────────────────────────────────────
+export async function addInventoryCount(data: {
+  runId: number; sku: string; systemQty: number; countedQty: number; varianceQty: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const { inventoryCounts } = await import("../drizzle/schema");
+  await db.insert(inventoryCounts).values({
+    runId: data.runId, sku: data.sku,
+    systemQty: String(data.systemQty), countedQty: String(data.countedQty), varianceQty: String(data.varianceQty),
+  });
+}
+export async function getInventoryCountsByRun(runId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { inventoryCounts } = await import("../drizzle/schema");
+  return db.select().from(inventoryCounts).where(eq(inventoryCounts.runId, runId));
+}
+
+// ─── M3: Inventory Adjustments ───────────────────────────────────────────────
+export async function addInventoryAdjustment(data: {
+  runId: number; sku: string; varianceQty: number; adjustmentQty: number; reason?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const { inventoryAdjustments } = await import("../drizzle/schema");
+  await db.insert(inventoryAdjustments).values({
+    runId: data.runId, sku: data.sku,
+    varianceQty: String(data.varianceQty), adjustmentQty: String(data.adjustmentQty),
+    reason: data.reason ?? null, approved: false,
+  });
+}
+export async function getInventoryAdjustmentsByRun(runId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { inventoryAdjustments } = await import("../drizzle/schema");
+  return db.select().from(inventoryAdjustments).where(eq(inventoryAdjustments.runId, runId));
+}
+
+// ─── M3: Replenishment ────────────────────────────────────────────────────────
+export async function getReplenishmentParams() {
+  const db = await getDb();
+  if (!db) return [];
+  const { replenishmentParams } = await import("../drizzle/schema");
+  return db.select().from(replenishmentParams);
+}
+export async function addReplenishmentSuggestion(data: {
+  runId: number; sku: string; systemQty: number; suggestedQty: number; reason: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const { replenishmentSuggestions } = await import("../drizzle/schema");
+  await db.insert(replenishmentSuggestions).values({
+    runId: data.runId, sku: data.sku,
+    systemQty: String(data.systemQty), suggestedQty: String(data.suggestedQty), reason: data.reason,
+  });
+}
+export async function getReplenishmentSuggestionsByRun(runId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { replenishmentSuggestions } = await import("../drizzle/schema");
+  return db.select().from(replenishmentSuggestions).where(eq(replenishmentSuggestions.runId, runId));
+}
+
+// ─── M4: KPI Snapshots ────────────────────────────────────────────────────────
+export async function addKpiSnapshot(data: {
+  runId: number; rotationRate: number; serviceLevel: number; errorRate: number;
+  averageLeadTime: number; stockImmobilizedValue: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const { kpiSnapshots } = await import("../drizzle/schema");
+  await db.insert(kpiSnapshots).values({
+    runId: data.runId,
+    rotationRate: String(data.rotationRate), serviceLevel: String(data.serviceLevel),
+    errorRate: String(data.errorRate), averageLeadTime: String(data.averageLeadTime),
+    stockImmobilizedValue: String(data.stockImmobilizedValue),
+  });
+}
+export async function getKpiSnapshotByRun(runId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const { kpiSnapshots } = await import("../drizzle/schema");
+  const rows = await db.select().from(kpiSnapshots).where(eq(kpiSnapshots.runId, runId));
+  return rows[0] ?? null;
+}
+
+// ─── M4: KPI Interpretations ─────────────────────────────────────────────────
+export async function addKpiInterpretation(data: {
+  runId: number; kpiKey: string; studentAnswer: string; isCorrect: boolean; pointsDelta: number; feedback: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const { kpiInterpretations } = await import("../drizzle/schema");
+  await db.insert(kpiInterpretations).values({
+    runId: data.runId, kpiKey: data.kpiKey, studentAnswer: data.studentAnswer,
+    isCorrect: data.isCorrect, pointsDelta: data.pointsDelta, feedback: data.feedback,
+  });
+}
+export async function getKpiInterpretationsByRun(runId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { kpiInterpretations } = await import("../drizzle/schema");
+  return db.select().from(kpiInterpretations).where(eq(kpiInterpretations.runId, runId));
+}

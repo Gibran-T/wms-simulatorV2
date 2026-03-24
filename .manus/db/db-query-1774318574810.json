@@ -1,0 +1,112 @@
+{
+  "query": "SELECT id, moduleId, name, difficulty FROM scenarios ORDER BY moduleId, id",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT id, moduleId, name, difficulty FROM scenarios ORDER BY moduleId, id",
+  "rows": [
+    {
+      "id": "1",
+      "moduleId": "1",
+      "name": "Scénario 1 — Cycle propre",
+      "difficulty": "facile"
+    },
+    {
+      "id": "2",
+      "moduleId": "1",
+      "name": "Scénario 2 — Réception fantôme (GR non postée)",
+      "difficulty": "moyen"
+    },
+    {
+      "id": "3",
+      "moduleId": "1",
+      "name": "Scénario 3 — Stock insuffisant",
+      "difficulty": "moyen"
+    },
+    {
+      "id": "4",
+      "moduleId": "1",
+      "name": "Scénario 4 — Écart d'inventaire",
+      "difficulty": "difficile"
+    },
+    {
+      "id": "5",
+      "moduleId": "1",
+      "name": "Scénario 5 — Non-conformités multiples",
+      "difficulty": "difficile"
+    },
+    {
+      "id": "6",
+      "moduleId": "2",
+      "name": "M2 — Scénario 1 : Rangement structuré et affectation d'emplacement",
+      "difficulty": "facile"
+    },
+    {
+      "id": "7",
+      "moduleId": "2",
+      "name": "M2 — Scénario 2 : Validation de la capacité d'emplacement",
+      "difficulty": "moyen"
+    },
+    {
+      "id": "8",
+      "moduleId": "2",
+      "name": "M2 — Scénario 3 : Application de la méthode FIFO en gestion multi-lots",
+      "difficulty": "difficile"
+    },
+    {
+      "id": "9",
+      "moduleId": "3",
+      "name": "M3 — Scénario 1 : Inventaire cyclique simple",
+      "difficulty": "facile"
+    },
+    {
+      "id": "10",
+      "moduleId": "3",
+      "name": "M3 — Scénario 2 : Analyse d'écart et ajustement d'inventaire",
+      "difficulty": "moyen"
+    },
+    {
+      "id": "11",
+      "moduleId": "3",
+      "name": "M3 — Scénario 3 : Réapprovisionnement selon paramètres Min/Max et stock de sécurité",
+      "difficulty": "difficile"
+    },
+    {
+      "id": "34",
+      "moduleId": "4",
+      "name": "M4 — Scénario 1 : Analyse de la rotation des stocks",
+      "difficulty": "facile"
+    },
+    {
+      "id": "35",
+      "moduleId": "4",
+      "name": "M4 — Scénario 2 : Analyse du taux de service et des erreurs opérationnelles",
+      "difficulty": "moyen"
+    },
+    {
+      "id": "36",
+      "moduleId": "4",
+      "name": "M4 — Scénario 3 : Diagnostic global de performance logistique",
+      "difficulty": "difficile"
+    },
+    {
+      "id": "37",
+      "moduleId": "5",
+      "name": "M5 — Scénario 1 : Cycle opérationnel complet",
+      "difficulty": "moyen"
+    },
+    {
+      "id": "38",
+      "moduleId": "5",
+      "name": "M5 — Scénario 2 : Gestion d'écarts et réajustement",
+      "difficulty": "difficile"
+    },
+    {
+      "id": "39",
+      "moduleId": "5",
+      "name": "M5 — Scénario 3 : Analyse décisionnelle stratégique",
+      "difficulty": "difficile"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tmoduleId\tname\tdifficulty\n1\t1\tScénario 1 — Cycle propre\tfacile\n2\t1\tScénario 2 — Réception fantôme (GR non postée)\tmoyen\n3\t1\tScénario 3 — Stock insuffisant\tmoyen\n4\t1\tScénario 4 — Écart d'inventaire\tdifficile\n5\t1\tScénario 5 — Non-conformités multiples\tdifficile\n6\t2\tM2 — Scénario 1 : Rangement structuré et affectation d'emplacement\tfacile\n7\t2\tM2 — Scénario 2 : Validation de la capacité d'emplacement\tmoyen\n8\t2\tM2 — Scénario 3 : Application de la méthode FIFO en gestion multi-lots\tdifficile\n9\t3\tM3 — Scénario 1 : Inventaire cyclique simple\tfacile\n10\t3\tM3 — Scénario 2 : Analyse d'écart et ajustement d'inventaire\tmoyen\n11\t3\tM3 — Scénario 3 : Réapprovisionnement selon paramètres Min/Max et stock de sécurité\tdifficile\n34\t4\tM4 — Scénario 1 : Analyse de la rotation des stocks\tfacile\n35\t4\tM4 — Scénario 2 : Analyse du taux de service et des erreurs opérationnelles\tmoyen\n36\t4\tM4 — Scénario 3 : Diagnostic global de performance logistique\tdifficile\n37\t5\tM5 — Scénario 1 : Cycle opérationnel complet\tmoyen\n38\t5\tM5 — Scénario 2 : Gestion d'écarts et réajustement\tdifficile\n39\t5\tM5 — Scénario 3 : Analyse décisionnelle stratégique\tdifficile\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

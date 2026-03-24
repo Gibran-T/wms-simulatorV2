@@ -28,7 +28,7 @@
 - [x] FioriShell layout component (SAP Fiori style)
 - [x] /student/scenarios — assigned scenarios list
 - [x] /student/run/:runId — MISSION_CONTROL dashboard (progress, compliance, next step)
-- [x] /student/run/:runId/:step — StepForm (PO/GR/SO/GI/CC/ADJ/Compliance)
+- [x] /student/run/:runId/:step — StepForm (PO/GR/SO/GI/CC/ADJ/Compliance + M2/M3/M4/M5 all steps)
 - [x] /student/run/:runId/report — Final Report with pedagogical summary
 
 ## Phase 4: Teacher UI

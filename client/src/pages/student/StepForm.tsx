@@ -1,4 +1,3 @@
-import FioriShell from "@/components/FioriShell";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useParams, useLocation } from "wouter";
@@ -6,7 +5,9 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useState } from "react";
 import { ArrowLeft, CheckCircle, Lock, AlertTriangle, Info, FlaskConical, ChevronDown, ChevronUp, Database } from "lucide-react";
+import FioriShell from "@/components/FioriShell";
 
+// ─── STEP_CONFIG: All M1–M5 steps ────────────────────────────────────────────
 const STEP_CONFIG: Record<string, {
   titleFr: string; titleEn: string; code: string; txCode: string;
   etapeFr: string; etapeEn: string;
@@ -14,6 +15,7 @@ const STEP_CONFIG: Record<string, {
   fields: string[]; tCode: string;
   pedagogicalDeep: { whyFr: string; whyEn: string; realSAPFr: string; realSAPEn: string; dependencyFr: string; dependencyEn: string; realErrorFr: string; realErrorEn: string };
 }> = {
+  // ── Module 1 ──────────────────────────────────────────────────────────────
   po: {
     titleFr: "Bon de commande", titleEn: "Purchase Order", code: "PO", txCode: "ME21N", tCode: "ME21N",
     etapeFr: "Étape 1 sur 9", etapeEn: "Step 1 of 9",
@@ -184,6 +186,354 @@ const STEP_CONFIG: Record<string, {
       realErrorEn: "A period closing with non-compliant transactions creates reconciliation errors between WMS, MM, and FI.",
     }
   },
+
+  // ── Module 2 ──────────────────────────────────────────────────────────────
+  fifo_pick: {
+    titleFr: "Prélèvement FIFO (LT0A)", titleEn: "FIFO Picking (LT0A)", code: "FIFO_PICK", txCode: "LT0A", tCode: "LT0A",
+    etapeFr: "Étape 3 sur 5", etapeEn: "Step 3 of 5",
+    objectiveFr: "Prélever le lot le plus ancien en premier (First In, First Out). Saisissez le numéro de lot, le bin source (STOCKAGE) et le bin destination (EXPÉDITION).",
+    objectiveEn: "Pick the oldest lot first (First In, First Out). Enter the lot number, source bin (STOCKAGE) and destination bin (EXPÉDITION).",
+    fields: ["sku", "fromBin", "toBin", "qty", "lotNumber"],
+    pedagogicalDeep: {
+      whyFr: "FIFO (First In, First Out) est la méthode de gestion des lots qui garantit que les marchandises les plus anciennes sont expédiées en premier. Cela prévient les péremptions et les pertes.",
+      whyEn: "FIFO (First In, First Out) is the lot management method that ensures the oldest goods are shipped first. This prevents expiry and losses.",
+      realSAPFr: "Dans SAP WM, la stratégie de prélèvement FIFO est configurée dans le type de stockage. Le système propose automatiquement le lot le plus ancien lors de la création d'un ordre de transfert.",
+      realSAPEn: "In SAP WM, the FIFO picking strategy is configured in the storage type. The system automatically proposes the oldest lot when creating a transfer order.",
+      dependencyFr: "Le prélèvement FIFO dépend de l'enregistrement correct des lots lors de la réception (GR avec numéro de lot). Sans traçabilité lot, FIFO ne peut pas être appliqué.",
+      dependencyEn: "FIFO picking depends on correct lot recording during receipt (GR with lot number). Without lot traceability, FIFO cannot be applied.",
+      realErrorFr: "Prélever un lot plus récent avant un lot plus ancien (violation FIFO) peut entraîner des produits périmés en stock et des non-conformités réglementaires.",
+      realErrorEn: "Picking a newer lot before an older one (FIFO violation) can lead to expired products in stock and regulatory non-compliance.",
+    }
+  },
+  stock_accuracy: {
+    titleFr: "Précision inventaire (MI04)", titleEn: "Stock Accuracy (MI04)", code: "STOCK_ACCURACY", txCode: "MI04", tCode: "MI04",
+    etapeFr: "Étape 4 sur 5", etapeEn: "Step 4 of 5",
+    objectiveFr: "Comparer le stock système avec le comptage physique pour calculer le taux de précision inventaire (SA%). Saisissez la quantité système et la quantité comptée.",
+    objectiveEn: "Compare system stock with physical count to calculate inventory accuracy rate (SA%). Enter the system quantity and counted quantity.",
+    fields: ["sku", "systemQty", "countedQty"],
+    pedagogicalDeep: {
+      whyFr: "La précision inventaire (Stock Accuracy) mesure l'écart entre le stock théorique (système) et le stock réel (physique). Un SA% > 98% est l'objectif standard en entrepôt.",
+      whyEn: "Stock Accuracy measures the gap between theoretical (system) stock and actual (physical) stock. An SA% > 98% is the standard warehouse target.",
+      realSAPFr: "Dans SAP, MI04 enregistre le comptage physique. Le système calcule automatiquement la variance et génère un rapport d'écart. MI07 valide les ajustements.",
+      realSAPEn: "In SAP, MI04 records the physical count. The system automatically calculates the variance and generates a discrepancy report. MI07 validates adjustments.",
+      dependencyFr: "La précision inventaire est calculée après chaque cycle de comptage. Elle dépend de la qualité des transactions GR, GI et des putaways précédents.",
+      dependencyEn: "Stock accuracy is calculated after each counting cycle. It depends on the quality of previous GR, GI and putaway transactions.",
+      realErrorFr: "Un SA% < 95% déclenche une alerte de contrôle interne et peut bloquer les expéditions si le stock disponible est inférieur aux commandes.",
+      realErrorEn: "An SA% < 95% triggers an internal control alert and may block shipments if available stock is below orders.",
+    }
+  },
+  compliance_adv: {
+    titleFr: "Conformité Avancée M2", titleEn: "Advanced Compliance M2", code: "COMPLIANCE_ADV", txCode: "MB52", tCode: "MB52",
+    etapeFr: "Étape 5 sur 5", etapeEn: "Step 5 of 5",
+    objectiveFr: "Valider la conformité du module 2 : FIFO respecté, précision inventaire calculée, traçabilité des lots complète.",
+    objectiveEn: "Validate Module 2 compliance: FIFO respected, inventory accuracy calculated, lot traceability complete.",
+    fields: [],
+    pedagogicalDeep: {
+      whyFr: "La conformité avancée M2 vérifie que les principes FIFO/FEFO ont été respectés, que la précision inventaire est documentée et que la traçabilité des lots est complète.",
+      whyEn: "Advanced M2 compliance verifies that FIFO/FEFO principles were respected, inventory accuracy is documented, and lot traceability is complete.",
+      realSAPFr: "Dans SAP, les rapports de conformité FIFO sont générés via MB51 (liste des mouvements de matières) et LT23 (liste des ordres de transfert).",
+      realSAPEn: "In SAP, FIFO compliance reports are generated via MB51 (material movement list) and LT23 (transfer order list).",
+      dependencyFr: "La conformité M2 dépend de la réussite des étapes FIFO_PICK et STOCK_ACCURACY. Toutes les variances doivent être documentées.",
+      dependencyEn: "M2 compliance depends on successful FIFO_PICK and STOCK_ACCURACY steps. All variances must be documented.",
+      realErrorFr: "Une non-conformité FIFO lors d'un audit ISO peut entraîner une suspension de certification et des pénalités contractuelles.",
+      realErrorEn: "A FIFO non-compliance during an ISO audit can lead to certification suspension and contractual penalties.",
+    }
+  },
+
+  // ── Module 3 ──────────────────────────────────────────────────────────────
+  cc_list: {
+    titleFr: "Liste de comptage (MI01)", titleEn: "Count List (MI01)", code: "CC_LIST", txCode: "MI01", tCode: "MI01",
+    etapeFr: "Étape 1 sur 5", etapeEn: "Step 1 of 5",
+    objectiveFr: "Générer la liste des SKUs à compter pour l'inventaire tournant. Sélectionnez au moins un SKU à inclure dans le cycle de comptage.",
+    objectiveEn: "Generate the list of SKUs to count for cycle counting. Select at least one SKU to include in the counting cycle.",
+    fields: ["skuList"],
+    pedagogicalDeep: {
+      whyFr: "La liste de comptage (MI01) est le document de départ du cycle count. Elle définit quels articles seront comptés, dans quel ordre et par qui.",
+      whyEn: "The count list (MI01) is the starting document for cycle counting. It defines which items will be counted, in what order, and by whom.",
+      realSAPFr: "Dans SAP, MI01 crée un document d'inventaire avec un numéro unique. Les articles sont bloqués pour les mouvements pendant le comptage.",
+      realSAPEn: "In SAP, MI01 creates an inventory document with a unique number. Items are blocked for movements during counting.",
+      dependencyFr: "La liste de comptage doit être créée avant tout comptage physique. Elle est le référentiel pour valider les résultats.",
+      dependencyEn: "The count list must be created before any physical counting. It is the reference for validating results.",
+      realErrorFr: "Compter des articles sans document MI01 crée des ajustements non traçables qui seront rejetés lors de l'audit.",
+      realErrorEn: "Counting items without an MI01 document creates untraceable adjustments that will be rejected during audit.",
+    }
+  },
+  cc_count: {
+    titleFr: "Comptage physique (MI04)", titleEn: "Physical Count (MI04)", code: "CC_COUNT", txCode: "MI04", tCode: "MI04",
+    etapeFr: "Étape 2 sur 5", etapeEn: "Step 2 of 5",
+    objectiveFr: "Enregistrer les quantités physiques comptées pour chaque SKU/Bin. Comparez avec le stock système pour identifier les variances.",
+    objectiveEn: "Record the physical quantities counted for each SKU/Bin. Compare with system stock to identify variances.",
+    fields: ["sku", "bin", "systemQty", "countedQty"],
+    pedagogicalDeep: {
+      whyFr: "Le comptage physique (MI04) est l'enregistrement des quantités réelles trouvées en entrepôt. C'est la base de la réconciliation stock.",
+      whyEn: "Physical counting (MI04) is the recording of actual quantities found in the warehouse. It is the basis for stock reconciliation.",
+      realSAPFr: "Dans SAP, MI04 enregistre le résultat du comptage. Le système calcule automatiquement la variance (quantité comptée - quantité système).",
+      realSAPEn: "In SAP, MI04 records the counting result. The system automatically calculates the variance (counted quantity - system quantity).",
+      dependencyFr: "Le comptage physique dépend d'un document MI01 ouvert. Les articles doivent être bloqués pour les mouvements pendant le comptage.",
+      dependencyEn: "Physical counting depends on an open MI01 document. Items must be blocked for movements during counting.",
+      realErrorFr: "Un comptage effectué pendant des mouvements actifs (réceptions, expéditions) crée des variances artificielles non représentatives.",
+      realErrorEn: "Counting performed during active movements (receipts, shipments) creates artificial variances that are not representative.",
+    }
+  },
+  cc_recon: {
+    titleFr: "Réconciliation (MI07)", titleEn: "Reconciliation (MI07)", code: "CC_RECON", txCode: "MI07", tCode: "MI07",
+    etapeFr: "Étape 3 sur 5", etapeEn: "Step 3 of 5",
+    objectiveFr: "Valider et justifier les ajustements d'inventaire. Pour chaque variance détectée, saisissez la quantité d'ajustement et la justification.",
+    objectiveEn: "Validate and justify inventory adjustments. For each detected variance, enter the adjustment quantity and justification.",
+    fields: ["sku", "bin", "varianceQty", "justification"],
+    pedagogicalDeep: {
+      whyFr: "La réconciliation (MI07) est la validation officielle des écarts d'inventaire. Elle génère les mouvements de correction et met à jour le stock système.",
+      whyEn: "Reconciliation (MI07) is the official validation of inventory variances. It generates correction movements and updates system stock.",
+      realSAPFr: "Dans SAP, MI07 valide le document d'inventaire et génère automatiquement les mouvements 701 (surplus) ou 702 (manquant). Un responsable doit approuver les ajustements importants.",
+      realSAPEn: "In SAP, MI07 validates the inventory document and automatically generates movements 701 (surplus) or 702 (shortage). A manager must approve significant adjustments.",
+      dependencyFr: "La réconciliation dépend d'un comptage physique (MI04) complété. Les ajustements doivent être justifiés et approuvés.",
+      dependencyEn: "Reconciliation depends on a completed physical count (MI04). Adjustments must be justified and approved.",
+      realErrorFr: "Des ajustements non justifiés lors d'un audit SOX peuvent entraîner des retraitements financiers et des sanctions réglementaires.",
+      realErrorEn: "Unjustified adjustments during a SOX audit can lead to financial restatements and regulatory sanctions.",
+    }
+  },
+  replenish: {
+    titleFr: "Réapprovisionnement (ME21N)", titleEn: "Replenishment (ME21N)", code: "REPLENISH", txCode: "ME21N", tCode: "ME21N",
+    etapeFr: "Étape 4 sur 5", etapeEn: "Step 4 of 5",
+    objectiveFr: "Calculer la quantité de réapprovisionnement optimale. Saisissez le stock actuel, le min/max et le stock de sécurité pour obtenir la suggestion système.",
+    objectiveEn: "Calculate the optimal replenishment quantity. Enter current stock, min/max and safety stock to get the system suggestion.",
+    fields: ["sku", "systemQty", "minQty", "maxQty", "safetyStock", "studentQty"],
+    pedagogicalDeep: {
+      whyFr: "Le réapprovisionnement automatique (MRP dans SAP) calcule les besoins en stock basés sur le point de commande (ROP), le stock de sécurité et la quantité économique de commande (EOQ).",
+      whyEn: "Automatic replenishment (MRP in SAP) calculates stock needs based on the reorder point (ROP), safety stock, and economic order quantity (EOQ).",
+      realSAPFr: "Dans SAP, MD01 (MRP) ou ME21N (PO manuel) génèrent les ordres de réapprovisionnement. Le système calcule automatiquement la quantité basée sur les paramètres MRP.",
+      realSAPEn: "In SAP, MD01 (MRP) or ME21N (manual PO) generate replenishment orders. The system automatically calculates the quantity based on MRP parameters.",
+      dependencyFr: "Le réapprovisionnement dépend des paramètres MRP configurés (stock min, stock max, stock de sécurité, délai fournisseur). Ces paramètres sont définis dans MM02.",
+      dependencyEn: "Replenishment depends on configured MRP parameters (min stock, max stock, safety stock, supplier lead time). These parameters are defined in MM02.",
+      realErrorFr: "Un réapprovisionnement trop tardif (stock < stock de sécurité) crée une rupture de stock et des arrêts de production ou des pertes de ventes.",
+      realErrorEn: "Late replenishment (stock < safety stock) creates a stockout and production stoppages or lost sales.",
+    }
+  },
+  compliance_m3: {
+    titleFr: "Conformité Module 3", titleEn: "Module 3 Compliance", code: "COMPLIANCE_M3", txCode: "MB52", tCode: "MB52",
+    etapeFr: "Étape 5 sur 5", etapeEn: "Step 5 of 5",
+    objectiveFr: "Valider la conformité du module 3 : cycle count complété, variances réconciliées, réapprovisionnement planifié.",
+    objectiveEn: "Validate Module 3 compliance: cycle count completed, variances reconciled, replenishment planned.",
+    fields: [],
+    pedagogicalDeep: {
+      whyFr: "La conformité M3 valide que le cycle de contrôle des stocks est complet : comptage, réconciliation et réapprovisionnement sont tous documentés et approuvés.",
+      whyEn: "M3 compliance validates that the stock control cycle is complete: counting, reconciliation and replenishment are all documented and approved.",
+      realSAPFr: "Dans SAP, le rapport de clôture d'inventaire (MI20) liste tous les documents d'inventaire et leur statut. La clôture de période (MMPV) finalise les ajustements.",
+      realSAPEn: "In SAP, the inventory closing report (MI20) lists all inventory documents and their status. Period closing (MMPV) finalizes adjustments.",
+      dependencyFr: "La conformité M3 dépend de la réussite de CC_LIST, CC_COUNT, CC_RECON et REPLENISH. Toutes les variances doivent être réconciliées.",
+      dependencyEn: "M3 compliance depends on successful CC_LIST, CC_COUNT, CC_RECON and REPLENISH steps. All variances must be reconciled.",
+      realErrorFr: "Une clôture M3 avec des variances ouvertes bloque la clôture comptable mensuelle et génère des écarts dans les états financiers.",
+      realErrorEn: "An M3 closing with open variances blocks the monthly accounting close and generates discrepancies in financial statements.",
+    }
+  },
+
+  // ── Module 4 ──────────────────────────────────────────────────────────────
+  kpi_data: {
+    titleFr: "Saisie données KPI", titleEn: "KPI Data Entry", code: "KPI_DATA", txCode: "MB52", tCode: "MB52",
+    etapeFr: "Étape 1 sur 5", etapeEn: "Step 1 of 5",
+    objectiveFr: "Reconnaître les données KPI fournies pour le module 4. Les données de référence sont : consommation annuelle 2400 unités, stock moyen 400, commandes livrées 285/300, erreurs 12/300 opérations.",
+    objectiveEn: "Acknowledge the KPI data provided for Module 4. Reference data: annual consumption 2400 units, average stock 400, orders delivered 285/300, errors 12/300 operations.",
+    fields: [],
+    pedagogicalDeep: {
+      whyFr: "Les KPI logistiques (Key Performance Indicators) sont les indicateurs clés qui mesurent la performance d'un entrepôt. Ils permettent d'identifier les axes d'amélioration.",
+      whyEn: "Logistics KPIs (Key Performance Indicators) are the key indicators that measure warehouse performance. They allow identifying areas for improvement.",
+      realSAPFr: "Dans SAP, les KPI sont extraits via des rapports standard (MB52, VL06O, ME2M) ou des tableaux de bord personnalisés dans SAP Analytics Cloud.",
+      realSAPEn: "In SAP, KPIs are extracted via standard reports (MB52, VL06O, ME2M) or custom dashboards in SAP Analytics Cloud.",
+      dependencyFr: "Les KPI dépendent de la qualité et de l'exhaustivité des transactions enregistrées dans le WMS. Des transactions manquantes faussent les indicateurs.",
+      dependencyEn: "KPIs depend on the quality and completeness of transactions recorded in the WMS. Missing transactions distort indicators.",
+      realErrorFr: "Des KPI calculés sur des données incomplètes conduisent à de mauvaises décisions managériales et à des investissements mal ciblés.",
+      realErrorEn: "KPIs calculated on incomplete data lead to poor management decisions and poorly targeted investments.",
+    }
+  },
+  kpi_rotation: {
+    titleFr: "Taux de rotation (DSI)", titleEn: "Rotation Rate (DSI)", code: "KPI_ROTATION", txCode: "MB52", tCode: "MB52",
+    etapeFr: "Étape 2 sur 5", etapeEn: "Step 2 of 5",
+    objectiveFr: "Interpréter le taux de rotation des stocks. Données : consommation annuelle 2400, stock moyen 400. Taux = 2400/400 = 6. Analysez si ce résultat indique un surstock, une performance normale ou une sous-performance.",
+    objectiveEn: "Interpret the stock rotation rate. Data: annual consumption 2400, average stock 400. Rate = 2400/400 = 6. Analyze whether this result indicates overstock, normal performance, or underperformance.",
+    fields: ["studentAnswer"],
+    pedagogicalDeep: {
+      whyFr: "Le taux de rotation (Inventory Turnover) mesure combien de fois le stock est renouvelé par an. Un taux élevé indique une gestion efficace ; un taux faible indique un surstock coûteux.",
+      whyEn: "The rotation rate (Inventory Turnover) measures how many times stock is renewed per year. A high rate indicates efficient management; a low rate indicates costly overstock.",
+      realSAPFr: "Dans SAP, le taux de rotation est calculé via MB52 (stock moyen) et MB51 (consommation). Le DSI (Days of Supply) = 365 / taux de rotation.",
+      realSAPEn: "In SAP, the rotation rate is calculated via MB52 (average stock) and MB51 (consumption). DSI (Days of Supply) = 365 / rotation rate.",
+      dependencyFr: "Le taux de rotation dépend de la précision du stock moyen (MB52) et de la consommation réelle (MB51). Des erreurs d'inventaire faussent ce KPI.",
+      dependencyEn: "The rotation rate depends on the accuracy of average stock (MB52) and actual consumption (MB51). Inventory errors distort this KPI.",
+      realErrorFr: "Un taux de rotation de 6 avec un objectif de 8-12 indique un surstock. En pratique, cela représente 60 jours de stock (DSI=60) au lieu de 30-45 jours optimal.",
+      realErrorEn: "A rotation rate of 6 with a target of 8-12 indicates overstock. In practice, this represents 60 days of stock (DSI=60) instead of the optimal 30-45 days.",
+    }
+  },
+  kpi_service: {
+    titleFr: "Taux de service (OTIF)", titleEn: "Service Level (OTIF)", code: "KPI_SERVICE", txCode: "VL06O", tCode: "VL06O",
+    etapeFr: "Étape 3 sur 5", etapeEn: "Step 3 of 5",
+    objectiveFr: "Interpréter le taux de service. Données : 285 commandes livrées sur 300 = 95%. Analysez si ce résultat est excellent, acceptable ou insuffisant selon les standards industrie.",
+    objectiveEn: "Interpret the service level. Data: 285 orders delivered out of 300 = 95%. Analyze whether this result is excellent, acceptable, or insufficient according to industry standards.",
+    fields: ["studentAnswer"],
+    pedagogicalDeep: {
+      whyFr: "Le taux de service (OTIF - On Time In Full) mesure le pourcentage de commandes livrées complètement et à temps. C'est le KPI client le plus important.",
+      whyEn: "The service level (OTIF - On Time In Full) measures the percentage of orders delivered completely and on time. It is the most important customer KPI.",
+      realSAPFr: "Dans SAP, le taux de service est calculé via VL06O (liste des livraisons) et SD-BIL (facturation). Le Fill Rate mesure la complétude des livraisons.",
+      realSAPEn: "In SAP, the service level is calculated via VL06O (delivery list) and SD-BIL (billing). Fill Rate measures delivery completeness.",
+      dependencyFr: "Le taux de service dépend de la disponibilité du stock (ATP), de la précision du picking et de la performance logistique des transporteurs.",
+      dependencyEn: "The service level depends on stock availability (ATP), picking accuracy, and carrier logistics performance.",
+      realErrorFr: "Un taux de service de 95% signifie 15 commandes non livrées sur 300. En B2B, chaque commande manquée peut entraîner des pénalités contractuelles de 1-5% de la valeur.",
+      realErrorEn: "A 95% service level means 15 undelivered orders out of 300. In B2B, each missed order can incur contractual penalties of 1-5% of the value.",
+    }
+  },
+  kpi_diagnostic: {
+    titleFr: "Diagnostic opérationnel", titleEn: "Operational Diagnostic", code: "KPI_DIAGNOSTIC", txCode: "LT23", tCode: "LT23",
+    etapeFr: "Étape 4 sur 5", etapeEn: "Step 4 of 5",
+    objectiveFr: "Formuler un diagnostic global basé sur tous les KPIs. Taux de rotation 6 (surstock), service 95% (acceptable), erreurs 4% (à améliorer). Proposez un plan d'action prioritaire.",
+    objectiveEn: "Formulate a global diagnostic based on all KPIs. Rotation rate 6 (overstock), service 95% (acceptable), errors 4% (to improve). Propose a priority action plan.",
+    fields: ["studentAnswer"],
+    pedagogicalDeep: {
+      whyFr: "Le diagnostic opérationnel synthétise tous les KPIs pour identifier les priorités d'amélioration. Il doit être structuré (problème → cause → solution → impact).",
+      whyEn: "The operational diagnostic synthesizes all KPIs to identify improvement priorities. It must be structured (problem → cause → solution → impact).",
+      realSAPFr: "Dans SAP, les tableaux de bord KPI sont disponibles dans SAP Analytics Cloud ou via des requêtes BW/BI personnalisées. Le Balanced Scorecard structure les KPIs en 4 axes.",
+      realSAPEn: "In SAP, KPI dashboards are available in SAP Analytics Cloud or via custom BW/BI queries. The Balanced Scorecard structures KPIs across 4 axes.",
+      dependencyFr: "Le diagnostic dépend de la compréhension de tous les KPIs précédents (rotation, service, erreurs). Un bon diagnostic identifie les causes racines, pas seulement les symptômes.",
+      dependencyEn: "The diagnostic depends on understanding all previous KPIs (rotation, service, errors). A good diagnostic identifies root causes, not just symptoms.",
+      realErrorFr: "Un diagnostic superficiel (ex: 'améliorer le service') sans analyse de cause racine conduit à des actions correctives inefficaces et coûteuses.",
+      realErrorEn: "A superficial diagnostic (e.g., 'improve service') without root cause analysis leads to ineffective and costly corrective actions.",
+    }
+  },
+  compliance_m4: {
+    titleFr: "Conformité Module 4", titleEn: "Module 4 Compliance", code: "COMPLIANCE_M4", txCode: "MB52", tCode: "MB52",
+    etapeFr: "Étape 5 sur 5", etapeEn: "Step 5 of 5",
+    objectiveFr: "Valider la conformité du module 4 : KPIs calculés, interprétations documentées, diagnostic et plan d'action formulés.",
+    objectiveEn: "Validate Module 4 compliance: KPIs calculated, interpretations documented, diagnostic and action plan formulated.",
+    fields: [],
+    pedagogicalDeep: {
+      whyFr: "La conformité M4 valide que l'analyse KPI est complète : données saisies, taux calculés, interprétations justifiées et diagnostic actionnable.",
+      whyEn: "M4 compliance validates that the KPI analysis is complete: data entered, rates calculated, interpretations justified, and actionable diagnostic.",
+      realSAPFr: "Dans SAP, le rapport de performance logistique est généré via SAP Analytics Cloud ou des rapports BW personnalisés. Il est présenté lors des revues de direction mensuelles.",
+      realSAPEn: "In SAP, the logistics performance report is generated via SAP Analytics Cloud or custom BW reports. It is presented during monthly management reviews.",
+      dependencyFr: "La conformité M4 dépend de la réussite de KPI_DATA, KPI_ROTATION, KPI_SERVICE et KPI_DIAGNOSTIC. Toutes les interprétations doivent être documentées.",
+      dependencyEn: "M4 compliance depends on successful KPI_DATA, KPI_ROTATION, KPI_SERVICE and KPI_DIAGNOSTIC steps. All interpretations must be documented.",
+      realErrorFr: "Des KPIs non interprétés dans un rapport de direction sont une non-conformité de gouvernance qui peut être signalée lors d'un audit ISO 9001.",
+      realErrorEn: "Uninterpreted KPIs in a management report are a governance non-compliance that may be flagged during an ISO 9001 audit.",
+    }
+  },
+
+  // ── Module 5 ──────────────────────────────────────────────────────────────
+  m5_reception: {
+    titleFr: "Réception M5 (MIGO)", titleEn: "M5 Reception (MIGO)", code: "M5_RECEPTION", txCode: "MIGO", tCode: "MIGO",
+    etapeFr: "Étape 1 sur 7", etapeEn: "Step 1 of 7",
+    objectiveFr: "Simulation intégrée M5 — Étape 1 : Réceptionner les marchandises fournisseur. Saisissez le SKU, la quantité et le numéro de document.",
+    objectiveEn: "M5 Integrated Simulation — Step 1: Receive supplier goods. Enter the SKU, quantity and document number.",
+    fields: ["docRef", "sku", "qty"],
+    pedagogicalDeep: {
+      whyFr: "La simulation intégrée M5 reproduit un cycle complet d'opérations entrepôt en conditions réelles. Chaque étape dépend des précédentes, comme dans un vrai WMS.",
+      whyEn: "The M5 integrated simulation reproduces a complete warehouse operations cycle under real conditions. Each step depends on the previous ones, as in a real WMS.",
+      realSAPFr: "Dans SAP S/4HANA, la réception (MIGO/101) est la première transaction du cycle logistique. Elle crée un document matière et met à jour le stock en temps réel.",
+      realSAPEn: "In SAP S/4HANA, receipt (MIGO/101) is the first transaction in the logistics cycle. It creates a material document and updates stock in real time.",
+      dependencyFr: "La réception M5 est le point de départ de la simulation. Elle doit être postée correctement pour que les étapes suivantes (putaway, cycle count) puissent s'exécuter.",
+      dependencyEn: "M5 reception is the starting point of the simulation. It must be posted correctly for subsequent steps (putaway, cycle count) to execute.",
+      realErrorFr: "Une réception avec un SKU incorrect ou une quantité erronée crée une chaîne d'erreurs dans toutes les étapes suivantes de la simulation.",
+      realErrorEn: "A receipt with an incorrect SKU or wrong quantity creates a chain of errors in all subsequent simulation steps.",
+    }
+  },
+  m5_putaway: {
+    titleFr: "Rangement M5 (LT01)", titleEn: "M5 Putaway (LT01)", code: "M5_PUTAWAY", txCode: "LT01", tCode: "LT01",
+    etapeFr: "Étape 2 sur 7", etapeEn: "Step 2 of 7",
+    objectiveFr: "Simulation intégrée M5 — Étape 2 : Ranger les marchandises reçues avec traçabilité de lot. Saisissez le bin source (RÉCEPTION), le bin destination (STOCKAGE) et le numéro de lot.",
+    objectiveEn: "M5 Integrated Simulation — Step 2: Store received goods with lot traceability. Enter source bin (RECEPTION), destination bin (STOCKAGE) and lot number.",
+    fields: ["sku", "fromBin", "toBin", "qty", "lotNumber"],
+    pedagogicalDeep: {
+      whyFr: "Le rangement M5 combine les compétences de M1 (putaway) et M2 (traçabilité lot). Le numéro de lot est essentiel pour le FIFO dans les étapes suivantes.",
+      whyEn: "M5 putaway combines skills from M1 (putaway) and M2 (lot traceability). The lot number is essential for FIFO in subsequent steps.",
+      realSAPFr: "Dans SAP WM, LT01 crée un ordre de transfert avec numéro de lot. Le système enregistre la date de réception pour le calcul FIFO/FEFO automatique.",
+      realSAPEn: "In SAP WM, LT01 creates a transfer order with lot number. The system records the receipt date for automatic FIFO/FEFO calculation.",
+      dependencyFr: "Le rangement M5 dépend d'une réception M5 validée. Le bin source doit contenir le stock reçu, le bin destination doit avoir de la capacité disponible.",
+      dependencyEn: "M5 putaway depends on a validated M5 reception. The source bin must contain the received stock, the destination bin must have available capacity.",
+      realErrorFr: "Un rangement sans numéro de lot dans un entrepôt pharmaceutique ou alimentaire est une violation réglementaire (FDA, HACCP) pouvant entraîner un rappel produit.",
+      realErrorEn: "Putaway without a lot number in a pharmaceutical or food warehouse is a regulatory violation (FDA, HACCP) that can lead to a product recall.",
+    }
+  },
+  m5_cycle_count: {
+    titleFr: "Inventaire M5 (MI04)", titleEn: "M5 Cycle Count (MI04)", code: "M5_CYCLE_COUNT", txCode: "MI04", tCode: "MI04",
+    etapeFr: "Étape 3 sur 7", etapeEn: "Step 3 of 7",
+    objectiveFr: "Simulation intégrée M5 — Étape 3 : Compter physiquement le stock et comparer avec le système. Saisissez le SKU, le bin, la quantité système et la quantité comptée.",
+    objectiveEn: "M5 Integrated Simulation — Step 3: Physically count stock and compare with system. Enter SKU, bin, system quantity and counted quantity.",
+    fields: ["sku", "bin", "systemQty", "countedQty"],
+    pedagogicalDeep: {
+      whyFr: "L'inventaire M5 applique les compétences de M3 (cycle count) dans le contexte de la simulation intégrée. Il vérifie que les transactions précédentes (réception, rangement) sont cohérentes.",
+      whyEn: "M5 cycle count applies M3 skills (cycle count) in the integrated simulation context. It verifies that previous transactions (reception, putaway) are consistent.",
+      realSAPFr: "Dans SAP, le cycle count M5 utilise MI01 (création document), MI04 (saisie comptage) et MI07 (validation). Le tout est traçable dans MI20 (liste des documents d'inventaire).",
+      realSAPEn: "In SAP, M5 cycle count uses MI01 (document creation), MI04 (count entry) and MI07 (validation). Everything is traceable in MI20 (inventory document list).",
+      dependencyFr: "L'inventaire M5 dépend des transactions précédentes (réception + rangement). Une variance importante indique une erreur dans les étapes précédentes.",
+      dependencyEn: "M5 cycle count depends on previous transactions (reception + putaway). A significant variance indicates an error in previous steps.",
+      realErrorFr: "Une variance de 0 après réception et rangement confirme la cohérence du système. Une variance non nulle nécessite une investigation immédiate.",
+      realErrorEn: "A variance of 0 after reception and putaway confirms system consistency. A non-zero variance requires immediate investigation.",
+    }
+  },
+  m5_replenish: {
+    titleFr: "Réapprovisionnement M5", titleEn: "M5 Replenishment", code: "M5_REPLENISH", txCode: "ME21N", tCode: "ME21N",
+    etapeFr: "Étape 4 sur 7", etapeEn: "Step 4 of 7",
+    objectiveFr: "Simulation intégrée M5 — Étape 4 : Calculer la quantité de réapprovisionnement. Saisissez le stock actuel, les paramètres min/max/sécurité et votre suggestion de commande.",
+    objectiveEn: "M5 Integrated Simulation — Step 4: Calculate replenishment quantity. Enter current stock, min/max/safety parameters and your order suggestion.",
+    fields: ["sku", "systemQty", "minQty", "maxQty", "safetyStock", "studentQty"],
+    pedagogicalDeep: {
+      whyFr: "Le réapprovisionnement M5 intègre les compétences de M3 (MRP) dans la simulation complète. Il démontre comment le WMS déclenche automatiquement les commandes fournisseurs.",
+      whyEn: "M5 replenishment integrates M3 skills (MRP) into the complete simulation. It demonstrates how the WMS automatically triggers supplier orders.",
+      realSAPFr: "Dans SAP, MD01 (MRP run) analyse tous les besoins et génère des propositions d'approvisionnement. ME21N crée le PO final après validation du gestionnaire.",
+      realSAPEn: "In SAP, MD01 (MRP run) analyzes all requirements and generates procurement proposals. ME21N creates the final PO after manager validation.",
+      dependencyFr: "Le réapprovisionnement M5 dépend du stock actuel (après inventaire M5). Les paramètres min/max doivent être cohérents avec la consommation réelle.",
+      dependencyEn: "M5 replenishment depends on current stock (after M5 cycle count). Min/max parameters must be consistent with actual consumption.",
+      realErrorFr: "Un réapprovisionnement calculé sur un stock erroné (avant inventaire) peut créer un surstock ou une rupture. L'ordre des étapes est critique.",
+      realErrorEn: "Replenishment calculated on incorrect stock (before cycle count) can create overstock or stockout. Step order is critical.",
+    }
+  },
+  m5_kpi: {
+    titleFr: "KPI intégrés M5", titleEn: "M5 Integrated KPIs", code: "M5_KPI", txCode: "MB52", tCode: "MB52",
+    etapeFr: "Étape 5 sur 7", etapeEn: "Step 5 of 7",
+    objectiveFr: "Simulation intégrée M5 — Étape 5 : Calculer les KPIs de la simulation. Saisissez les données de consommation, commandes et opérations pour obtenir les indicateurs de performance.",
+    objectiveEn: "M5 Integrated Simulation — Step 5: Calculate simulation KPIs. Enter consumption, orders and operations data to get performance indicators.",
+    fields: ["annualConsumption", "averageStock", "ordersFulfilled", "totalOrders", "operationalErrors", "totalOperations", "avgLeadTimeDays", "stockValue"],
+    pedagogicalDeep: {
+      whyFr: "Les KPI M5 synthétisent toute la simulation en indicateurs de performance. Ils permettent d'évaluer si les opérations de la simulation ont été efficaces.",
+      whyEn: "M5 KPIs synthesize the entire simulation into performance indicators. They allow evaluating whether the simulation operations were effective.",
+      realSAPFr: "Dans SAP, les KPIs de fin de simulation sont extraits via des rapports analytiques (SAP Analytics Cloud, BW/BI). Ils alimentent le tableau de bord de direction.",
+      realSAPEn: "In SAP, end-of-simulation KPIs are extracted via analytical reports (SAP Analytics Cloud, BW/BI). They feed the management dashboard.",
+      dependencyFr: "Les KPI M5 dépendent de toutes les transactions précédentes de la simulation. Des transactions incorrectes faussent les indicateurs finaux.",
+      dependencyEn: "M5 KPIs depend on all previous simulation transactions. Incorrect transactions distort final indicators.",
+      realErrorFr: "Des KPIs calculés en fin de simulation avec des données incohérentes invalident toute l'analyse. La qualité des données est fondamentale.",
+      realErrorEn: "KPIs calculated at the end of simulation with inconsistent data invalidate the entire analysis. Data quality is fundamental.",
+    }
+  },
+  m5_decision: {
+    titleFr: "Décision stratégique M5", titleEn: "M5 Strategic Decision", code: "M5_DECISION", txCode: "LT23", tCode: "LT23",
+    etapeFr: "Étape 6 sur 7", etapeEn: "Step 6 of 7",
+    objectiveFr: "Simulation intégrée M5 — Étape 6 : Formuler une décision stratégique basée sur les KPIs calculés. Analysez les résultats et proposez un plan d'action pour améliorer la performance.",
+    objectiveEn: "M5 Integrated Simulation — Step 6: Formulate a strategic decision based on calculated KPIs. Analyze results and propose an action plan to improve performance.",
+    fields: ["studentAnswer"],
+    pedagogicalDeep: {
+      whyFr: "La décision stratégique M5 est l'exercice de synthèse final. Elle évalue la capacité de l'étudiant à transformer des données KPI en décisions opérationnelles concrètes.",
+      whyEn: "The M5 strategic decision is the final synthesis exercise. It evaluates the student's ability to transform KPI data into concrete operational decisions.",
+      realSAPFr: "Dans SAP, les décisions stratégiques sont supportées par SAP S/4HANA Embedded Analytics et SAP Analytics Cloud. Les tableaux de bord temps réel facilitent la prise de décision.",
+      realSAPEn: "In SAP, strategic decisions are supported by SAP S/4HANA Embedded Analytics and SAP Analytics Cloud. Real-time dashboards facilitate decision-making.",
+      dependencyFr: "La décision M5 dépend de la compréhension de tous les KPIs calculés. Une bonne décision identifie les priorités, les ressources nécessaires et les délais.",
+      dependencyEn: "M5 decision depends on understanding all calculated KPIs. A good decision identifies priorities, required resources, and timelines.",
+      realErrorFr: "Une décision stratégique sans justification KPI est rejetée par la direction. En entreprise, toute décision d'investissement doit être étayée par des données.",
+      realErrorEn: "A strategic decision without KPI justification is rejected by management. In business, every investment decision must be supported by data.",
+    }
+  },
+  compliance_m5: {
+    titleFr: "Validation finale M5", titleEn: "M5 Final Validation", code: "COMPLIANCE_M5", txCode: "MB52", tCode: "MB52",
+    etapeFr: "Étape 7 sur 7", etapeEn: "Step 7 of 7",
+    objectiveFr: "Simulation intégrée M5 — Étape finale : Valider la conformité complète de la simulation intégrée. Toutes les étapes doivent être complétées avec succès.",
+    objectiveEn: "M5 Integrated Simulation — Final step: Validate complete compliance of the integrated simulation. All steps must be completed successfully.",
+    fields: [],
+    pedagogicalDeep: {
+      whyFr: "La validation finale M5 est la certification de compétence TEC.LOG. Elle confirme que l'étudiant maîtrise l'ensemble du cycle logistique WMS/ERP.",
+      whyEn: "M5 final validation is the TEC.LOG competency certification. It confirms that the student masters the complete WMS/ERP logistics cycle.",
+      realSAPFr: "Dans SAP, la validation finale correspond à la clôture de période (MMPV) et au rapport de conformité annuel. Elle déclenche les processus de reporting réglementaire.",
+      realSAPEn: "In SAP, final validation corresponds to period closing (MMPV) and the annual compliance report. It triggers regulatory reporting processes.",
+      dependencyFr: "La validation M5 dépend de la réussite de toutes les étapes précédentes. C'est la démonstration que l'étudiant peut gérer un cycle logistique complet de façon autonome.",
+      dependencyEn: "M5 validation depends on successful completion of all previous steps. It demonstrates that the student can manage a complete logistics cycle autonomously.",
+      realErrorFr: "Une validation finale avec des étapes incomplètes est impossible en production réelle. SAP bloque la clôture si des documents sont en suspens.",
+      realErrorEn: "A final validation with incomplete steps is impossible in real production. SAP blocks closing if documents are pending.",
+    }
+  },
 };
 
 type FormValues = {
@@ -195,6 +545,24 @@ type FormValues = {
   qty?: string;
   physicalQty?: string;
   comment?: string;
+  lotNumber?: string;
+  systemQty?: string;
+  countedQty?: string;
+  minQty?: string;
+  maxQty?: string;
+  safetyStock?: string;
+  studentQty?: string;
+  studentAnswer?: string;
+  varianceQty?: string;
+  justification?: string;
+  annualConsumption?: string;
+  averageStock?: string;
+  ordersFulfilled?: string;
+  totalOrders?: string;
+  operationalErrors?: string;
+  totalOperations?: string;
+  avgLeadTimeDays?: string;
+  stockValue?: string;
 };
 
 function PedagogicalPanel({ cfg, isDemo }: { cfg: typeof STEP_CONFIG[string]; isDemo: boolean }) {
@@ -261,7 +629,6 @@ function BackendTransparencyPanel({ runData }: { runData: any }) {
       </button>
       {open && (
         <div className="bg-card p-4 space-y-4 text-xs">
-          {/* Current Stock */}
           <div>
             <p className="font-bold text-blue-700 dark:text-blue-300 mb-2">
               📦 {t("Stock actuel (INVENTORY_BALANCE)", "Current stock (INVENTORY_BALANCE)")}
@@ -287,7 +654,6 @@ function BackendTransparencyPanel({ runData }: { runData: any }) {
               </table>
             )}
           </div>
-          {/* Pending Transactions */}
           <div>
             <p className="font-bold text-blue-700 dark:text-blue-300 mb-2">
               📋 {t("Transactions enregistrées", "Recorded transactions")} ({transactions?.length ?? 0})
@@ -319,11 +685,10 @@ function BackendTransparencyPanel({ runData }: { runData: any }) {
               </table>
             )}
           </div>
-          {/* Cycle Counts */}
-          {(cycleCounts?.length ?? 0) > 0 && (
+          {cycleCounts?.length > 0 && (
             <div>
               <p className="font-bold text-blue-700 dark:text-blue-300 mb-2">
-                🔍 {t("Cycle Counts", "Cycle Counts")} ({cycleCounts.length})
+                🔍 {t("Comptages inventaire", "Cycle counts")} ({cycleCounts.length})
               </p>
               <table className="w-full text-xs border-collapse">
                 <thead>
@@ -365,6 +730,7 @@ export default function StepForm() {
   const { data: masterData } = trpc.master.skus.useQuery();
   const { data: bins } = trpc.master.bins.useQuery();
 
+  // ── M1 mutations ──────────────────────────────────────────────────────────
   const submitPO = trpc.transactions.submitPO.useMutation({ onSuccess: handleSuccess, onError: handleError });
   const submitGR = trpc.transactions.submitGR.useMutation({ onSuccess: handleSuccess, onError: handleError });
   const submitPUTAWAY_M1 = trpc.transactions.submitPUTAWAY_M1.useMutation({ onSuccess: handleSuccess, onError: handleError });
@@ -375,16 +741,52 @@ export default function StepForm() {
   const submitADJ = trpc.transactions.submitADJ.useMutation({ onSuccess: handleSuccess, onError: handleError });
   const submitCompliance = trpc.compliance.finalize.useMutation({ onSuccess: handleSuccess, onError: handleError });
 
+  // ── M2 mutations ──────────────────────────────────────────────────────────
+  const submitFifoPick = trpc.m2.submitFifoPick.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitStockAccuracy = trpc.m2.submitStockAccuracy.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitComplianceAdv = trpc.m2.submitComplianceAdv.useMutation({ onSuccess: handleSuccess, onError: handleError });
+
+  // ── M3 mutations ──────────────────────────────────────────────────────────
+  const submitCcList = trpc.m3.submitCcList.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitCcCount = trpc.m3.submitCcCount.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitCcRecon = trpc.m3.submitCcRecon.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitReplenishM3 = trpc.m3.submitReplenish.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitComplianceM3 = trpc.m3.submitComplianceM3.useMutation({ onSuccess: handleSuccess, onError: handleError });
+
+  // ── M4 mutations ──────────────────────────────────────────────────────────
+  const submitKpiData = trpc.m4.submitKpiData.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitKpiRotation = trpc.m4.submitKpiRotation.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitKpiService = trpc.m4.submitKpiService.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitKpiDiagnostic = trpc.m4.submitKpiDiagnostic.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitComplianceM4 = trpc.m4.submitComplianceM4.useMutation({ onSuccess: handleSuccess, onError: handleError });
+
+  // ── M5 mutations ──────────────────────────────────────────────────────────
+  const submitM5Reception = trpc.m5.submitReception.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitM5Putaway = trpc.m5.submitPutaway.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitM5CycleCount = trpc.m5.submitCycleCount.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitM5Replenish = trpc.m5.submitReplenish.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitM5Kpi = trpc.m5.submitKpi.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitM5Decision = trpc.m5.submitDecision.useMutation({ onSuccess: handleSuccess, onError: handleError });
+  const submitComplianceM5 = trpc.m5.submitComplianceM5.useMutation({ onSuccess: handleSuccess, onError: handleError });
+
   const { register, handleSubmit, watch, formState: { errors: formErrors } } = useForm<FormValues>();
 
   function handleSuccess(data: any) {
     if (data?.demoWarning) {
       toast.warning(`⚠ ${t("Avertissement (mode démo)", "Warning (demo mode)")} : ${data.demoWarning}`);
+    } else if (data?.feedback) {
+      // KPI interpretation feedback
+      const icon = data.isCorrect ? "✅" : "⚠";
+      toast[data.isCorrect ? "success" : "warning"](`${icon} ${t(cfg.titleFr, cfg.titleEn)} — ${data.feedback}`);
+    } else if (data?.suggestion) {
+      // Replenishment suggestion
+      const s = data.suggestion;
+      toast.success(`${t("Suggestion système", "System suggestion")}: ${s.suggestedQty} ${t("unités", "units")} — ${s.reason}`);
     } else {
       toast.success(`${t(cfg.titleFr, cfg.titleEn)} — ${t("Étape validée avec succès !", "Step validated successfully!")}`);
     }
     refetch();
-    setTimeout(() => navigate(`/student/run/${runId}`), 1200);
+    setTimeout(() => navigate(`/student/run/${runId}`), 1500);
   }
 
   function handleError(err: any) {
@@ -395,13 +797,13 @@ export default function StepForm() {
     const base = { runId: parseInt(runId) };
     const qty = values.qty ? Number(values.qty) : 0;
     const physicalQty = values.physicalQty ? Number(values.physicalQty) : 0;
+    const stepLower = step?.toLowerCase() ?? "";
 
-    // Validation for standard bin field
+    // Standard field validations
     if (cfg.fields.includes("bin") && (!values.bin || values.bin === "")) {
       toast.error(t("Veuillez sélectionner un emplacement (Bin) avant de valider.", "Please select a bin location before validating."));
       return;
     }
-    // Validation for fromBin/toBin fields
     if (cfg.fields.includes("fromBin") && (!values.fromBin || values.fromBin === "")) {
       toast.error(t("Veuillez sélectionner le bin source (De).", "Please select the source bin (From)."));
       return;
@@ -422,8 +824,13 @@ export default function StepForm() {
       toast.error(t("Veuillez saisir une quantité valide (> 0) avant de valider.", "Please enter a valid quantity (> 0) before validating."));
       return;
     }
+    if (cfg.fields.includes("studentAnswer") && (!values.studentAnswer || values.studentAnswer.trim().length < 5)) {
+      toast.error(t("Veuillez saisir une réponse d'au moins 5 caractères.", "Please enter an answer of at least 5 characters."));
+      return;
+    }
 
-    switch (step?.toLowerCase()) {
+    switch (stepLower) {
+      // ── M1 ──────────────────────────────────────────────────────────────
       case "po": return submitPO.mutate({ ...base, sku: values.sku!, bin: values.bin!, qty, docRef: values.docRef!, comment: values.comment });
       case "gr": return submitGR.mutate({ ...base, sku: values.sku!, bin: values.bin!, qty, docRef: values.docRef!, comment: values.comment });
       case "putaway_m1": return submitPUTAWAY_M1.mutate({ ...base, sku: values.sku!, fromBin: values.fromBin!, toBin: values.toBin!, qty, docRef: values.docRef!, comment: values.comment });
@@ -434,14 +841,70 @@ export default function StepForm() {
       case "adj": return submitADJ.mutate({ ...base, sku: values.sku!, bin: values.bin!, qty, docRef: values.docRef ?? "ADJ-AUTO", comment: values.comment });
       case "compliance": return submitCompliance.mutate({ ...base });
       case "stock":
-        // STOCK step is auto-completed by the server after PUTAWAY_M1; just navigate back
         toast.success(t("Stock disponible confirmé — étape auto-validée.", "Available stock confirmed — step auto-validated."));
         setTimeout(() => navigate(`/student/run/${runId}`), 800);
         return;
+
+      // ── M2 ──────────────────────────────────────────────────────────────
+      case "fifo_pick":
+        if (!values.lotNumber?.trim()) { toast.error(t("Veuillez saisir un numéro de lot.", "Please enter a lot number.")); return; }
+        return submitFifoPick.mutate({ ...base, sku: values.sku!, fromBin: values.fromBin!, toBin: values.toBin!, qty, lotNumber: values.lotNumber! });
+      case "stock_accuracy":
+        return submitStockAccuracy.mutate({ ...base, sku: values.sku!, systemQty: Number(values.systemQty ?? 0), countedQty: Number(values.countedQty ?? 0) });
+      case "compliance_adv":
+        return submitComplianceAdv.mutate({ ...base });
+
+      // ── M3 ──────────────────────────────────────────────────────────────
+      case "cc_list":
+        if (!values.sku) { toast.error(t("Veuillez sélectionner au moins un SKU.", "Please select at least one SKU.")); return; }
+        return submitCcList.mutate({ ...base, skus: [values.sku!] });
+      case "cc_count":
+        return submitCcCount.mutate({ ...base, counts: [{ sku: values.sku!, bin: values.bin!, systemQty: Number(values.systemQty ?? 0), countedQty: Number(values.countedQty ?? 0) }] });
+      case "cc_recon":
+        return submitCcRecon.mutate({ ...base, adjustments: [{ sku: values.sku!, bin: values.bin!, varianceQty: Number(values.varianceQty ?? 0), justification: values.justification ?? "Ajustement manuel" }] });
+      case "replenish":
+        return submitReplenishM3.mutate({ ...base, sku: values.sku!, systemQty: Number(values.systemQty ?? 0), minQty: Number(values.minQty ?? 0), maxQty: Number(values.maxQty ?? 0), safetyStock: Number(values.safetyStock ?? 0), studentQty: Number(values.studentQty ?? 0) });
+      case "compliance_m3":
+        return submitComplianceM3.mutate({ ...base });
+
+      // ── M4 ──────────────────────────────────────────────────────────────
+      case "kpi_data":
+        return submitKpiData.mutate({ ...base });
+      case "kpi_rotation":
+        return submitKpiRotation.mutate({ ...base, studentAnswer: values.studentAnswer! });
+      case "kpi_service":
+        return submitKpiService.mutate({ ...base, studentAnswer: values.studentAnswer! });
+      case "kpi_diagnostic":
+        return submitKpiDiagnostic.mutate({ ...base, studentAnswer: values.studentAnswer! });
+      case "compliance_m4":
+        return submitComplianceM4.mutate({ ...base });
+
+      // ── M5 ──────────────────────────────────────────────────────────────
+      case "m5_reception":
+        return submitM5Reception.mutate({ ...base, sku: values.sku!, qty, docRef: values.docRef! });
+      case "m5_putaway":
+        if (!values.lotNumber?.trim()) { toast.error(t("Veuillez saisir un numéro de lot.", "Please enter a lot number.")); return; }
+        return submitM5Putaway.mutate({ ...base, sku: values.sku!, fromBin: values.fromBin!, toBin: values.toBin!, qty, lotNumber: values.lotNumber! });
+      case "m5_cycle_count":
+        return submitM5CycleCount.mutate({ ...base, sku: values.sku!, bin: values.bin!, systemQty: Number(values.systemQty ?? 0), countedQty: Number(values.countedQty ?? 0) });
+      case "m5_replenish":
+        return submitM5Replenish.mutate({ ...base, sku: values.sku!, systemQty: Number(values.systemQty ?? 0), minQty: Number(values.minQty ?? 0), maxQty: Number(values.maxQty ?? 0), safetyStock: Number(values.safetyStock ?? 0), studentQty: Number(values.studentQty ?? 0) });
+      case "m5_kpi":
+        return submitM5Kpi.mutate({ ...base, kpiData: { annualConsumption: Number(values.annualConsumption ?? 2400), averageStock: Number(values.averageStock ?? 400), ordersFulfilled: Number(values.ordersFulfilled ?? 285), totalOrders: Number(values.totalOrders ?? 300), operationalErrors: Number(values.operationalErrors ?? 12), totalOperations: Number(values.totalOperations ?? 300), avgLeadTimeDays: Number(values.avgLeadTimeDays ?? 3.5), stockValue: Number(values.stockValue ?? 48000) } });
+      case "m5_decision":
+        return submitM5Decision.mutate({ ...base, studentDecision: values.studentAnswer! });
+      case "compliance_m5":
+        return submitComplianceM5.mutate({ ...base });
     }
   }
 
-  const isAnyPending = submitPO.isPending || submitGR.isPending || submitPUTAWAY_M1.isPending || submitSO.isPending || submitPICKING_M1.isPending || submitGI.isPending || submitCC.isPending || submitADJ.isPending || submitCompliance.isPending;
+  const isAnyPending = [
+    submitPO, submitGR, submitPUTAWAY_M1, submitSO, submitPICKING_M1, submitGI, submitCC, submitADJ, submitCompliance,
+    submitFifoPick, submitStockAccuracy, submitComplianceAdv,
+    submitCcList, submitCcCount, submitCcRecon, submitReplenishM3, submitComplianceM3,
+    submitKpiData, submitKpiRotation, submitKpiService, submitKpiDiagnostic, submitComplianceM4,
+    submitM5Reception, submitM5Putaway, submitM5CycleCount, submitM5Replenish, submitM5Kpi, submitM5Decision, submitComplianceM5,
+  ].some(m => m.isPending);
 
   if (isLoading) {
     return (
@@ -469,6 +932,9 @@ export default function StepForm() {
   const availableStock = selectedSku && selectedBin ? (inventory[`${selectedSku}::${selectedBin}`] ?? 0) : null;
   const availableStockFromBin = selectedSku && selectedFromBin ? (inventory[`${selectedSku}::${selectedFromBin}`] ?? 0) : null;
   const isOutOfSequence = isDemo && !isCurrentStep && !isCompleted;
+
+  // Determine if this is a compliance/auto step (no real form)
+  const isAutoStep = ["stock", "compliance", "compliance_adv", "compliance_m3", "compliance_m4", "compliance_m5", "kpi_data"].includes(step?.toLowerCase() ?? "");
 
   return (
     <FioriShell
@@ -563,59 +1029,23 @@ export default function StepForm() {
               </div>
             )}
 
-            {/* Objective */}
-            <div className="alert-info m-4 mb-0">
-              <p className="text-xs font-semibold mb-0.5 flex items-center gap-1.5">
-                <Info size={12} /> {t("Objectif pédagogique", "Pedagogical Objective")}
+            {/* Objective Panel */}
+            <div className="mx-4 mt-4 bg-primary/5 border border-primary/20 rounded-md p-3">
+              <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">
+                <Info size={10} className="inline mr-1" />{t("Objectif pédagogique", "Pedagogical objective")}
               </p>
-              <p className="text-xs">{t(cfg.objectiveFr, cfg.objectiveEn)}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{t(cfg.objectiveFr, cfg.objectiveEn)}</p>
             </div>
 
-            {/* Context Panel: Previous Steps Summary (demo) */}
-            {(["gr","so","gi","cc","adj","putaway_m1","picking_m1"].includes(step?.toLowerCase() ?? "")) && runData?.demoBackendState?.transactions && runData.demoBackendState.transactions.length > 0 && (
-              <div className="mx-4 mt-4 bg-primary/5 border border-primary/20 rounded-md p-3">
-                <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-2">
-                  {t("Référence — Étapes précédentes", "Reference — Previous Steps")}
-                </p>
-                <table className="w-full text-[10px]">
-                  <thead>
-                    <tr className="text-muted-foreground">
-                      <th className="text-left pb-1">{t("Transaction", "Transaction")}</th>
-                      <th className="text-left pb-1">SKU</th>
-                      <th className="text-left pb-1">Bin</th>
-                      <th className="text-left pb-1">{t("Qté", "Qty")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {runData.demoBackendState.transactions.map((tx: any) => (
-                      <tr key={tx.id} className="border-t border-border">
-                        <td className="py-1 font-mono font-semibold text-primary">{tx.txType}</td>
-                        <td className="py-1 text-foreground">{tx.sku || <span className="text-destructive">{t("non défini", "undefined")}</span>}</td>
-                        <td className="py-1 font-mono text-foreground">{tx.bin || "—"}</td>
-                        <td className="py-1 text-foreground">{tx.qty ?? "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
             {/* Context Panel: Stock for evaluation mode */}
-            {(["gi","cc","so","putaway_m1","picking_m1"].includes(step?.toLowerCase() ?? "")) && !isDemo && (
+            {(["gi","cc","so","putaway_m1","picking_m1","fifo_pick","m5_putaway","m5_cycle_count"].includes(step?.toLowerCase() ?? "")) && !isDemo && (
               <div className="mx-4 mt-4 bg-primary/5 border border-primary/20 rounded-md p-3">
                 <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">
                   📊 {t("Stock actuel par emplacement", "Current stock by location")}
                 </p>
-                <p className="text-[10px] text-muted-foreground mb-2">
-                  {step?.toLowerCase() === "putaway_m1"
-                    ? t("Sélectionnez un bin RÉCEPTION comme source et un bin STOCKAGE comme destination.", "Select a RECEPTION bin as source and a STOCKAGE bin as destination.")
-                    : step?.toLowerCase() === "picking_m1"
-                    ? t("Sélectionnez un bin STOCKAGE comme source et un bin EXPÉDITION comme destination.", "Select a STOCKAGE bin as source and an EXPÉDITION bin as destination.")
-                    : t("Utilisez le même SKU et Bin que vos étapes précédentes.", "Use the same SKU and Bin as your previous steps.")}
-                </p>
                 {Object.entries(runData?.inventory ?? {}).filter(([, qty]) => (qty as number) > 0).length === 0 ? (
                   <p className="text-[10px] text-destructive">
-                    ⚠ {t("Aucun stock disponible — vérifiez que la GR a été validée avec un SKU sélectionné.", "No stock available — verify that GR was validated with a selected SKU.")}
+                    ⚠ {t("Aucun stock disponible — vérifiez que la GR a été validée.", "No stock available — verify that GR was validated.")}
                   </p>
                 ) : (
                   <div className="space-y-0.5">
@@ -633,7 +1063,7 @@ export default function StepForm() {
             )}
 
             <form onSubmit={handleSubmit(onSubmit)} className="p-5 space-y-4">
-              {/* Compliance step */}
+              {/* ── Compliance / Auto steps ─────────────────────────────── */}
               {step?.toLowerCase() === "compliance" && (
                 <div>
                   <div className={`rounded-md p-4 mb-4 ${
@@ -652,7 +1082,7 @@ export default function StepForm() {
                         ? t("⚠ Non conforme (démo) — Clôture autorisée en mode démonstration", "⚠ Non-compliant (demo) — Closing allowed in demo mode")
                         : t("🔴 Système non conforme — Résoudre les problèmes", "🔴 System non-compliant — Resolve issues")}
                     </p>
-                    {runData?.compliance.issuesFr.map((issue: string, i: number) => (
+                    {runData?.compliance.issuesFr?.map((issue: string, i: number) => (
                       <p key={i} className={`text-xs ${isDemo ? "text-amber-700 dark:text-amber-400" : "text-destructive"}`}>• {issue}</p>
                     ))}
                   </div>
@@ -662,32 +1092,52 @@ export default function StepForm() {
                       <p className="text-xs">{t("Résolvez tous les problèmes de conformité avant de clôturer le module.", "Resolve all compliance issues before closing the module.")}</p>
                     </div>
                   )}
-                  <div className="flex items-center gap-0.5 mb-3">
-                    <label className="text-xs text-muted-foreground">{t("Commentaire de clôture (optionnel)", "Closing comment (optional)")}</label>
-                  </div>
-                  <input {...register("comment")} placeholder={t("Ex: Module 1 complété avec succès", "Ex: Module 1 completed successfully")} className="fiori-field-input" />
+                  <input {...register("comment")} placeholder={t("Ex: Module complété avec succès", "Ex: Module completed successfully")} className="fiori-field-input" />
                 </div>
               )}
 
-              {/* STOCK step — auto-completed, just show info */}
-              {step?.toLowerCase() === "stock" && (
+              {/* Auto-complete steps */}
+              {["stock", "compliance_adv", "compliance_m3", "compliance_m4", "compliance_m5", "kpi_data"].includes(step?.toLowerCase() ?? "") && (
                 <div className="alert-compliant">
-                  <p className="text-xs font-semibold mb-1">✅ {t("Stock disponible confirmé", "Available stock confirmed")}</p>
-                  <p className="text-xs">{t("Cette étape est automatiquement validée après le rangement (PUTAWAY). Le stock est maintenant disponible en zone STOCKAGE.", "This step is automatically validated after putaway. Stock is now available in the STOCKAGE zone.")}</p>
-                  <div className="mt-3 space-y-0.5">
-                    {Object.entries(runData?.inventory ?? {}).filter(([, qty]) => (qty as number) > 0).map(([key, qty]) => {
-                      const [sku, bin] = key.split("::");
-                      return (
-                        <p key={key} className="text-[10px] font-mono">
-                          <span className="text-primary font-semibold">{sku}</span> @ <span className="text-green-600 dark:text-green-400">{bin}</span> — <strong>{qty as number} {t("unités", "units")}</strong>
-                        </p>
-                      );
-                    })}
-                  </div>
+                  <p className="text-xs font-semibold mb-1">
+                    {step?.toLowerCase() === "stock"
+                      ? t("✅ Stock disponible confirmé", "✅ Available stock confirmed")
+                      : step?.toLowerCase() === "kpi_data"
+                      ? t("📊 Données KPI de référence", "📊 Reference KPI data")
+                      : t("✅ Prêt pour validation de conformité", "✅ Ready for compliance validation")}
+                  </p>
+                  {step?.toLowerCase() === "stock" && (
+                    <p className="text-xs">{t("Cette étape est automatiquement validée après le rangement (PUTAWAY). Le stock est maintenant disponible en zone STOCKAGE.", "This step is automatically validated after putaway. Stock is now available in the STOCKAGE zone.")}</p>
+                  )}
+                  {step?.toLowerCase() === "kpi_data" && (
+                    <div className="mt-2 space-y-1 text-xs font-mono">
+                      <p>📦 {t("Consommation annuelle", "Annual consumption")}: <strong>2 400 unités</strong></p>
+                      <p>📦 {t("Stock moyen", "Average stock")}: <strong>400 unités</strong></p>
+                      <p>✅ {t("Commandes livrées", "Orders delivered")}: <strong>285 / 300</strong></p>
+                      <p>⚠ {t("Erreurs opérationnelles", "Operational errors")}: <strong>12 / 300</strong></p>
+                      <p>⏱ {t("Délai moyen", "Average lead time")}: <strong>3.5 jours</strong></p>
+                      <p>💰 {t("Valeur stock immobilisé", "Immobilized stock value")}: <strong>48 000 $</strong></p>
+                    </div>
+                  )}
+                  {["compliance_adv", "compliance_m3", "compliance_m4", "compliance_m5"].includes(step?.toLowerCase() ?? "") && (
+                    <p className="text-xs mt-1">{t("Toutes les étapes précédentes ont été complétées. Cliquez sur Valider pour finaliser ce module.", "All previous steps have been completed. Click Validate to finalize this module.")}</p>
+                  )}
+                  {step?.toLowerCase() === "stock" && (
+                    <div className="mt-3 space-y-0.5">
+                      {Object.entries(runData?.inventory ?? {}).filter(([, qty]) => (qty as number) > 0).map(([key, qty]) => {
+                        const [sku, bin] = key.split("::");
+                        return (
+                          <p key={key} className="text-[10px] font-mono">
+                            <span className="text-primary font-semibold">{sku}</span> @ <span className="text-green-600 dark:text-green-400">{bin}</span> — <strong>{qty as number} {t("unités", "units")}</strong>
+                          </p>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Standard fields */}
+              {/* ── Standard fields ─────────────────────────────────────── */}
               {cfg.fields.includes("docRef") && (
                 <div>
                   <label className="fiori-field-label">
@@ -717,8 +1167,7 @@ export default function StepForm() {
               {cfg.fields.includes("bin") && (
                 <div>
                   <label className="fiori-field-label">
-                    {t("Bin / Emplacement", "Bin / Location")} <span className="text-destructive">*</span>{" "}
-                    <span className="text-[10px] text-muted-foreground ml-1">{t("Requis", "Required")}</span>
+                    {t("Bin / Emplacement", "Bin / Location")} <span className="text-destructive">*</span>
                   </label>
                   <select {...register("bin")} className="fiori-field-input fiori-field-active">
                     <option value="">— {t("Sélectionner un emplacement", "Select a location")} —</option>
@@ -734,16 +1183,11 @@ export default function StepForm() {
                 </div>
               )}
 
-              {/* fromBin field for putaway/picking */}
+              {/* fromBin field */}
               {cfg.fields.includes("fromBin") && (
                 <div>
                   <label className="fiori-field-label">
-                    {t("Bin Source (De)", "Source Bin (From)")} <span className="text-destructive">*</span>{" "}
-                    <span className="text-[10px] text-muted-foreground ml-1">
-                      {step?.toLowerCase() === "putaway_m1"
-                        ? t("Zone RÉCEPTION (REC-01 ou REC-02)", "RECEPTION zone (REC-01 or REC-02)")
-                        : t("Zone STOCKAGE", "STOCKAGE zone")}
-                    </span>
+                    {t("Bin Source (De)", "Source Bin (From)")} <span className="text-destructive">*</span>
                   </label>
                   <select {...register("fromBin")} className="fiori-field-input fiori-field-active">
                     <option value="">— {t("Sélectionner le bin source", "Select source bin")} —</option>
@@ -759,16 +1203,11 @@ export default function StepForm() {
                 </div>
               )}
 
-              {/* toBin field for putaway/picking */}
+              {/* toBin field */}
               {cfg.fields.includes("toBin") && (
                 <div>
                   <label className="fiori-field-label">
-                    {t("Bin Destination (Vers)", "Destination Bin (To)")} <span className="text-destructive">*</span>{" "}
-                    <span className="text-[10px] text-muted-foreground ml-1">
-                      {step?.toLowerCase() === "putaway_m1"
-                        ? t("Zone STOCKAGE (B-01, A-01, etc.)", "STOCKAGE zone (B-01, A-01, etc.)")
-                        : t("Zone EXPÉDITION (EXP-01 ou EXP-02)", "EXPÉDITION zone (EXP-01 or EXP-02)")}
-                    </span>
+                    {t("Bin Destination (Vers)", "Destination Bin (To)")} <span className="text-destructive">*</span>
                   </label>
                   <select {...register("toBin")} className="fiori-field-input fiori-field-active">
                     <option value="">— {t("Sélectionner le bin destination", "Select destination bin")} —</option>
@@ -779,23 +1218,33 @@ export default function StepForm() {
                 </div>
               )}
 
+              {/* Lot Number field */}
+              {cfg.fields.includes("lotNumber") && (
+                <div>
+                  <label className="fiori-field-label">
+                    {t("Numéro de lot", "Lot Number")} <span className="text-destructive">*</span>{" "}
+                    <span className="text-[10px] text-muted-foreground ml-1">{t("Ex: LOT-2025-001", "Ex: LOT-2025-001")}</span>
+                  </label>
+                  <input {...register("lotNumber")} placeholder="LOT-2025-001" className="fiori-field-input fiori-field-active" />
+                </div>
+              )}
+
+              {/* Qty field */}
               {cfg.fields.includes("qty") && (
                 <div>
                   <label className="fiori-field-label">
-                    {t("Quantité", "Quantity")} <span className="text-destructive">*</span>{" "}
-                    <span className="text-[10px] text-muted-foreground ml-1">{t("Requis", "Required")}</span>
+                    {t("Quantité", "Quantity")} <span className="text-destructive">*</span>
                   </label>
                   <input {...register("qty")} type="number" min={1} placeholder="Ex: 50" className="fiori-field-input fiori-field-active" />
                   {(["gi","so"].includes(step?.toLowerCase() ?? "")) && availableStock !== null && (
                     <p className="text-xs mt-1 text-amber-600 dark:text-amber-400">
-                      {isDemo ? "⚠ Démo : " : ""}
                       {t(`Ne peut pas dépasser le stock disponible (${availableStock})`, `Cannot exceed available stock (${availableStock})`)}
-                      {isDemo && t(" — En mode démonstration, le dépassement est autorisé avec avertissement.", " — In demo mode, exceeding is allowed with a warning.")}
                     </p>
                   )}
                 </div>
               )}
 
+              {/* Physical Qty field */}
               {cfg.fields.includes("physicalQty") && (
                 <div>
                   <label className="fiori-field-label">
@@ -805,54 +1254,241 @@ export default function StepForm() {
                 </div>
               )}
 
-              {cfg.fields.includes("comment") && step?.toLowerCase() !== "compliance" && (
+              {/* System Qty field */}
+              {cfg.fields.includes("systemQty") && (
                 <div>
                   <label className="fiori-field-label">
-                    {t("Commentaire", "Comment")}{" "}
-                    <span className="text-[10px] text-muted-foreground ml-1">{t("Optionnel", "Optional")}</span>
+                    {t("Quantité système (MB52)", "System quantity (MB52)")} <span className="text-destructive">*</span>
                   </label>
-                  <input {...register("comment")} placeholder={t("Remarques...", "Remarks...")} className="fiori-field-input" />
+                  <input {...register("systemQty")} type="number" min={0} placeholder="Ex: 100" className="fiori-field-input fiori-field-active" />
                 </div>
               )}
 
-              {/* Status Block */}
-              {step?.toLowerCase() !== "stock" && (
-                <div className={isDemo ? "bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-md p-3" : "alert-info"}>
-                  <p className="text-xs font-semibold">
-                    {isDemo ? t("MODE DÉMONSTRATION — STATUT", "DEMO MODE — STATUS") : t("STATUT DE L'ÉTAPE", "STEP STATUS")}
-                  </p>
-                  <p className="text-xs mt-0.5">
-                    {isDemo
-                      ? t("Étape accessible en mode démonstration. Aucun score enregistré.", "Step accessible in demo mode. No score recorded.")
-                      : t("Étape active — Remplissez les champs requis et soumettez pour valider.", "Active step — Fill in the required fields and submit to validate.")}
-                  </p>
+              {/* Counted Qty field */}
+              {cfg.fields.includes("countedQty") && (
+                <div>
+                  <label className="fiori-field-label">
+                    {t("Quantité comptée physiquement", "Physically counted quantity")} <span className="text-destructive">*</span>
+                  </label>
+                  <input {...register("countedQty")} type="number" min={0} placeholder="Ex: 98" className="fiori-field-input fiori-field-active" />
                 </div>
               )}
 
-              <PedagogicalPanel cfg={cfg} isDemo={isDemo} />
-              <BackendTransparencyPanel runData={runData} />
+              {/* Min Qty field */}
+              {cfg.fields.includes("minQty") && (
+                <div>
+                  <label className="fiori-field-label">
+                    {t("Stock minimum (ROP)", "Minimum stock (ROP)")} <span className="text-destructive">*</span>
+                  </label>
+                  <input {...register("minQty")} type="number" min={0} placeholder="Ex: 50" className="fiori-field-input fiori-field-active" />
+                </div>
+              )}
 
-              {/* Action Buttons */}
+              {/* Max Qty field */}
+              {cfg.fields.includes("maxQty") && (
+                <div>
+                  <label className="fiori-field-label">
+                    {t("Stock maximum", "Maximum stock")} <span className="text-destructive">*</span>
+                  </label>
+                  <input {...register("maxQty")} type="number" min={0} placeholder="Ex: 200" className="fiori-field-input fiori-field-active" />
+                </div>
+              )}
+
+              {/* Safety Stock field */}
+              {cfg.fields.includes("safetyStock") && (
+                <div>
+                  <label className="fiori-field-label">
+                    {t("Stock de sécurité", "Safety stock")} <span className="text-destructive">*</span>
+                  </label>
+                  <input {...register("safetyStock")} type="number" min={0} placeholder="Ex: 25" className="fiori-field-input fiori-field-active" />
+                </div>
+              )}
+
+              {/* Student Qty (replenishment suggestion) */}
+              {cfg.fields.includes("studentQty") && (
+                <div>
+                  <label className="fiori-field-label">
+                    {t("Votre suggestion de commande (unités)", "Your order suggestion (units)")} <span className="text-destructive">*</span>
+                  </label>
+                  <input {...register("studentQty")} type="number" min={0} placeholder="Ex: 150" className="fiori-field-input fiori-field-active" />
+                  <p className="text-[10px] text-muted-foreground mt-1">{t("Le système calculera la suggestion optimale et la comparera avec votre réponse.", "The system will calculate the optimal suggestion and compare it with your answer.")}</p>
+                </div>
+              )}
+
+              {/* Variance Qty field */}
+              {cfg.fields.includes("varianceQty") && (
+                <div>
+                  <label className="fiori-field-label">
+                    {t("Quantité d'ajustement (variance)", "Adjustment quantity (variance)")} <span className="text-destructive">*</span>
+                  </label>
+                  <input {...register("varianceQty")} type="number" placeholder="Ex: -2 (manquant) ou +3 (surplus)" className="fiori-field-input fiori-field-active" />
+                </div>
+              )}
+
+              {/* Justification field */}
+              {cfg.fields.includes("justification") && (
+                <div>
+                  <label className="fiori-field-label">
+                    {t("Justification de l'ajustement", "Adjustment justification")} <span className="text-destructive">*</span>
+                  </label>
+                  <input {...register("justification")} placeholder={t("Ex: Erreur de comptage lors de la réception", "Ex: Counting error during reception")} className="fiori-field-input fiori-field-active" />
+                </div>
+              )}
+
+              {/* SKU List field (for CC_LIST) */}
+              {cfg.fields.includes("skuList") && (
+                <div>
+                  <label className="fiori-field-label">
+                    {t("SKU à inclure dans le comptage", "SKU to include in count")} <span className="text-destructive">*</span>
+                  </label>
+                  <select {...register("sku")} className="fiori-field-input fiori-field-active">
+                    <option value="">— {t("Sélectionner un SKU", "Select a SKU")} —</option>
+                    {masterData?.map((s: any) => (
+                      <option key={s.sku} value={s.sku}>{s.sku} — {s.descriptionFr}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-muted-foreground mt-1">{t("Sélectionnez le SKU principal à compter.", "Select the main SKU to count.")}</p>
+                </div>
+              )}
+
+              {/* Student Answer (KPI interpretation, M5 decision) */}
+              {cfg.fields.includes("studentAnswer") && (
+                <div>
+                  <label className="fiori-field-label">
+                    {t("Votre analyse / réponse", "Your analysis / answer")} <span className="text-destructive">*</span>{" "}
+                    <span className="text-[10px] text-muted-foreground ml-1">{t("Min. 5 caractères", "Min. 5 characters")}</span>
+                  </label>
+                  <textarea
+                    {...register("studentAnswer")}
+                    rows={4}
+                    placeholder={t(
+                      "Rédigez votre analyse ici. Soyez précis et justifiez votre réponse avec des données.",
+                      "Write your analysis here. Be precise and justify your answer with data."
+                    )}
+                    className="fiori-field-input fiori-field-active resize-none"
+                  />
+                  {step?.toLowerCase() === "kpi_rotation" && (
+                    <div className="mt-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded p-2">
+                      <p className="text-[10px] font-bold text-blue-700 dark:text-blue-300 mb-1">💡 {t("Données de référence", "Reference data")}</p>
+                      <p className="text-[10px] font-mono text-blue-600 dark:text-blue-400">
+                        {t("Taux de rotation", "Rotation rate")} = 2400 / 400 = <strong>6 fois/an</strong> | DSI = 365/6 = <strong>60 jours</strong>
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">{t("Objectif industrie : 8-12 rotations/an (30-45 jours de stock)", "Industry target: 8-12 rotations/year (30-45 days of stock)")}</p>
+                    </div>
+                  )}
+                  {step?.toLowerCase() === "kpi_service" && (
+                    <div className="mt-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded p-2">
+                      <p className="text-[10px] font-bold text-blue-700 dark:text-blue-300 mb-1">💡 {t("Données de référence", "Reference data")}</p>
+                      <p className="text-[10px] font-mono text-blue-600 dark:text-blue-400">
+                        {t("Taux de service", "Service level")} = 285 / 300 = <strong>95%</strong>
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">{t("Objectif industrie : ≥ 98% (classe mondiale), 95-97% (acceptable), < 95% (à améliorer)", "Industry target: ≥ 98% (world class), 95-97% (acceptable), < 95% (to improve)")}</p>
+                    </div>
+                  )}
+                  {step?.toLowerCase() === "kpi_diagnostic" && (
+                    <div className="mt-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded p-2">
+                      <p className="text-[10px] font-bold text-blue-700 dark:text-blue-300 mb-1">💡 {t("Synthèse KPIs", "KPI Summary")}</p>
+                      <p className="text-[10px] font-mono text-blue-600 dark:text-blue-400">
+                        {t("Rotation", "Rotation")}: 6 ({t("surstock", "overstock")}) | {t("Service", "Service")}: 95% ({t("acceptable", "acceptable")}) | {t("Erreurs", "Errors")}: 4% ({t("à améliorer", "to improve")})
+                      </p>
+                    </div>
+                  )}
+                  {step?.toLowerCase() === "m5_decision" && (
+                    <div className="mt-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded p-2">
+                      <p className="text-[10px] font-bold text-blue-700 dark:text-blue-300 mb-1">💡 {t("Guide décision stratégique", "Strategic decision guide")}</p>
+                      <p className="text-[10px] text-muted-foreground">{t("Structure recommandée : Problème identifié → Cause racine → Action corrective → KPI cible → Délai", "Recommended structure: Identified problem → Root cause → Corrective action → Target KPI → Timeline")}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* KPI Data fields (M5 only) */}
+              {cfg.fields.includes("annualConsumption") && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="fiori-field-label">{t("Consommation annuelle", "Annual consumption")}</label>
+                    <input {...register("annualConsumption")} type="number" defaultValue={2400} className="fiori-field-input fiori-field-active" />
+                  </div>
+                  <div>
+                    <label className="fiori-field-label">{t("Stock moyen", "Average stock")}</label>
+                    <input {...register("averageStock")} type="number" defaultValue={400} className="fiori-field-input fiori-field-active" />
+                  </div>
+                  <div>
+                    <label className="fiori-field-label">{t("Commandes livrées", "Orders fulfilled")}</label>
+                    <input {...register("ordersFulfilled")} type="number" defaultValue={285} className="fiori-field-input fiori-field-active" />
+                  </div>
+                  <div>
+                    <label className="fiori-field-label">{t("Total commandes", "Total orders")}</label>
+                    <input {...register("totalOrders")} type="number" defaultValue={300} className="fiori-field-input fiori-field-active" />
+                  </div>
+                  <div>
+                    <label className="fiori-field-label">{t("Erreurs opérationnelles", "Operational errors")}</label>
+                    <input {...register("operationalErrors")} type="number" defaultValue={12} className="fiori-field-input fiori-field-active" />
+                  </div>
+                  <div>
+                    <label className="fiori-field-label">{t("Total opérations", "Total operations")}</label>
+                    <input {...register("totalOperations")} type="number" defaultValue={300} className="fiori-field-input fiori-field-active" />
+                  </div>
+                  <div>
+                    <label className="fiori-field-label">{t("Délai moyen (jours)", "Avg lead time (days)")}</label>
+                    <input {...register("avgLeadTimeDays")} type="number" step="0.1" defaultValue={3.5} className="fiori-field-input fiori-field-active" />
+                  </div>
+                  <div>
+                    <label className="fiori-field-label">{t("Valeur stock ($)", "Stock value ($)")}</label>
+                    <input {...register("stockValue")} type="number" defaultValue={48000} className="fiori-field-input fiori-field-active" />
+                  </div>
+                </div>
+              )}
+
+              {/* Comment field */}
+              {cfg.fields.includes("comment") && (
+                <div>
+                  <label className="fiori-field-label">{t("Commentaire (optionnel)", "Comment (optional)")}</label>
+                  <input {...register("comment")} placeholder={t("Ex: Réception conforme au bon de commande", "Ex: Receipt conforming to purchase order")} className="fiori-field-input" />
+                </div>
+              )}
+
+              {/* Submit Button */}
               <div className="flex items-center justify-between pt-2 border-t border-border">
-                <button type="button" onClick={() => navigate(`/student/run/${runId}`)}
-                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors">
-                  <ArrowLeft size={13} /> {t("Retour au Mission Control", "Back to Mission Control")}
+                <button
+                  type="button"
+                  onClick={() => navigate(`/student/run/${runId}`)}
+                  className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ArrowLeft size={13} />
+                  {t("Annuler", "Cancel")}
                 </button>
                 <button
                   type="submit"
-                  disabled={isAnyPending || (!isDemo && step?.toLowerCase() === "compliance" && !runData?.compliance.compliant)}
-                  className={`flex items-center gap-2 text-white text-xs font-semibold px-5 py-2.5 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    isDemo ? "bg-purple-600 hover:bg-purple-700" : "bg-primary hover:bg-primary/90"
+                  disabled={isAnyPending}
+                  className={`flex items-center gap-2 px-5 py-2 rounded-md text-sm font-semibold text-white transition-all ${
+                    isAnyPending
+                      ? "opacity-60 cursor-not-allowed bg-primary/60"
+                      : isDemo
+                      ? "bg-indigo-600 hover:bg-indigo-700"
+                      : "bg-primary hover:bg-primary/90"
                   }`}
                 >
                   {isAnyPending ? (
-                    <><div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" /> {t("Traitement...", "Processing...")}</>
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      {t("Validation...", "Validating...")}
+                    </>
                   ) : (
-                    <><CheckCircle size={13} /> {isDemo ? t("Valider (Démo)", "Validate (Demo)") : `${t("Valider —", "Validate —")} ${t(cfg.titleFr, cfg.titleEn)}`}</>
+                    <>
+                      <CheckCircle size={14} />
+                      {t("Valider la transaction", "Validate transaction")}
+                    </>
                   )}
                 </button>
               </div>
             </form>
+
+            {/* Backend Transparency Panel (demo only) */}
+            <div className="px-5 pb-5">
+              <BackendTransparencyPanel runData={runData} />
+              <PedagogicalPanel cfg={cfg} isDemo={isDemo} />
+            </div>
           </div>
         )}
       </div>

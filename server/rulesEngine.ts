@@ -259,8 +259,9 @@ export function canExecuteStep(step: StepCode, state: RunState): ValidationResul
       };
     }
     // Verify picking was done to an EXPEDITION bin
+    // Accept both PICKING (fromBin debit) and PICKING_M1 (toBin credit to expedition)
     const pickingInExpedition = state.transactions.some(
-      (t) => t.docType === "PICKING" && t.posted && EXPEDITION_BINS.includes(t.bin)
+      (t) => (t.docType === "PICKING" || t.docType === "PICKING_M1") && t.posted && EXPEDITION_BINS.includes(t.bin)
     );
     if (!pickingInExpedition) {
       return {
@@ -546,9 +547,13 @@ export function calculateInventory(
 
     if (tx.docType === "GR" || tx.docType === "ADJ" || tx.docType === "PUTAWAY" || tx.docType === "PUTAWAY_M1") {
       inventory[key] += Number(tx.qty);
-    } else if (tx.docType === "GI" || tx.docType === "PICKING" || tx.docType === "PICKING_M1") {
-      // PICKING moves goods from stock bin to expedition bin — tracked separately
-      // GI finalizes the exit; both reduce the source bin
+    } else if (tx.docType === "PICKING_M1") {
+      // PICKING_M1 is the ARRIVAL transaction posted to toBin (expedition bin)
+      // qty is stored as positive — it CREDITS the expedition bin
+      inventory[key] += Number(tx.qty);
+    } else if (tx.docType === "GI" || tx.docType === "PICKING") {
+      // PICKING deducts from source bin (fromBin, qty stored as negative)
+      // GI deducts from expedition bin (finalizes the physical exit)
       inventory[key] -= Number(tx.qty);
     }
   }
@@ -565,9 +570,10 @@ export function calculateBinLoad(
   const load: Record<string, number> = {};
   for (const tx of transactions) {
     if (!tx.posted) continue;
-    if (tx.docType === "PUTAWAY" || tx.docType === "PUTAWAY_M1" || tx.docType === "GR") {
+    if (tx.docType === "PUTAWAY" || tx.docType === "PUTAWAY_M1" || tx.docType === "GR" || tx.docType === "PICKING_M1") {
+      // PICKING_M1 credits the expedition bin (arrival)
       load[tx.bin] = (load[tx.bin] ?? 0) + Number(tx.qty);
-    } else if (tx.docType === "GI" || tx.docType === "PICKING" || tx.docType === "PICKING_M1") {
+    } else if (tx.docType === "GI" || tx.docType === "PICKING") {
       load[tx.bin] = (load[tx.bin] ?? 0) - Number(tx.qty);
     }
   }

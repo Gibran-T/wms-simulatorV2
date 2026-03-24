@@ -383,6 +383,7 @@ function ScoreEvolutionSection() {
 export default function AnalyticsDashboard() {
   const { t } = useLanguage();
 
+  const [, navigate] = useLocation();
   const { data, isLoading, refetch, isFetching } = trpc.monitor.powerAnalytics.useQuery(undefined, {
     refetchInterval: 60_000,
   });
@@ -463,8 +464,6 @@ export default function AnalyticsDashboard() {
       </div>
     );
   }
-
-  const [, navigate] = useLocation();
 
   return (
     <FioriShell>
