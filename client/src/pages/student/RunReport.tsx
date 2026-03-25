@@ -321,7 +321,7 @@ export default function RunReport() {
           </div>
         )}
 
-        {/* Résumé pédagogique */}
+        {/* Résumé pédagogique — dynamic for all modules */}
         <div className="bg-card border border-border rounded-md p-5">
           <p className="text-xs font-semibold text-foreground mb-4 uppercase tracking-wider">
             {t("Résumé Pédagogique", "Pedagogical Summary")}
@@ -329,7 +329,9 @@ export default function RunReport() {
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <p className="text-[10px] text-muted-foreground uppercase">{t("Étapes validées", "Steps validated")}</p>
-              <p className="text-lg font-bold text-foreground">{completedSteps.length}/7</p>
+              <p className="text-lg font-bold text-foreground">
+                {detail ? `${detail.stepsCompleted}/${detail.totalSteps}` : `${completedSteps.length}`}
+              </p>
             </div>
             <div>
               <p className="text-[10px] text-muted-foreground uppercase">{t("Progression", "Progression")}</p>
@@ -343,36 +345,37 @@ export default function RunReport() {
             </div>
             <div>
               <p className="text-[10px] text-muted-foreground uppercase">{t("Erreurs commises", "Errors made")}</p>
-              <p className={`text-sm font-bold ${(detail?.errors.length ?? 0) === 0 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
-                {detail?.errors.length ?? 0}
+              <p className={`text-sm font-bold ${(detail?.totalErrors ?? 0) === 0 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}>
+                {detail?.totalErrors ?? 0}
               </p>
             </div>
           </div>
-          <div className="space-y-1.5">
-            {["PO","GR","STOCK","SO","GI","CC","COMPLIANCE"].map(step => {
-              const done = completedSteps.includes(step as any);
-              const stepDetail = detail?.stepBreakdown.find(s => s.step === step);
-              const label = t(STEP_LABELS_FR[step] ?? step, STEP_LABELS_EN[step] ?? step);
-              return (
-                <div key={step} className={`flex items-center gap-3 p-2.5 rounded ${done ? "bg-green-50 dark:bg-green-950/30" : "bg-secondary/50"}`}>
-                  {done
-                    ? <CheckCircle size={13} className="text-green-600 dark:text-green-400 flex-shrink-0" />
-                    : <AlertTriangle size={13} className="text-amber-500 flex-shrink-0" />}
-                  <span className={`text-xs flex-1 ${done ? "text-green-700 dark:text-green-300 font-medium" : "text-muted-foreground"}`}>
-                    {label}
-                  </span>
-                  {stepDetail && stepDetail.maxPoints > 0 && (
-                    <span className={`text-[10px] font-semibold ${done ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
-                      {stepDetail.pointsEarned}/{stepDetail.maxPoints} pts
+          {/* Dynamic step list from detailedReport — works for M1-M5 */}
+          {detail && (
+            <div className="space-y-1.5">
+              {detail.stepBreakdown.map(stepDetail => {
+                const done = stepDetail.completed;
+                return (
+                  <div key={stepDetail.step} className={`flex items-center gap-3 p-2.5 rounded ${done ? "bg-green-50 dark:bg-green-950/30" : "bg-secondary/50"}`}>
+                    {done
+                      ? <CheckCircle size={13} className="text-green-600 dark:text-green-400 flex-shrink-0" />
+                      : <AlertTriangle size={13} className="text-amber-500 flex-shrink-0" />}
+                    <span className={`text-xs flex-1 ${done ? "text-green-700 dark:text-green-300 font-medium" : "text-muted-foreground"}`}>
+                      {stepDetail.label}
                     </span>
-                  )}
-                  <span className={`text-[10px] font-semibold ${done ? "text-green-600 dark:text-green-400" : "text-amber-500"}`}>
-                    {done ? t("VALIDÉ", "DONE") : t("NON COMPLÉTÉ", "INCOMPLETE")}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+                    {stepDetail.maxPoints > 0 && (
+                      <span className={`text-[10px] font-semibold ${done ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}`}>
+                        {stepDetail.pointsEarned}/{stepDetail.maxPoints} pts
+                      </span>
+                    )}
+                    <span className={`text-[10px] font-semibold ${done ? "text-green-600 dark:text-green-400" : "text-amber-500"}`}>
+                      {done ? t("VALIDÉ", "DONE") : t("NON COMPLÉTÉ", "INCOMPLETE")}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Erreurs commises */}
@@ -440,7 +443,7 @@ export default function RunReport() {
           </div>
         )}
 
-        {/* Compétences */}
+        {/* Compétences — dynamic per module */}
         <div className="bg-card border border-border rounded-md p-5">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen size={14} className="text-primary" />
@@ -449,14 +452,49 @@ export default function RunReport() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {[
-              t("PO/GR (Approvisionnement)", "PO/GR (Procurement)"),
-              t("SO/GI (Expédition)", "SO/GI (Shipping)"),
-              t("WMS — Gestion des bins", "WMS — Bin management"),
-              t("ERP — Flux intégré", "ERP — Integrated flow"),
-              t("Cycle Count & ADJ", "Cycle Count & ADJ"),
-              t("KPI & Conformité", "KPI & Compliance")
-            ].map(c => (
+            {((): string[] => {
+              const mod = scenario?.moduleId ?? 1;
+              if (mod === 1) return [
+                t("PO/GR (Approvisionnement)", "PO/GR (Procurement)"),
+                t("SO/GI (Expédition)", "SO/GI (Shipping)"),
+                t("WMS — Gestion des bins", "WMS — Bin management"),
+                t("ERP — Flux intégré", "ERP — Integrated flow"),
+                t("Cycle Count & ADJ", "Cycle Count & ADJ"),
+                t("Conformité système", "System compliance"),
+              ];
+              if (mod === 2) return [
+                t("Gestion FIFO/LIFO", "FIFO/LIFO management"),
+                t("Précision d’inventaire", "Inventory accuracy"),
+                t("Gestion de lots (batch)", "Batch/lot management"),
+                t("Traçabilité (ASN)", "Traceability (ASN)"),
+                t("Conformité avancée", "Advanced compliance"),
+              ];
+              if (mod === 3) return [
+                t("Comptage cyclique (CC)", "Cycle Count (CC)"),
+                t("Réconciliation des écarts", "Variance reconciliation"),
+                t("ROP — Point de réapprovisionnement", "ROP — Reorder point"),
+                t("EOQ — Quantité économique", "EOQ — Economic order quantity"),
+                t("Gestion du stock de sécurité", "Safety stock management"),
+                t("MRP — Planification des besoins", "MRP — Material requirements"),
+              ];
+              if (mod === 4) return [
+                t("Taux de rotation des stocks", "Inventory turnover rate"),
+                t("Taux de service (Fill Rate)", "Service level (Fill Rate)"),
+                t("DSI — Jours de stock", "DSI — Days of stock"),
+                t("LPH — Lignes par heure", "LPH — Lines per hour"),
+                t("Diagnostic de performance", "Performance diagnosis"),
+                t("Analyse Lean & RCA", "Lean & RCA analysis"),
+              ];
+              if (mod === 5) return [
+                t("Simulation intégrée M1–M4", "Integrated simulation M1–M4"),
+                t("Décision stratégique", "Strategic decision-making"),
+                t("Gestion de crise logistique", "Logistics crisis management"),
+                t("Analyse multicritère", "Multi-criteria analysis"),
+                t("Présentation de résultats", "Results presentation"),
+                t("Certification TEC.LOG", "TEC.LOG Certification"),
+              ];
+              return [];
+            })().map(c => (
               <span key={c} className="text-[10px] bg-primary/10 text-primary font-medium px-2.5 py-1 rounded-full">{c}</span>
             ))}
           </div>

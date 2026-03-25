@@ -773,20 +773,43 @@ export default function StepForm() {
 
   function handleSuccess(data: any) {
     if (data?.demoWarning) {
-      toast.warning(`⚠ ${t("Avertissement (mode démo)", "Warning (demo mode)")} : ${data.demoWarning}`);
+      toast.warning(`⚠ ${t("Avertissement (mode démo)", "Warning (demo mode)")} : ${data.demoWarning}`, { duration: 5000 });
     } else if (data?.feedback) {
-      // KPI interpretation feedback
+      // KPI interpretation feedback (M4/M5)
       const icon = data.isCorrect ? "✅" : "⚠";
-      toast[data.isCorrect ? "success" : "warning"](`${icon} ${t(cfg.titleFr, cfg.titleEn)} — ${data.feedback}`);
+      toast[data.isCorrect ? "success" : "warning"](`${icon} ${t(cfg.titleFr, cfg.titleEn)} — ${data.feedback}`, { duration: 6000 });
     } else if (data?.suggestion) {
-      // Replenishment suggestion
+      // Replenishment suggestion (M3/M5) with accuracy feedback
       const s = data.suggestion;
-      toast.success(`${t("Suggestion système", "System suggestion")}: ${s.suggestedQty} ${t("unités", "units")} — ${s.reason}`);
+      const studentQty = data.studentQty;
+      if (studentQty !== undefined && s.suggestedQty > 0) {
+        const diff = Math.abs(studentQty - s.suggestedQty);
+        const accuracy = Math.round((1 - diff / s.suggestedQty) * 100);
+        const icon = accuracy >= 80 ? "✅" : accuracy >= 50 ? "⚠" : "❌";
+        toast[accuracy >= 80 ? "success" : "warning"](
+          `${icon} ${t("Suggestion optimale", "Optimal suggestion")}: ${s.suggestedQty} ${t("unités", "units")} | ${t("Votre réponse", "Your answer")}: ${studentQty} | ${t("Précision", "Accuracy")}: ${Math.max(0, accuracy)}% — ${s.reason}`,
+          { duration: 7000 }
+        );
+      } else {
+        toast.success(`✅ ${t("Suggestion système", "System suggestion")}: ${s.suggestedQty} ${t("unités", "units")} — ${s.reason}`, { duration: 5000 });
+      }
+    } else if (data?.totalVariance !== undefined) {
+      // CC_COUNT feedback with variance detail
+      const v = data.totalVariance;
+      if (v === 0) {
+        toast.success(`✅ ${t("Comptage parfait — aucune variance détectée. Excellent travail !", "Perfect count — no variance detected. Excellent work!")}`, { duration: 4000 });
+      } else {
+        toast.warning(`⚠ ${t("Variance totale détectée", "Total variance detected")}: ${v > 0 ? "+" : ""}${v} ${t("unités. Passez à la réconciliation (CC_RECON) pour ajuster le stock.", "units. Proceed to reconciliation (CC_RECON) to adjust stock.")}`, { duration: 6000 });
+      }
+    } else if (data?.adjustmentsApplied !== undefined) {
+      // CC_RECON feedback
+      const n = data.adjustmentsApplied;
+      toast.success(`✅ ${t("Réconciliation validée", "Reconciliation validated")} — ${n} ${t("ajustement(s) appliqué(s) au stock", "adjustment(s) applied to stock")}`, { duration: 4000 });
     } else {
       toast.success(`${t(cfg.titleFr, cfg.titleEn)} — ${t("Étape validée avec succès !", "Step validated successfully!")}`);
     }
     refetch();
-    setTimeout(() => navigate(`/student/run/${runId}`), 1500);
+    setTimeout(() => navigate(`/student/run/${runId}`), 1800);
   }
 
   function handleError(err: any) {
@@ -1306,12 +1329,37 @@ export default function StepForm() {
 
               {/* Student Qty (replenishment suggestion) */}
               {cfg.fields.includes("studentQty") && (
-                <div>
-                  <label className="fiori-field-label">
-                    {t("Votre suggestion de commande (unités)", "Your order suggestion (units)")} <span className="text-destructive">*</span>
-                  </label>
-                  <input {...register("studentQty")} type="number" min={0} placeholder="Ex: 150" className="fiori-field-input fiori-field-active" />
-                  <p className="text-[10px] text-muted-foreground mt-1">{t("Le système calculera la suggestion optimale et la comparera avec votre réponse.", "The system will calculate the optimal suggestion and compare it with your answer.")}</p>
+                <div className="space-y-3">
+                  {/* ROP/EOQ Pedagogical Reference Panel */}
+                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <p className="text-[10px] font-bold text-blue-700 dark:text-blue-300 uppercase tracking-wider mb-2">
+                      📐 {t("Formules de référence — MRP/ROP/EOQ", "Reference formulas — MRP/ROP/EOQ")}
+                    </p>
+                    <div className="space-y-2 text-[10px] font-mono">
+                      <div className="bg-white dark:bg-blue-900/30 rounded p-2 border border-blue-100 dark:border-blue-800">
+                        <p className="text-blue-600 dark:text-blue-300 font-bold mb-0.5">{t("Point de commande (ROP)", "Reorder Point (ROP)")}</p>
+                        <p className="text-blue-800 dark:text-blue-200">ROP = {t("Stock de sécurité", "Safety Stock")} + (D × LT)</p>
+                        <p className="text-blue-500 dark:text-blue-400 text-[9px] mt-0.5">{t("D = demande journalière, LT = délai fournisseur", "D = daily demand, LT = supplier lead time")}</p>
+                      </div>
+                      <div className="bg-white dark:bg-blue-900/30 rounded p-2 border border-blue-100 dark:border-blue-800">
+                        <p className="text-blue-600 dark:text-blue-300 font-bold mb-0.5">{t("Quantité à commander", "Order Quantity")}</p>
+                        <p className="text-blue-800 dark:text-blue-200">Q = {t("Stock max", "Max stock")} − {t("Stock actuel", "Current stock")}</p>
+                        <p className="text-blue-500 dark:text-blue-400 text-[9px] mt-0.5">{t("Si stock actuel ≤ ROP → déclencher commande", "If current stock ≤ ROP → trigger order")}</p>
+                      </div>
+                      <div className="bg-amber-50 dark:bg-amber-950/30 rounded p-2 border border-amber-200 dark:border-amber-800">
+                        <p className="text-amber-700 dark:text-amber-300 font-bold mb-0.5">💡 {t("Exemple concret", "Concrete example")}</p>
+                        <p className="text-amber-800 dark:text-amber-200">{t("Stock actuel", "Current stock")}: 30 | {t("Stock min (ROP)", "Min stock (ROP)")}: 50 | {t("Stock max", "Max stock")}: 200</p>
+                        <p className="text-amber-700 dark:text-amber-400 font-semibold">→ Q = 200 − 30 = <strong>170 unités</strong></p>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="fiori-field-label">
+                      {t("Votre suggestion de commande (unités)", "Your order suggestion (units)")} <span className="text-destructive">*</span>
+                    </label>
+                    <input {...register("studentQty")} type="number" min={0} placeholder="Ex: 150" className="fiori-field-input fiori-field-active" />
+                    <p className="text-[10px] text-muted-foreground mt-1">{t("Appliquez la formule ci-dessus avec vos valeurs saisies. Le système comparera votre réponse avec la suggestion optimale.", "Apply the formula above with your entered values. The system will compare your answer with the optimal suggestion.")}</p>
+                  </div>
                 </div>
               )}
 

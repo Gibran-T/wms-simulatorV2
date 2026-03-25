@@ -62,6 +62,9 @@ import {
   isModuleUnlocked,
   MODULE1_STEPS,
   MODULE2_STEPS,
+  MODULE3_STEPS,
+  MODULE4_STEPS,
+  MODULE5_STEPS,
   validatePutaway,
   validateGRZone,
   validatePutawayM1Zone,
@@ -621,59 +624,83 @@ export const appRouter = router({
         const state = await buildRunState(input.runId);
         const compliance = checkCompliance(state);
 
-        // ── Step max points map ──────────────────────────────────────────────
-        const STEP_MAX: Record<string, number> = {
+        // ── Determine module from scenario ──────────────────────────────────
+        const scenario = await getScenarioById(run.scenarioId);
+        const moduleId = scenario?.moduleId ?? 1;
+        // ── Step max points map (all modules) ───────────────────────────────
+        const STEP_MAX_ALL: Record<string, number> = {
+          // M1
           PO: 10, GR: 10, PUTAWAY_M1: 5, STOCK: 0, SO: 10, PICKING_M1: 5, GI: 15, CC: 10, COMPLIANCE: 5,
+          // M2
+          FIFO_PICK: 15, STOCK_ACCURACY: 15, COMPLIANCE_ADV: 20,
+          // M3
+          CC_LIST: 10, CC_COUNT: 20, CC_RECON: 15, REPLENISH: 20, COMPLIANCE_M3: 15,
+          // M4
+          KPI_DATA: 10, KPI_ROTATION: 20, KPI_SERVICE: 20, KPI_DIAGNOSTIC: 20, COMPLIANCE_M4: 15,
+          // M5
+          M5_RECEPTION: 10, M5_PUTAWAY: 10, M5_CYCLE_COUNT: 15, M5_REPLENISH: 20, M5_KPI: 10, M5_DECISION: 30, COMPLIANCE_M5: 20,
         };
-        const STEP_EVENT_MAP: Record<string, string> = {
+        const STEP_EVENT_MAP_ALL: Record<string, string> = {
+          // M1
           PO: "PO_COMPLETED", GR: "GR_COMPLETED", PUTAWAY_M1: "PUTAWAY_M1_COMPLETED",
           SO: "SO_COMPLETED", PICKING_M1: "PICKING_M1_COMPLETED",
           GI: "GI_COMPLETED", CC: "CC_COMPLETED", COMPLIANCE: "COMPLIANCE_OK",
+          // M2
+          FIFO_PICK: "FIFO_PICK_COMPLETED", STOCK_ACCURACY: "STOCK_ACCURACY_COMPLETED", COMPLIANCE_ADV: "COMPLIANCE_ADV_COMPLETED",
+          // M3
+          CC_LIST: "CC_LIST_COMPLETED", CC_COUNT: "CC_COUNT_COMPLETED", CC_RECON: "CC_RECON_COMPLETED",
+          REPLENISH: "REPLENISH_COMPLETED", COMPLIANCE_M3: "COMPLIANCE_M3_COMPLETED",
+          // M4
+          KPI_DATA: "KPI_DATA_COMPLETED", KPI_ROTATION: "KPI_ROTATION_COMPLETED", KPI_SERVICE: "KPI_SERVICE_COMPLETED",
+          KPI_DIAGNOSTIC: "KPI_DIAGNOSTIC_COMPLETED", COMPLIANCE_M4: "COMPLIANCE_M4_COMPLETED",
+          // M5
+          M5_RECEPTION: "M5_RECEPTION_COMPLETED", M5_PUTAWAY: "M5_PUTAWAY_COMPLETED", M5_CYCLE_COUNT: "M5_CYCLE_COUNT_COMPLETED",
+          M5_REPLENISH: "M5_REPLENISH_COMPLETED", M5_KPI: "M5_KPI_COMPLETED", M5_DECISION: "M5_DECISION_COMPLETED", COMPLIANCE_M5: "COMPLIANCE_M5_COMPLETED",
         };
-        const STEP_LABELS: Record<string, string> = {
-          PO: "Purchase Order (ME21N)",
-          GR: "Goods Receipt — Quai RÉCEPTION (MIGO)",
-          PUTAWAY_M1: "Rangement RÉCEPTION → STOCK (LT0A)",
-          STOCK: "Stock Disponible",
-          SO: "Sales Order (VA01)",
-          PICKING_M1: "Prélèvement STOCK → EXPÉDITION (VL01N)",
-          GI: "Goods Issue — Quai EXPÉDITION (VL02N)",
-          CC: "Cycle Count (MI01)",
-          COMPLIANCE: "Conformité Système",
+        const STEP_ZONES_ALL: Record<string, { from?: string; to?: string; zone?: string }> = {
+          PO: { zone: "ACHAT" }, GR: { to: "RÉCEPTION" }, PUTAWAY_M1: { from: "RÉCEPTION", to: "STOCKAGE" },
+          STOCK: { zone: "STOCKAGE" }, SO: { zone: "VENTE" }, PICKING_M1: { from: "STOCKAGE", to: "EXPÉDITION" },
+          GI: { from: "EXPÉDITION" }, CC: { zone: "STOCKAGE" }, COMPLIANCE: { zone: "SYSTÈME" },
+          FIFO_PICK: { from: "STOCKAGE", to: "EXPÉDITION" }, STOCK_ACCURACY: { zone: "STOCKAGE" }, COMPLIANCE_ADV: { zone: "SYSTÈME" },
+          CC_LIST: { zone: "STOCKAGE" }, CC_COUNT: { zone: "STOCKAGE" }, CC_RECON: { zone: "STOCKAGE" },
+          REPLENISH: { zone: "ACHAT" }, COMPLIANCE_M3: { zone: "SYSTÈME" },
+          KPI_DATA: { zone: "ANALYTIQUE" }, KPI_ROTATION: { zone: "ANALYTIQUE" }, KPI_SERVICE: { zone: "ANALYTIQUE" },
+          KPI_DIAGNOSTIC: { zone: "ANALYTIQUE" }, COMPLIANCE_M4: { zone: "SYSTÈME" },
+          M5_RECEPTION: { to: "RÉCEPTION" }, M5_PUTAWAY: { from: "RÉCEPTION", to: "STOCKAGE" },
+          M5_CYCLE_COUNT: { zone: "STOCKAGE" }, M5_REPLENISH: { zone: "ACHAT" },
+          M5_KPI: { zone: "ANALYTIQUE" }, M5_DECISION: { zone: "STRATÉGIQUE" }, COMPLIANCE_M5: { zone: "SYSTÈME" },
         };
-        const STEP_ZONES: Record<string, { from?: string; to?: string; zone?: string }> = {
-          PO:         { zone: "ACHAT" },
-          GR:         { to: "RÉCEPTION" },
-          PUTAWAY_M1: { from: "RÉCEPTION", to: "STOCKAGE" },
-          STOCK:      { zone: "STOCKAGE" },
-          SO:         { zone: "VENTE" },
-          PICKING_M1: { from: "STOCKAGE", to: "EXPÉDITION" },
-          GI:         { from: "EXPÉDITION" },
-          CC:         { zone: "STOCKAGE" },
-          COMPLIANCE: { zone: "SYSTÈME" },
-        };
-
+        // ── Select steps for this module ─────────────────────────────────────
+        const moduleSteps = moduleId === 2 ? MODULE2_STEPS
+          : moduleId === 3 ? MODULE3_STEPS
+          : moduleId === 4 ? MODULE4_STEPS
+          : moduleId === 5 ? MODULE5_STEPS
+          : MODULE1_STEPS;
+        const stepCodesToReport = moduleSteps.map(s => s.code as string);
         // ── Per-step score breakdown ─────────────────────────────────────────
-        const stepBreakdown = ["PO","GR","PUTAWAY_M1","STOCK","SO","PICKING_M1","GI","CC","COMPLIANCE"].map(step => {
+        const stepBreakdown = stepCodesToReport.map(step => {
           const completed = state.completedSteps.includes(step as any);
-          const completionEvent = STEP_EVENT_MAP[step];
+          const completionEvent = STEP_EVENT_MAP_ALL[step];
           const completionPoints = completionEvent
             ? events.filter(e => e.eventType === completionEvent).reduce((s, e) => s + e.pointsDelta, 0)
             : 0;
-          const maxPoints = STEP_MAX[step];
+          const maxPoints = STEP_MAX_ALL[step] ?? 0;
           const pct = maxPoints > 0 ? Math.round((completionPoints / maxPoints) * 100) : (completed ? 100 : 0);
           // Collect zone errors for this step
           const zoneErrors = events
             .filter(e => e.eventType === "WRONG_ZONE" && (e.message ?? "").includes(step))
             .map(e => e.message ?? "");
+          // Use labelFr from moduleSteps if available
+          const stepDef = moduleSteps.find(s => (s.code as string) === step);
+          const label = stepDef?.labelFr ?? step;
           return {
             step,
-            label: STEP_LABELS[step],
+            label,
             completed,
             pointsEarned: completionPoints,
             maxPoints,
             pct: Math.max(0, Math.min(100, pct)),
-            zones: STEP_ZONES[step] ?? {},
+            zones: STEP_ZONES_ALL[step] ?? {},
             zoneErrors,
           };
         });
@@ -1815,7 +1842,7 @@ export const appRouter = router({
         }
         await markStepComplete(input.runId, "CC_RECON");
         if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "CC_RECON_COMPLETED", pointsDelta: 15, message: "Réconciliation et ajustements validés" });
-        return { success: true };
+        const adjustmentsApplied = input.adjustments.filter((a: any) => a.varianceQty !== 0).length; return { success: true, adjustmentsApplied };
       }),
 
     /** M3 Step 4: REPLENISH \u2014 replenishment suggestion */
@@ -1845,7 +1872,7 @@ export const appRouter = router({
         await addReplenishmentSuggestion({ runId: input.runId, sku: input.sku, systemQty: input.systemQty, suggestedQty: suggestion.suggestedQty, reason: suggestion.reason });
         await markStepComplete(input.runId, "REPLENISH");
         if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "REPLENISH_COMPLETED", pointsDelta: points, message: `R\u00e9approvisionnement: sugg\u00e9r\u00e9 ${suggestion.suggestedQty}, \u00e9tudiant ${input.studentQty}` });
-        return { success: true, suggestion, diff };
+        return { success: true, suggestion, diff, studentQty: input.studentQty };
       }),
 
     /** M3 Step 5: COMPLIANCE_M3 */
@@ -1998,7 +2025,7 @@ export const appRouter = router({
         await addReplenishmentSuggestion({ runId: input.runId, sku: input.sku, systemQty: input.systemQty, suggestedQty: suggestion.suggestedQty, reason: suggestion.reason });
         await markStepComplete(input.runId, "M5_REPLENISH");
         if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "M5_REPLENISH_COMPLETED", pointsDelta: points, message: `M5 Réappro: suggéré ${suggestion.suggestedQty}, étudiant ${input.studentQty}` });
-        return { success: true, suggestion, diff };
+        return { success: true, suggestion, diff, studentQty: input.studentQty };
       }),
 
     /** M5 Step 5: M5_KPI */

@@ -373,3 +373,21 @@
 - [x] Add PUTAWAY_M1, STOCK, PICKING_M1 to MissionControl STEPS array
 - [x] Add PUTAWAY_M1, STOCK, PICKING_M1 to PEDAGOGICAL_OBJECTIVES in MissionControl
 - [x] All 50 vitest tests pass, zero TypeScript errors
+
+## QA Priority Fixes (2026-03-25)
+- [x] Testes unitários M3: ROP, EOQ, calculateVariance, computeReplenishmentSuggestion (73 novos testes)
+- [x] Testes unitários M4: calculateKpis (rotation, service, errorRate, DSI, stockValue)
+- [x] Testes unitários M5: scoreM5Decision (NLP scoring, bonus, feedback)
+- [x] RunReport: tabela de scores por etapa dinâmica M1-M5 (pontos obtidos / pontos máx)
+- [x] RunReport: seção "Resumo de erros pedagógicos" com descrição e recomendação
+- [x] RunReport: backend procedure runs.detailedReport expandido para M1-M5
+- [x] FR/EN toggle: TeacherDashboard — todos os textos via t() (já estava correto)
+- [x] FR/EN toggle: ScenarioManager — todos os textos via t() (já estava correto)
+- [x] FR/EN toggle: MonitorDashboard — todos os textos via t() (já estava correto)
+- [x] FR/EN toggle: AssignmentManager — todos os textos via t() (já estava correto)
+- [x] FR/EN toggle: CohortManager — todos os textos via t() (já estava correto)
+- [x] Experiência didática M3: painel ROP/EOQ com fórmulas visíveis + feedback de precisão no réapprovisionnement
+- [x] Experiência didática M3: feedback CC_COUNT mostra variância total + orientação para CC_RECON
+- [x] Experiência didática M3: feedback CC_RECON mostra número de ajustamentos aplicados
+- [x] RunReport: competências dinâmicas por módulo (M1-M5 cada um com suas competências específicas)
+- [x] Backend: submitCcRecon retorna adjustmentsApplied; submitReplenish retorna studentQty para feedback de precisão
