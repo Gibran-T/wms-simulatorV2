@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id, email, name, role, openId, passwordHash IS NOT NULL as hasPassword, loginMethod FROM users WHERE email = 'gibranlog@gmail.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT id, email, name, role, openId, passwordHash IS NOT NULL as hasPassword, loginMethod FROM users WHERE email = 'gibranlog@gmail.com';",
+  "rows": [
+    {
+      "id": "1",
+      "email": "gibranlog@gmail.com",
+      "name": "Gibran Thiago (Admin)",
+      "role": "admin",
+      "openId": "bWzyxCbGKiEzPL4QUFQ2yZ",
+      "hasPassword": "1",
+      "loginMethod": "google"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\trole\topenId\thasPassword\tloginMethod\n1\tgibranlog@gmail.com\tGibran Thiago (Admin)\tadmin\tbWzyxCbGKiEzPL4QUFQ2yZ\t1\tgoogle\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

@@ -1,0 +1,8 @@
+{
+  "query": "SELECT q.id, q.module_id, q.title_fr, q.passing_score, COUNT(qq.id) as question_count FROM quizzes q LEFT JOIN quiz_questions qq ON qq.quiz_id = q.id GROUP BY q.id ORDER BY q.module_id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT q.id, q.module_id, q.title_fr, q.passing_score, COUNT(qq.id) as question_count FROM quizzes q LEFT JOIN quiz_questions qq ON qq.quiz_id = q.id GROUP BY q.id ORDER BY q.module_id;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'qq.quiz_id' in 'on clause'"
+  ]
+}

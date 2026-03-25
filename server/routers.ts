@@ -50,15 +50,22 @@ import {
   updateStudentNotes,
   assignStudentToCohort,
   getStudentStats,
+  getQuizByModule,
+  getQuizWithQuestions,
+  getQuizAttemptsByUser,
+  getBestQuizAttempt,
+  saveQuizAttempt,
 } from "./db";
 import {
   calculateBinLoad,
   calculateInventory,
   calculateProgressPct,
+  calculateProgressPctAllModules,
   canExecuteStep,
   canIssueStock,
   checkCompliance,
   getNextRequiredStep,
+  getNextRequiredStepAllModules,
   isModuleUnlocked,
   MODULE1_STEPS,
   MODULE2_STEPS,
@@ -867,9 +874,9 @@ export const appRouter = router({
         // Score is now calculated for both modes; isDemo flag distinguishes official vs pedagogical
         const totalScore = calculateTotalScore(await getScoringEventsByRun(input.runId));
         const compliance = checkCompliance(state);
-        const nextStep = getNextRequiredStep(state.completedSteps);
-        const progressPct = calculateProgressPct(state.completedSteps);
-
+         const moduleId = scenario?.moduleId ?? 1;
+        const nextStep = getNextRequiredStepAllModules(state.completedSteps, moduleId);
+        const progressPct = calculateProgressPctAllModules(state.completedSteps, moduleId);
         return {
           run,
           scenario,
@@ -879,7 +886,12 @@ export const appRouter = router({
           nextStep,
           progressPct,
           totalScore,
-          steps: MODULE1_STEPS,
+          moduleId,
+          steps: scenario?.moduleId === 2 ? MODULE2_STEPS
+            : scenario?.moduleId === 3 ? MODULE3_STEPS
+            : scenario?.moduleId === 4 ? MODULE4_STEPS
+            : scenario?.moduleId === 5 ? MODULE5_STEPS
+            : MODULE1_STEPS,
           isDemo: run.isDemo,
           // Backend transparency data (visible only in demo mode on frontend)
           demoBackendState: run.isDemo ? {
@@ -2067,6 +2079,90 @@ export const appRouter = router({
         await markStepComplete(input.runId, "COMPLIANCE_M5");
         if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "COMPLIANCE_M5_COMPLETED", pointsDelta: 20, message: "Validation finale M5 complétée" });
         return { success: true };
+      }),
+  }),
+
+  // ── QUIZ ROUTER ─────────────────────────────────────────────────────────────
+  quiz: router({
+    /** Get quiz for a module (correctIndex hidden from student) */
+    getByModule: protectedProcedure
+      .input(z.object({ moduleId: z.number() }))
+      .query(async ({ input }) => {
+        const quiz = await getQuizByModule(input.moduleId);
+        if (!quiz) return null;
+        const full = await getQuizWithQuestions(quiz.id);
+        if (!full) return null;
+        return {
+          id: full.id,
+          moduleId: full.moduleId,
+          titleFr: full.titleFr,
+          titleEn: full.titleEn,
+          passingScore: full.passingScore,
+          questions: full.questions.map(q => ({
+            id: q.id,
+            questionFr: q.questionFr,
+            questionEn: q.questionEn,
+            optionsFr: q.optionsFr as string[],
+            optionsEn: q.optionsEn as string[],
+            difficulty: q.difficulty,
+            orderIndex: q.orderIndex,
+          })),
+        };
+      }),
+
+    /** Get best quiz attempt for current user + module */
+    getBestAttempt: protectedProcedure
+      .input(z.object({ moduleId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return getBestQuizAttempt(ctx.user.id, input.moduleId);
+      }),
+
+    /** Get all attempts for current user + module */
+    getAttempts: protectedProcedure
+      .input(z.object({ moduleId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return getQuizAttemptsByUser(ctx.user.id, input.moduleId);
+      }),
+
+    /** Submit quiz answers — returns score, passed, and per-question feedback */
+    submit: protectedProcedure
+      .input(z.object({
+        moduleId: z.number(),
+        answers: z.array(z.number()),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const quiz = await getQuizByModule(input.moduleId);
+        if (!quiz) throw new TRPCError({ code: "NOT_FOUND", message: "Quiz non trouvé pour ce module" });
+        const full = await getQuizWithQuestions(quiz.id);
+        if (!full) throw new TRPCError({ code: "NOT_FOUND" });
+        const questions = full.questions;
+        if (input.answers.length !== questions.length) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: `Expected ${questions.length} answers, got ${input.answers.length}` });
+        }
+        let correct = 0;
+        const feedback = questions.map((q, i) => {
+          const isCorrect = input.answers[i] === q.correctIndex;
+          if (isCorrect) correct++;
+          return {
+            questionId: q.id,
+            chosen: input.answers[i],
+            correctIndex: q.correctIndex,
+            isCorrect,
+            explanationFr: q.explanationFr,
+            explanationEn: q.explanationEn,
+          };
+        });
+        const score = Math.round((correct / questions.length) * 100);
+        const passed = score >= quiz.passingScore;
+        await saveQuizAttempt({
+          userId: ctx.user.id,
+          quizId: quiz.id,
+          moduleId: input.moduleId,
+          answers: input.answers,
+          score,
+          passed,
+        });
+        return { score, passed, correct, total: questions.length, passingScore: quiz.passingScore, feedback };
       }),
   }),
 });

@@ -1,33 +1,54 @@
-import FioriShell from "@/components/FioriShell";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useParams, useLocation } from "wouter";
 import { CheckCircle, Lock, ArrowRight, AlertTriangle, Trophy, FlaskConical } from "lucide-react";
+import FioriShell from "@/components/FioriShell";
 
-const STEPS = [
-  { key: "PO",         label: "Purchase Order",   labelFr: "Bon de commande",       code: "ME21N",  descFr: "Créer la commande d'achat",              descEn: "Create purchase order" },
-  { key: "GR",         label: "Goods Receipt",    labelFr: "Réception marchand.",   code: "MIGO",   descFr: "Enregistrer la réception",               descEn: "Record goods receipt" },
-  { key: "PUTAWAY_M1", label: "Putaway (LT0A)",   labelFr: "Rangement stock",       code: "LT0A",   descFr: "Ranger RÉC → STOCKAGE",                  descEn: "Putaway REC → STOCKAGE" },
-  { key: "STOCK",      label: "Stock Check",      labelFr: "Stock disponible",      code: "MB52",   descFr: "Vérifier stock disponible",              descEn: "Verify available stock" },
-  { key: "SO",         label: "Sales Order",      labelFr: "Commande client",       code: "VA01",   descFr: "Créer la commande client",               descEn: "Create sales order" },
-  { key: "PICKING_M1", label: "Picking (VL01N)",  labelFr: "Prélèvement expéd.",    code: "VL01N",  descFr: "Prélever STOCKAGE → EXPÉD.",             descEn: "Pick STOCKAGE → DISPATCH" },
-  { key: "GI",         label: "Goods Issue",      labelFr: "Sortie de stock",       code: "VL02N",  descFr: "Émettre les marchandises",               descEn: "Issue goods" },
-  { key: "CC",         label: "Cycle Count",      labelFr: "Comptage inventaire",   code: "MI01",   descFr: "Compter l'inventaire",                   descEn: "Count inventory" },
-  { key: "ADJ",        label: "Adjustment",       labelFr: "Ajustement",            code: "MI07",   descFr: "Ajuster les écarts",                     descEn: "Adjust variances" },
-  { key: "COMPLIANCE", label: "Compliance",       labelFr: "Conformité",            code: "MB52",   descFr: "Valider la conformité",                  descEn: "Validate compliance" },
-];
-
+// Pedagogical objectives for all M1-M5 steps
 const PEDAGOGICAL_OBJECTIVES: Record<string, { fr: string; en: string }> = {
-  PO:         { fr: "Comprendre le processus d'approvisionnement : création d'une commande d'achat (PO) avec fournisseur, SKU et quantité.", en: "Understand the procurement process: creating a purchase order (PO) with supplier, SKU, and quantity." },
-  GR:         { fr: "Maîtriser l'entrée en stock : la réception physique (GR) impacte l'inventaire uniquement si Posted=Y.", en: "Master stock entry: physical receipt (GR) impacts inventory only when Posted=Y." },
-  PUTAWAY_M1: { fr: "Comprendre le rangement WMS : transférer la marchandise de la zone RÉCEPTION vers la zone STOCKAGE via LT0A.", en: "Understand WMS putaway: transfer goods from RECEPTION zone to STOCKAGE zone via LT0A." },
-  STOCK:      { fr: "Vérifier la disponibilité stock : confirmer que le stock est bien en zone STOCKAGE avant de créer un SO.", en: "Verify stock availability: confirm stock is in STOCKAGE zone before creating a SO." },
-  SO:         { fr: "Analyser la demande client : un Sales Order (SO) ne peut être créé que si le stock disponible est suffisant.", en: "Analyze customer demand: a Sales Order (SO) can only be created if sufficient stock is available." },
-  PICKING_M1: { fr: "Maîtriser le prélèvement WMS : déplacer la marchandise de STOCKAGE vers EXPÉDITION via VL01N avant la GI.", en: "Master WMS picking: move goods from STOCKAGE to EXPÉDITION via VL01N before GI." },
-  GI:         { fr: "Contrôler la sortie de stock : le Goods Issue (GI) déduit le stock et génère le mouvement 601.", en: "Control stock outflow: Goods Issue (GI) deducts stock and generates movement 601." },
-  CC:         { fr: "Vérifier l'exactitude de l'inventaire : comparer le stock physique au stock système pour détecter les écarts.", en: "Verify inventory accuracy: compare physical stock to system stock to detect variances." },
-  ADJ:        { fr: "Corriger les écarts : tout écart de Cycle Count doit être résolu par un ajustement (ADJ) avant la clôture.", en: "Correct variances: all Cycle Count variances must be resolved by an adjustment (ADJ) before closing." },
-  COMPLIANCE: { fr: "Valider la conformité système : tous les indicateurs doivent être au vert avant de clôturer le module.", en: "Validate system compliance: all indicators must be green before closing the module." },
+  // M1
+  PO:           { fr: "Comprendre le processus d'approvisionnement : création d'une commande d'achat (PO) avec fournisseur, SKU et quantité.", en: "Understand the procurement process: creating a purchase order (PO) with supplier, SKU, and quantity." },
+  GR:           { fr: "Maîtriser l'entrée en stock : la réception physique (GR) impacte l'inventaire uniquement si Posted=Y.", en: "Master stock entry: physical receipt (GR) impacts inventory only when Posted=Y." },
+  PUTAWAY_M1:   { fr: "Comprendre le rangement WMS : transférer la marchandise de la zone RÉCEPTION vers la zone STOCKAGE via LT0A.", en: "Understand WMS putaway: transfer goods from RECEPTION zone to STOCKAGE zone via LT0A." },
+  STOCK:        { fr: "Vérifier la disponibilité stock : confirmer que le stock est bien en zone STOCKAGE avant de créer un SO.", en: "Verify stock availability: confirm stock is in STOCKAGE zone before creating a SO." },
+  SO:           { fr: "Analyser la demande client : un Sales Order (SO) ne peut être créé que si le stock disponible est suffisant.", en: "Analyze customer demand: a Sales Order (SO) can only be created if sufficient stock is available." },
+  PICKING_M1:   { fr: "Maîtriser le prélèvement WMS : déplacer la marchandise de STOCKAGE vers EXPÉDITION via VL01N avant la GI.", en: "Master WMS picking: move goods from STOCKAGE to EXPÉDITION via VL01N before GI." },
+  GI:           { fr: "Contrôler la sortie de stock : le Goods Issue (GI) déduit le stock et génère le mouvement 601.", en: "Control stock outflow: Goods Issue (GI) deducts stock and generates movement 601." },
+  CC:           { fr: "Vérifier l'exactitude de l'inventaire : comparer le stock physique au stock système pour détecter les écarts.", en: "Verify inventory accuracy: compare physical stock to system stock to detect variances." },
+  ADJ:          { fr: "Corriger les écarts : tout écart de Cycle Count doit être résolu par un ajustement (ADJ) avant la clôture.", en: "Correct variances: all Cycle Count variances must be resolved by an adjustment (ADJ) before closing." },
+  COMPLIANCE:   { fr: "Valider la conformité système : tous les indicateurs doivent être au vert avant de clôturer le module.", en: "Validate system compliance: all indicators must be green before closing the module." },
+  // M2
+  FIFO_PICK:      { fr: "Appliquer la règle FIFO : prélever en priorité les lots les plus anciens (date d'entrée la plus tôt) pour minimiser les risques d'obsolescence.", en: "Apply FIFO rule: pick oldest batches first (earliest entry date) to minimize obsolescence risk." },
+  STOCK_ACCURACY: { fr: "Calculer le taux de précision de l'inventaire (IRA) : comparer le stock physique au stock système et identifier les écarts significatifs.", en: "Calculate Inventory Record Accuracy (IRA): compare physical to system stock and identify significant variances." },
+  COMPLIANCE_ADV: { fr: "Valider la conformité avancée : vérifier que tous les mouvements FIFO et les comptages sont conformes aux standards WMS.", en: "Validate advanced compliance: verify all FIFO movements and counts meet WMS standards." },
+  // M3
+  CC_LIST:        { fr: "Planifier le comptage cyclique : identifier les articles à compter selon la méthode ABC et préparer la liste de comptage.", en: "Plan cycle counting: identify items to count using ABC method and prepare the count list." },
+  CC_COUNT:       { fr: "Exécuter le comptage physique : saisir les quantités réelles pour chaque article et calculer les variances par rapport au stock système.", en: "Execute physical count: enter actual quantities for each item and calculate variances against system stock." },
+  CC_RECON:       { fr: "Réconcilier les écarts : analyser les variances et appliquer les ajustements nécessaires pour aligner le stock physique et système.", en: "Reconcile variances: analyze discrepancies and apply necessary adjustments to align physical and system stock." },
+  REPLENISH:      { fr: "Calculer le point de réapprovisionnement (ROP) et la quantité économique de commande (EOQ) pour optimiser les niveaux de stock.", en: "Calculate the Reorder Point (ROP) and Economic Order Quantity (EOQ) to optimize stock levels." },
+  COMPLIANCE_M3:  { fr: "Valider la conformité du contrôle des stocks : IRA ≥ 95%, tous les écarts résolus, niveaux de stock optimisés.", en: "Validate stock control compliance: IRA ≥ 95%, all variances resolved, stock levels optimized." },
+  // M4
+  KPI_DATA:       { fr: "Collecter les données KPI : saisir les valeurs réelles de livraison, réception et stock pour calculer les indicateurs de performance.", en: "Collect KPI data: enter actual delivery, reception, and stock values to calculate performance indicators." },
+  KPI_ROTATION:   { fr: "Analyser la rotation des stocks (DSI/ITO) : comprendre le lien entre la vitesse de rotation et les coûts de possession.", en: "Analyze stock rotation (DSI/ITO): understand the link between turnover speed and carrying costs." },
+  KPI_SERVICE:    { fr: "Mesurer le taux de service client (OTIF, Fill Rate) : quantifier l'impact des ruptures de stock sur la satisfaction client.", en: "Measure customer service rate (OTIF, Fill Rate): quantify the impact of stockouts on customer satisfaction." },
+  KPI_DIAGNOSTIC: { fr: "Diagnostiquer les causes racines des sous-performances KPI et proposer des actions correctives ciblées (méthode RCA).", en: "Diagnose root causes of KPI underperformance and propose targeted corrective actions (RCA method)." },
+  COMPLIANCE_M4:  { fr: "Valider le tableau de bord KPI : tous les indicateurs calculés, diagnostics documentés, plan d'action défini.", en: "Validate KPI dashboard: all indicators calculated, diagnostics documented, action plan defined." },
+  // M5
+  M5_RECEPTION:   { fr: "Simuler la réception d'urgence : gérer un flux entrant non planifié avec contraintes de temps et de ressources.", en: "Simulate emergency reception: manage an unplanned inbound flow with time and resource constraints." },
+  M5_PICKING:     { fr: "Optimiser le prélèvement sous contrainte : appliquer les règles FIFO/FEFO dans un contexte de pression opérationnelle.", en: "Optimize picking under constraint: apply FIFO/FEFO rules in an operational pressure context." },
+  M5_SHIPPING:    { fr: "Gérer l'expédition prioritaire : prioriser les commandes selon les critères OTIF et les contraintes de transport.", en: "Manage priority shipping: prioritize orders by OTIF criteria and transport constraints." },
+  M5_CRISIS:      { fr: "Gérer une crise opérationnelle : identifier les causes, évaluer l'impact et décider des actions correctives en temps réel.", en: "Manage an operational crisis: identify causes, assess impact, and decide corrective actions in real time." },
+  M5_KPI_REVIEW:  { fr: "Analyser les KPI post-simulation : comparer les performances réelles aux objectifs et identifier les axes d'amélioration.", en: "Analyze post-simulation KPIs: compare actual performance to targets and identify improvement areas." },
+  M5_DECISION:    { fr: "Prendre une décision stratégique : formuler une recommandation structurée basée sur les données de la simulation.", en: "Make a strategic decision: formulate a structured recommendation based on simulation data." },
+  COMPLIANCE_M5:  { fr: "Valider la simulation intégrée : tous les flux complétés, KPI analysés, décision stratégique documentée.", en: "Validate integrated simulation: all flows completed, KPIs analyzed, strategic decision documented." },
+};
+
+const MODULE_LABELS: Record<number, { fr: string; en: string }> = {
+  1: { fr: "Module 1 — Fondements ERP/WMS", en: "Module 1 — ERP/WMS Foundations" },
+  2: { fr: "Module 2 — Exécution avancée", en: "Module 2 — Advanced Execution" },
+  3: { fr: "Module 3 — Contrôle des stocks", en: "Module 3 — Stock Control" },
+  4: { fr: "Module 4 — KPI logistiques", en: "Module 4 — Logistics KPIs" },
+  5: { fr: "Module 5 — Simulation intégrée", en: "Module 5 — Integrated Simulation" },
 };
 
 export default function MissionControl() {
@@ -48,9 +69,21 @@ export default function MissionControl() {
 
   if (!data) return null;
 
-  const { run, scenario, completedSteps, compliance, totalScore: score, nextStep, progressPct, isDemo } = data;
+  const { run, scenario, completedSteps, compliance, totalScore: score, nextStep, progressPct, isDemo, moduleId, steps: backendSteps } = data;
+
+  // Use dynamic steps from backend (supports M1-M5)
+  const STEPS = (backendSteps ?? []).map((s: any) => ({
+    key: s.code,
+    label: s.labelEn ?? s.code,
+    labelFr: s.labelFr ?? s.code,
+    code: s.sapCode ?? s.code,
+    descFr: s.descFr ?? "",
+    descEn: s.descEn ?? "",
+  }));
+
   const completedCount = completedSteps.length;
   const isCompliant = compliance.compliant;
+  const moduleLabel = MODULE_LABELS[moduleId ?? 1];
 
   const getStepStatus = (stepKey: string) => {
     if (completedSteps.includes(stepKey as any)) return "completed";
@@ -59,6 +92,8 @@ export default function MissionControl() {
     return "locked";
   };
   const nextStepCode = (nextStep as any)?.code as string | undefined;
+
+  const nextStepDef = STEPS.find(s => s.key === nextStepCode);
 
   return (
     <FioriShell
@@ -100,7 +135,7 @@ export default function MissionControl() {
             </div>
             <div>
               <p className="text-muted-foreground font-medium uppercase tracking-wider mb-0.5">{t("Module", "Module")}</p>
-              <p className="font-semibold text-foreground">{t("Module 1 — Logistique", "Module 1 — Logistics")}</p>
+              <p className="font-semibold text-foreground">{t(moduleLabel?.fr ?? "Module 1", moduleLabel?.en ?? "Module 1")}</p>
             </div>
             <div>
               <p className="text-muted-foreground font-medium uppercase tracking-wider mb-0.5">{t("Scénario", "Scenario")}</p>
@@ -146,8 +181,10 @@ export default function MissionControl() {
             <p className="text-white font-bold text-base">
               {run.status === "completed"
                 ? t("✅ Simulation terminée — Voir le rapport final", "✅ Simulation complete — View final report")
+                : nextStepCode && nextStepDef
+                ? `→ ${nextStepDef.label} (${nextStepDef.code})`
                 : nextStepCode
-                ? `→ ${STEPS.find(s => s.key === nextStepCode)?.label ?? nextStepCode} (${STEPS.find(s => s.key === nextStepCode)?.code})`
+                ? `→ ${nextStepCode}`
                 : isDemo
                 ? t("✅ Toutes les étapes complétées", "✅ All steps completed")
                 : t("⚠ Vérifier les blocages système", "⚠ Check system blocks")}
@@ -174,7 +211,7 @@ export default function MissionControl() {
         {nextStepCode && (
           <div className="alert-info">
             <p className="text-xs font-semibold mb-0.5">
-              {t("Objectif pédagogique", "Pedagogical Objective")} — {STEPS.find(s => s.key === nextStepCode)?.label}
+              {t("Objectif pédagogique", "Pedagogical Objective")} — {nextStepDef ? t(nextStepDef.labelFr, nextStepDef.label) : nextStepCode}
             </p>
             <p className="text-xs">
               {t(
@@ -189,7 +226,7 @@ export default function MissionControl() {
         <div className="bg-card border border-border rounded-md p-5">
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              {t("Flux de processus — Module 1", "Process Flow — Module 1")}
+              {t(`Flux de processus — ${moduleLabel?.fr ?? "Module 1"}`, `Process Flow — ${moduleLabel?.en ?? "Module 1"}`)}
             </p>
             {isDemo && (
               <span className="text-[10px] text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-950/40 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
@@ -286,9 +323,9 @@ export default function MissionControl() {
               </p>
               <div className="space-y-1">
                 {[
-                  { labelFr: "Transactions postées", labelEn: "Posted transactions", ok: !compliance.issues.some(i => i.includes("unposted")), valFr: "OK", valEn: "OK", failFr: "Non postée(s)", failEn: "Unposted" },
-                  { labelFr: "Stock positif",         labelEn: "Positive stock",       ok: !compliance.issues.some(i => i.includes("Negative")), valFr: "OK", valEn: "OK", failFr: "Stock négatif", failEn: "Negative stock" },
-                  { labelFr: "Écarts résolus",        labelEn: "Variances resolved",   ok: !compliance.issues.some(i => i.includes("variance")), valFr: "OK", valEn: "OK", failFr: "ADJ requis",    failEn: "ADJ required" },
+                  { labelFr: "Transactions postées", labelEn: "Posted transactions", ok: !compliance.issues.some((i: string) => i.includes("unposted")), valFr: "OK", valEn: "OK", failFr: "Non postée(s)", failEn: "Unposted" },
+                  { labelFr: "Stock positif",         labelEn: "Positive stock",       ok: !compliance.issues.some((i: string) => i.includes("Negative")), valFr: "OK", valEn: "OK", failFr: "Stock négatif", failEn: "Negative stock" },
+                  { labelFr: "Écarts résolus",        labelEn: "Variances resolved",   ok: !compliance.issues.some((i: string) => i.includes("variance")), valFr: "OK", valEn: "OK", failFr: "ADJ requis",    failEn: "ADJ required" },
                 ].map((item) => (
                   <div key={item.labelFr} className="flex items-center justify-between text-xs">
                     <span className={isCompliant ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>

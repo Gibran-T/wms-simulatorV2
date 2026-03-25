@@ -1,0 +1,35 @@
+{
+  "query": "SELECT q.moduleId, q.passingScore, COUNT(qq.id) as questionCount FROM quizzes q LEFT JOIN quiz_questions qq ON qq.quizId = q.id GROUP BY q.id ORDER BY q.moduleId;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT q.moduleId, q.passingScore, COUNT(qq.id) as questionCount FROM quizzes q LEFT JOIN quiz_questions qq ON qq.quizId = q.id GROUP BY q.id ORDER BY q.moduleId;",
+  "rows": [
+    {
+      "moduleId": "1",
+      "passingScore": "60",
+      "questionCount": "5"
+    },
+    {
+      "moduleId": "2",
+      "passingScore": "60",
+      "questionCount": "4"
+    },
+    {
+      "moduleId": "3",
+      "passingScore": "60",
+      "questionCount": "4"
+    },
+    {
+      "moduleId": "4",
+      "passingScore": "60",
+      "questionCount": "4"
+    },
+    {
+      "moduleId": "5",
+      "passingScore": "60",
+      "questionCount": "4"
+    }
+  ],
+  "messages": [],
+  "stdout": "moduleId\tpassingScore\tquestionCount\n1\t60\t5\n2\t60\t4\n3\t60\t4\n4\t60\t4\n5\t60\t4\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

@@ -1,0 +1,9 @@
+{
+  "query": "\nINSERT INTO users (email, name, role, passwordHash, openId, createdAt, updatedAt)\nVALUES (\n  'gibranlog@gmail.com',\n  'Gibran Thiago (Admin)',\n  'admin',\n  '$2b$10$2jZmk6EUfVPbDnphYESsGOljOUv3McWS5czQASNY4LAEgcGoRdEBm',\n  'local_gibranlog',\n  NOW(),\n  NOW()\n)\nON DUPLICATE KEY UPDATE\n  role = 'admin',\n  passwordHash = '$2b$10$2jZmk6EUfVPbDnphYESsGOljOUv3McWS5czQASNY4LAEgcGoRdEBm',\n  name = 'Gibran Thiago (Admin)',\n  updatedAt = NOW();\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute \nINSERT INTO users (email, name, role, passwordHash, openId, createdAt, updatedAt)\nVALUES (\n  'gibranlog@gmail.com',\n  'Gibran Thiago (Admin)',\n  'admin',\n  '$2b$10$2jZmk6EUfVPbDnphYESsGOljOUv3McWS5czQASNY4LAEgcGoRdEBm',\n  'local_gibranlog',\n  NOW(),\n  NOW()\n)\nON DUPLICATE KEY UPDATE\n  role = 'admin',\n  passwordHash = '$2b$10$2jZmk6EUfVPbDnphYESsGOljOUv3McWS5czQASNY4LAEgcGoRdEBm',\n  name = 'Gibran Thiago (Admin)',\n  updatedAt = NOW();\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 56
+}

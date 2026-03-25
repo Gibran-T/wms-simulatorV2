@@ -391,3 +391,18 @@
 - [x] Experiência didática M3: feedback CC_RECON mostra número de ajustamentos aplicados
 - [x] RunReport: competências dinâmicas por módulo (M1-M5 cada um com suas competências específicas)
 - [x] Backend: submitCcRecon retorna adjustmentsApplied; submitReplenish retorna studentQty para feedback de precisão
+
+## QA Senior Mission — 10 Steps (2026-03-25)
+
+- [x] Step 1: Internal email+password auth — Manus OAuth removed from login page
+- [x] Step 1: Create account gibranlog@gmail.com / 161878Log$ with admin role
+- [x] Step 1: Login flow validated (localLogin + bcrypt + JWT session)
+- [x] Step 2: Quiz system — 5 quizzes (M1: 5q, M2-M5: 4q each), 60% gate, explanations
+- [x] Step 2: Quiz button added to StudentSlidesHub module cards; route /student/quiz/:moduleId
+- [x] Step 3: ScenarioList fixed — M2-M5 now use unified run flow (ModeSelectionScreen)
+- [x] Step 4: Persistent feedback panel in StepForm — pedagogicalDeep content shown post-submit
+- [x] Step 5: MissionControl now uses dynamic steps from backend (M1-M5 all supported)
+- [x] Step 5: runs.state uses getNextRequiredStepAllModules + calculateProgressPctAllModules
+- [x] Step 8: 123/123 tests passing, TypeScript 0 errors, DB verified (5 quizzes, 21 questions)
+- [ ] Step 9: Final checkpoint + push to GitHub
+- [ ] Step 10: Final QA Senior report (verdict + action plan)

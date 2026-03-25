@@ -161,14 +161,12 @@ export default function StudentSlidesHub() {
           const unlocked = isModuleUnlocked(mod.id);
 
           return (
-            <button
+            <div
               key={mod.id}
-              onClick={() => unlocked && navigate(`/student/slides/${mod.id}`)}
-              disabled={!unlocked}
-              className={`group text-left rounded-lg border-2 transition-all duration-200 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0070f2] ${
+              className={`group rounded-lg border-2 transition-all duration-200 overflow-hidden ${
                 unlocked
-                  ? `${mod.border} ${mod.bg} hover:shadow-md hover:-translate-y-0.5 cursor-pointer`
-                  : "border-gray-200 bg-gray-50 cursor-not-allowed opacity-60"
+                  ? `${mod.border} ${mod.bg} hover:shadow-md hover:-translate-y-0.5`
+                  : "border-gray-200 bg-gray-50 opacity-60"
               }`}
             >
               {/* Top accent bar */}
@@ -239,12 +237,22 @@ export default function StudentSlidesHub() {
 
                 {/* CTA */}
                 {unlocked ? (
-                  <div
-                    className="flex items-center justify-center gap-2 py-2 rounded-md text-white text-xs font-semibold transition-opacity group-hover:opacity-90"
-                    style={{ backgroundColor: mod.color }}
-                  >
-                    <Presentation size={13} />
-                    {t("Ouvrir les slides", "Open slides")}
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => navigate(`/student/slides/${mod.id}`)}
+                      className="flex items-center justify-center gap-2 py-2 rounded-md text-white text-xs font-semibold transition-opacity hover:opacity-90 w-full"
+                      style={{ backgroundColor: mod.color }}
+                    >
+                      <Presentation size={13} />
+                      {t("Ouvrir les slides", "Open slides")}
+                    </button>
+                    <button
+                      onClick={() => navigate(`/student/quiz/${mod.id}`)}
+                      className="flex items-center justify-center gap-2 py-2 rounded-md text-xs font-semibold border-2 transition-colors hover:opacity-80 w-full"
+                      style={{ borderColor: mod.color, color: mod.color, backgroundColor: `${mod.color}10` }}
+                    >
+                      ✓ {t("Faire le quiz", "Take the quiz")}
+                    </button>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2 py-2 rounded-md bg-gray-100 text-gray-400 text-xs font-semibold">
@@ -253,7 +261,7 @@ export default function StudentSlidesHub() {
                   </div>
                 )}
               </div>
-            </button>
+            </div>
           );
         })}
       </div>

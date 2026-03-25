@@ -3,7 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useParams, useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useState } from "react";
+import React, { useState } from "react";
 import { ArrowLeft, CheckCircle, Lock, AlertTriangle, Info, FlaskConical, ChevronDown, ChevronUp, Database } from "lucide-react";
 import FioriShell from "@/components/FioriShell";
 
@@ -770,8 +770,22 @@ export default function StepForm() {
   const submitComplianceM5 = trpc.m5.submitComplianceM5.useMutation({ onSuccess: handleSuccess, onError: handleError });
 
   const { register, handleSubmit, watch, formState: { errors: formErrors } } = useForm<FormValues>();
+  const [feedbackPanel, setFeedbackPanel] = useState<{ data: any } | null>(null);
 
   function handleSuccess(data: any) {
+    // Show persistent feedback panel
+    setFeedbackPanel({ data });
+    refetch();
+    // Also show a brief toast
+    if (data?.demoWarning) {
+      toast.warning(`⚠ ${t("Avertissement (mode démo)", "Warning (demo mode)")} : ${data.demoWarning}`, { duration: 4000 });
+    } else {
+      toast.success(t("Étape validée — consultez le feedback ci-dessous", "Step validated — see feedback below"), { duration: 3000 });
+    }
+    return; // Don't auto-redirect — wait for user to click Continue
+  }
+
+  function handleSuccessLegacy(data: any) {
     if (data?.demoWarning) {
       toast.warning(`⚠ ${t("Avertissement (mode démo)", "Warning (demo mode)")} : ${data.demoWarning}`, { duration: 5000 });
     } else if (data?.feedback) {
@@ -976,6 +990,121 @@ export default function StepForm() {
             <p className="text-indigo-200 text-xs font-semibold">
               🔵 {t("MODE DÉMONSTRATION — Aucun score enregistré · Progression libre activée", "DEMO MODE — No score recorded · Free progression enabled")}
             </p>
+          </div>
+        )}
+
+        {/* ── FEEDBACK PANEL (shown after step submission) ──────────────────── */}
+        {feedbackPanel && (
+          <div className="mb-6 rounded-xl border-2 border-green-500 bg-green-50 dark:bg-green-950/30 overflow-hidden">
+            {/* Header */}
+            <div className="bg-green-500 px-5 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle size={18} className="text-white" />
+                <span className="text-white font-bold text-sm">
+                  {t("Étape validée avec succès !", "Step validated successfully!")}
+                </span>
+              </div>
+              <span className="text-green-100 text-xs font-mono">{cfg.code} ✓</span>
+            </div>
+
+            {/* Result summary */}
+            {feedbackPanel.data?.suggestion && (
+              <div className="px-5 py-3 border-b border-green-200 dark:border-green-800">
+                <p className="text-xs font-semibold text-green-800 dark:text-green-300 mb-1">
+                  {t("Résultat réapprovisionnement", "Replenishment result")}
+                </p>
+                {(() => {
+                  const s = feedbackPanel.data.suggestion;
+                  const studentQty = feedbackPanel.data.studentQty;
+                  const diff = studentQty !== undefined ? Math.abs(studentQty - s.suggestedQty) : null;
+                  const accuracy = diff !== null && s.suggestedQty > 0 ? Math.max(0, Math.round((1 - diff / s.suggestedQty) * 100)) : null;
+                  return (
+                    <div className="grid grid-cols-3 gap-3 mt-2">
+                      <div className="bg-white dark:bg-green-900/50 rounded-md p-2 text-center">
+                        <p className="text-xs text-muted-foreground">{t("Votre réponse", "Your answer")}</p>
+                        <p className="font-bold text-lg text-foreground">{studentQty ?? "—"}</p>
+                      </div>
+                      <div className="bg-white dark:bg-green-900/50 rounded-md p-2 text-center">
+                        <p className="text-xs text-muted-foreground">{t("Suggestion système", "System suggestion")}</p>
+                        <p className="font-bold text-lg text-green-700 dark:text-green-300">{s.suggestedQty}</p>
+                      </div>
+                      <div className="bg-white dark:bg-green-900/50 rounded-md p-2 text-center">
+                        <p className="text-xs text-muted-foreground">{t("Précision", "Accuracy")}</p>
+                        <p className={`font-bold text-lg ${accuracy !== null && accuracy >= 80 ? "text-green-600" : "text-amber-600"}`}>
+                          {accuracy !== null ? `${accuracy}%` : "—"}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+                <p className="text-xs text-muted-foreground mt-2 italic">{feedbackPanel.data.suggestion.reason}</p>
+              </div>
+            )}
+            {feedbackPanel.data?.totalVariance !== undefined && (
+              <div className="px-5 py-3 border-b border-green-200 dark:border-green-800">
+                <p className="text-xs font-semibold text-green-800 dark:text-green-300 mb-1">{t("Résultat inventaire", "Inventory result")}</p>
+                <div className="flex items-center gap-3 mt-2">
+                  <div className={`rounded-md px-4 py-2 text-center ${feedbackPanel.data.totalVariance === 0 ? "bg-green-100 dark:bg-green-900/50" : "bg-amber-100 dark:bg-amber-900/30"}`}>
+                    <p className="text-xs text-muted-foreground">{t("Variance totale", "Total variance")}</p>
+                    <p className={`font-bold text-xl ${feedbackPanel.data.totalVariance === 0 ? "text-green-700" : "text-amber-700"}`}>
+                      {feedbackPanel.data.totalVariance === 0 ? "0 ✔" : `${feedbackPanel.data.totalVariance > 0 ? "+" : ""}${feedbackPanel.data.totalVariance}`}
+                    </p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {feedbackPanel.data.totalVariance === 0
+                      ? t("Comptage parfait ! Aucun ajustement nécessaire.", "Perfect count! No adjustment needed.")
+                      : t("Des variances ont été détectées. Passez à CC_RECON pour ajuster le stock.", "Variances detected. Proceed to CC_RECON to adjust stock.")}
+                  </p>
+                </div>
+              </div>
+            )}
+            {feedbackPanel.data?.feedback && (
+              <div className="px-5 py-3 border-b border-green-200 dark:border-green-800">
+                <p className="text-xs font-semibold text-green-800 dark:text-green-300 mb-1">{t("Interprétation KPI", "KPI Interpretation")}</p>
+                <p className={`text-sm font-medium mt-1 ${feedbackPanel.data.isCorrect ? "text-green-700" : "text-amber-700"}`}>
+                  {feedbackPanel.data.isCorrect ? "✅" : "⚠"} {feedbackPanel.data.feedback}
+                </p>
+              </div>
+            )}
+
+            {/* Pedagogical deep dive */}
+            <div className="px-5 py-4">
+              <p className="text-xs font-bold text-green-800 dark:text-green-300 uppercase tracking-wide mb-3">
+                📚 {t("Explication pédagogique", "Pedagogical explanation")}
+              </p>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">{t("Pourquoi cette étape ?", "Why this step?")}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{t(cfg.pedagogicalDeep.whyFr, cfg.pedagogicalDeep.whyEn)}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-foreground mb-1">{t("Dans SAP réel", "In real SAP")}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{t(cfg.pedagogicalDeep.realSAPFr, cfg.pedagogicalDeep.realSAPEn)}</p>
+                </div>
+                <div className="bg-amber-50 dark:bg-amber-950/30 rounded-md p-3 border border-amber-200 dark:border-amber-800">
+                  <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-1">
+                    ⚠ {t("Erreur fréquente en production", "Common production error")}
+                  </p>
+                  <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">{t(cfg.pedagogicalDeep.realErrorFr, cfg.pedagogicalDeep.realErrorEn)}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Continue button */}
+            <div className="px-5 pb-4 flex gap-3">
+              <button
+                onClick={() => navigate(`/student/run/${runId}`)}
+                className="flex-1 py-2.5 rounded-md bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-colors"
+              >
+                {t("→ Continuer la simulation", "→ Continue simulation")}
+              </button>
+              <button
+                onClick={() => setFeedbackPanel(null)}
+                className="px-4 py-2.5 rounded-md border border-green-300 text-green-700 dark:text-green-300 font-medium text-sm hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+              >
+                {t("Rester ici", "Stay here")}
+              </button>
+            </div>
           </div>
         )}
 

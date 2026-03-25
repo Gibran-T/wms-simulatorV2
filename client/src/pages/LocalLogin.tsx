@@ -219,23 +219,9 @@ export default function LocalLogin() {
                       </Button>
                     </form>
                     <div className="mt-4 pt-4 border-t border-border text-center">
-                      <p className="text-xs text-muted-foreground mb-2">
-                        {t("Ou connectez-vous avec votre compte Manus", "Or sign in with your Manus account")}
+                      <p className="text-xs text-muted-foreground">
+                        {t("Vous n'avez pas de compte ? Utilisez l'onglet \"Créer un compte\".", "No account? Use the \"Create Account\" tab.")}
                       </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => {
-                          const origin = window.location.origin;
-                          const state = btoa(origin + "/");
-                          const appId = (window as any).__VITE_APP_ID__ || import.meta.env.VITE_APP_ID;
-                          const portalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
-                          window.location.href = `${portalUrl}/login?client_id=${appId}&state=${state}`;
-                        }}
-                      >
-                        {t("Connexion Manus OAuth", "Manus OAuth Login")}
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>

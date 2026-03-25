@@ -523,11 +523,8 @@ export default function ScenarioList() {
                           {!activeRun && (
                             <button
                               onClick={() => {
-                                if (mod.id === 1) {
-                                  setPendingScenario({ id: scenario.id, name: scenario.name, difficulty: scenario.difficulty ?? undefined });
-                                } else {
-                                  navigate(mod.route);
-                                }
+                                // All modules (M1-M5) use the unified ModeSelectionScreen → run flow
+                                setPendingScenario({ id: scenario.id, name: scenario.name, difficulty: scenario.difficulty ?? undefined });
                               }}
                               className="flex items-center gap-1.5 text-white text-xs font-semibold px-4 py-2 rounded-md hover:opacity-90 transition-opacity"
                               style={{ backgroundColor: mod.color }}

@@ -327,3 +327,50 @@ export const preAuthorizedEmails = mysqlTable("pre_authorized_emails", {
 
 export type PreAuthorizedEmail = typeof preAuthorizedEmails.$inferSelect;
 export type InsertPreAuthorizedEmail = typeof preAuthorizedEmails.$inferInsert;
+
+// ── QUIZ SYSTEM ─────────────────────────────────────────────────────────────
+// quizzes: one quiz per module (M1-M5)
+export const quizzes = mysqlTable("quizzes", {
+  id: int("id").autoincrement().primaryKey(),
+  moduleId: int("moduleId").notNull(),
+  titleFr: varchar("titleFr", { length: 255 }).notNull(),
+  titleEn: varchar("titleEn", { length: 255 }).notNull(),
+  passingScore: int("passingScore").default(60).notNull(), // % required to pass
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Quiz = typeof quizzes.$inferSelect;
+export type InsertQuiz = typeof quizzes.$inferInsert;
+
+// quizQuestions: questions for each quiz
+export const quizQuestions = mysqlTable("quiz_questions", {
+  id: int("id").autoincrement().primaryKey(),
+  quizId: int("quizId").notNull(),
+  questionFr: text("questionFr").notNull(),
+  questionEn: text("questionEn").notNull(),
+  optionsFr: json("optionsFr").notNull(), // string[]
+  optionsEn: json("optionsEn").notNull(), // string[]
+  correctIndex: int("correctIndex").notNull(), // 0-based index of correct answer
+  explanationFr: text("explanationFr").notNull(),
+  explanationEn: text("explanationEn").notNull(),
+  difficulty: mysqlEnum("difficulty", ["easy", "medium", "hard"]).default("medium").notNull(),
+  orderIndex: int("orderIndex").default(0).notNull(),
+});
+
+export type QuizQuestion = typeof quizQuestions.$inferSelect;
+export type InsertQuizQuestion = typeof quizQuestions.$inferInsert;
+
+// quizAttempts: student quiz attempts
+export const quizAttempts = mysqlTable("quiz_attempts", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  quizId: int("quizId").notNull(),
+  moduleId: int("moduleId").notNull(),
+  answers: json("answers").notNull(), // number[] — index of chosen answer per question
+  score: int("score").notNull(), // 0-100 percentage
+  passed: boolean("passed").notNull(),
+  completedAt: timestamp("completedAt").defaultNow().notNull(),
+});
+
+export type QuizAttempt = typeof quizAttempts.$inferSelect;
+export type InsertQuizAttempt = typeof quizAttempts.$inferInsert;

@@ -30,6 +30,7 @@ import Legal from "./pages/Legal";
 import LocalLogin from "./pages/LocalLogin";
 import SlideViewer from "./pages/SlideViewer";
 import StudentSlidesHub from "./pages/student/StudentSlidesHub";
+import QuizPage from "./pages/student/QuizPage";
 
 function Router() {
   return (
@@ -52,6 +53,8 @@ function Router() {
       <Route path="/student/module4" component={Module4Dashboard} />
       {/* Module 5 routes */}
       <Route path="/student/module5" component={Module5SimulationPage} />
+      {/* Quiz routes */}
+      <Route path="/student/quiz/:moduleId" component={QuizPage} />
       {/* Slides routes — requires authentication (handled by SlideViewer via FioriShell guard) */}
       <Route path="/student/slides" component={StudentSlidesHub} />
       <Route path="/student/slides/:moduleId" component={SlideViewer} />

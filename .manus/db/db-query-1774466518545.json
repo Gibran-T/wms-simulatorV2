@@ -1,0 +1,9 @@
+{
+  "query": "\nUPDATE users SET \n  passwordHash = '$2b$10$2jZmk6EUfVPbDnphYESsGOljOUv3McWS5czQASNY4LAEgcGoRdEBm',\n  name = 'Gibran Thiago (Admin)',\n  role = 'admin',\n  updatedAt = NOW()\nWHERE id = '1';\n\nDELETE FROM users WHERE id = '1350006';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute \nUPDATE users SET \n  passwordHash = '$2b$10$2jZmk6EUfVPbDnphYESsGOljOUv3McWS5czQASNY4LAEgcGoRdEBm',\n  name = 'Gibran Thiago (Admin)',\n  role = 'admin',\n  updatedAt = NOW()\nWHERE id = '1';\n\nDELETE FROM users WHERE id = '1350006';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 73
+}
