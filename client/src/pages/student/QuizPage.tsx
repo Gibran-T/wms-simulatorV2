@@ -51,6 +51,12 @@ export default function QuizPage() {
   const [answers, setAnswers] = useState<number[]>([]);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [immediateResult, setImmediateResult] = useState<{
+    isCorrect: boolean;
+    correctIndex: number;
+    explanationFr: string;
+    explanationEn: string;
+  } | null>(null);
   const [results, setResults] = useState<{
     score: number; passed: boolean; correct: number; total: number;
     passingScore: number;
@@ -60,6 +66,7 @@ export default function QuizPage() {
   const { data: quiz, isLoading } = trpc.quiz.getByModule.useQuery({ moduleId });
   const { data: bestAttempt } = trpc.quiz.getBestAttempt.useQuery({ moduleId });
   const submitMutation = trpc.quiz.submit.useMutation();
+  const checkAnswerMutation = trpc.quiz.checkAnswer.useMutation();
 
   const color = MODULE_COLORS[moduleId] || "#1E3A5F";
 
@@ -89,6 +96,12 @@ export default function QuizPage() {
     );
   }
 
+  // Helper: parse options that may arrive as JSON strings from the API
+  const parseOpts = (raw: unknown): string[] => {
+    if (Array.isArray(raw)) return raw as string[];
+    if (typeof raw === 'string') { try { return JSON.parse(raw); } catch { return []; } }
+    return [];
+  };
   const questions = quiz.questions;
   const currentQuestion = questions[currentQ];
 
@@ -200,8 +213,8 @@ export default function QuizPage() {
   // ── QUESTION ─────────────────────────────────────────────────────────────────
   if (quizState === "question" && currentQuestion) {
     const options: string[] = lang === "fr"
-      ? (currentQuestion.optionsFr as unknown as string[])
-      : (currentQuestion.optionsEn as unknown as string[]);
+      ? parseOpts(currentQuestion.optionsFr)
+      : parseOpts(currentQuestion.optionsEn);
     const question = lang === "fr" ? currentQuestion.questionFr : currentQuestion.questionEn;
     const difficulty = DIFFICULTY_LABELS[currentQuestion.difficulty] || DIFFICULTY_LABELS.medium;
     const progress = ((currentQ) / questions.length) * 100;
@@ -233,11 +246,16 @@ export default function QuizPage() {
                     optionClass += selectedOption === idx
                       ? "border-primary bg-primary/10 text-foreground font-medium"
                       : "border-border hover:border-primary/50 hover:bg-secondary/50 text-foreground cursor-pointer";
+                  } else if (immediateResult) {
+                    // Show correct/incorrect with color coding
+                    if (idx === immediateResult.correctIndex) {
+                      optionClass += "border-green-500 bg-green-50 dark:bg-green-950/30 text-green-800 dark:text-green-300 font-medium";
+                    } else if (idx === selectedOption && !immediateResult.isCorrect) {
+                      optionClass += "border-red-500 bg-red-50 dark:bg-red-950/30 text-red-800 dark:text-red-300 font-medium";
+                    } else {
+                      optionClass += "border-border text-muted-foreground opacity-60";
+                    }
                   } else {
-                    // Show correct/incorrect after submission
-                    // Note: correctIndex is only available in submit result feedback, not in question data
-                    // We highlight selected option as green if it matches (we'll know after submit)
-                    // For now, just highlight selected
                     if (idx === selectedOption) {
                       optionClass += "border-primary bg-primary/10 text-foreground font-medium";
                     } else {
@@ -258,8 +276,11 @@ export default function QuizPage() {
                           {String.fromCharCode(65 + idx)}
                         </span>
                         <span className="leading-relaxed">{option}</span>
-                        {showFeedback && idx === selectedOption && (
-                          <ChevronRight className="w-4 h-4 text-primary flex-shrink-0 ml-auto mt-0.5" />
+                        {showFeedback && immediateResult && idx === immediateResult.correctIndex && (
+                          <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 ml-auto mt-0.5" />
+                        )}
+                        {showFeedback && immediateResult && idx === selectedOption && !immediateResult.isCorrect && (
+                          <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 ml-auto mt-0.5" />
                         )}
                       </div>
                     </button>
@@ -273,10 +294,26 @@ export default function QuizPage() {
                   <Button
                     className="w-full text-white font-semibold"
                     style={{ backgroundColor: color }}
-                    disabled={selectedOption === null}
-                    onClick={() => setShowFeedback(true)}
+                    disabled={selectedOption === null || checkAnswerMutation.isPending}
+                    onClick={async () => {
+                      if (selectedOption === null) return;
+                      try {
+                        const result = await checkAnswerMutation.mutateAsync({
+                          moduleId,
+                          questionIndex: currentQ,
+                          chosenIndex: selectedOption,
+                        });
+                        setImmediateResult(result);
+                        setShowFeedback(true);
+                      } catch (e) {
+                        // Fallback: show feedback without server result
+                        setShowFeedback(true);
+                      }
+                    }}
                   >
-                    {t("Valider ma réponse", "Submit answer")}
+                    {checkAnswerMutation.isPending
+                      ? t("Vérification...", "Checking...")
+                      : t("Valider ma réponse", "Submit answer")}
                   </Button>
                 ) : (
                   <Button
@@ -290,6 +327,7 @@ export default function QuizPage() {
                         setCurrentQ(currentQ + 1);
                         setSelectedOption(null);
                         setShowFeedback(false);
+                        setImmediateResult(null);
                       } else {
                         // Submit all answers
                         try {
@@ -314,16 +352,28 @@ export default function QuizPage() {
 
           {/* Feedback panel */}
           {showFeedback && (
-            <Card className="mt-4 border-2 border-amber-500/50 bg-amber-500/5">
+            <Card className={`mt-4 border-2 ${immediateResult?.isCorrect ? 'border-green-500/50 bg-green-500/5' : immediateResult ? 'border-red-500/50 bg-red-500/5' : 'border-amber-500/50 bg-amber-500/5'}`}>
               <CardContent className="pt-4 pb-4">
                 <div className="flex items-start gap-3">
-                  <Lightbulb className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  {immediateResult?.isCorrect
+                    ? <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                    : immediateResult
+                      ? <XCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      : <Lightbulb className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  }
                   <div>
-                    <p className="text-sm font-semibold text-foreground mb-1">
-                      {t("Voici l'explication pédagogique :", "Here is the pedagogical explanation:")}
+                    <p className={`text-sm font-semibold mb-1 ${immediateResult?.isCorrect ? 'text-green-700 dark:text-green-300' : immediateResult ? 'text-red-700 dark:text-red-300' : 'text-foreground'}`}>
+                      {immediateResult?.isCorrect
+                        ? t("✅ Bonne réponse !", "✅ Correct!")
+                        : immediateResult
+                          ? t("❌ Réponse incorrecte", "❌ Incorrect answer")
+                          : t("Voici l'explication pédagogique :", "Here is the pedagogical explanation:")
+                      }
                     </p>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      {t(
+                      {immediateResult
+                        ? (lang === 'fr' ? immediateResult.explanationFr : immediateResult.explanationEn)
+                        : t(
                         "L'explication complète sera affichée dans les résultats finaux avec la bonne réponse.",
                         "The complete explanation will be shown in the final results with the correct answer."
                       )}
@@ -380,7 +430,7 @@ export default function QuizPage() {
           <div className="space-y-3 mb-8">
             {results.feedback.map((fb, i) => {
               const q = questions[i];
-              const opts: string[] = lang === "fr" ? (q.optionsFr as unknown as string[]) : (q.optionsEn as unknown as string[]);
+              const opts: string[] = lang === "fr" ? parseOpts(q.optionsFr) : parseOpts(q.optionsEn);
               return (
                 <Card key={fb.questionId} className={`border ${fb.isCorrect ? "border-green-500/30" : "border-red-500/30"}`}>
                   <CardContent className="pt-4 pb-4">

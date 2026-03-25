@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET passwordHash = '$2b$10$Dr0SY0/HZmSS4kpZRU/Ix.eHLbGUCu5J7bso3xLRknQMdEtuX1FJi' WHERE email = 'marie.tremblay.etudiant@gmail.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute UPDATE users SET passwordHash = '$2b$10$Dr0SY0/HZmSS4kpZRU/Ix.eHLbGUCu5J7bso3xLRknQMdEtuX1FJi' WHERE email = 'marie.tremblay.etudiant@gmail.com';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 153
+}

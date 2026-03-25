@@ -419,3 +419,12 @@
 - [x] Priority 3: server/trpc.integration.test.ts — M3 full flow (CC_LIST→CC_COUNT→CC_RECON→REPLENISH)
 - [ ] Student experience run: create account, M1-M5 complete, honest journal
 - [ ] Student journey report PDF
+
+## Student Journey Simulation — Bugs Found & Fixed (2026-03-25)
+
+- [x] Bug: Quiz options.map crash — optionsFr/optionsEn stored as JSON strings, not parsed arrays (fixed in QuizPage.tsx parseOpts helper + router JSON.parse)
+- [x] Bug: Sonner toast not showing — sonner.tsx used next-themes useTheme (not installed), fixed to use custom ThemeContext
+- [x] Bug: quiz.getBestAttempt returns undefined when no attempt — fixed to return null
+- [x] Bug: PUTAWAY_M1 stock debit missing — GR posted +50 to REC-01 but PUTAWAY never debited REC-01, leaving phantom stock (fixed: PUTAWAY now records negative debit transaction for fromBin)
+- [x] Bug: COMPLIANCE step gives no resolution path for unposted transactions — added actionable hints and "Retour au Mission Control" button
+- [x] Feature: Quiz immediate feedback — added quiz.checkAnswer procedure + updated QuizPage to show correct/wrong with explanation after each answer (not just at results)

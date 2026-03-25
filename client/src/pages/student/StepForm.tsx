@@ -770,7 +770,9 @@ export default function StepForm() {
   const submitM5Decision = trpc.m5.submitDecision.useMutation({ onSuccess: handleSuccess, onError: handleError });
   const submitComplianceM5 = trpc.m5.submitComplianceM5.useMutation({ onSuccess: handleSuccess, onError: handleError });
 
-  const { register, handleSubmit, watch, formState: { errors: formErrors } } = useForm<FormValues>();
+  const { register, handleSubmit, watch, setValue, formState: { errors: formErrors } } = useForm<FormValues>();
+  // Expose setValue for testing/automation
+  if (typeof window !== 'undefined') (window as any).__rhfSetValue = setValue;
   const [feedbackPanel, setFeedbackPanel] = useState<{ data: any } | null>(null);
   const [showGlossary, setShowGlossary] = useState(false);
 
@@ -1255,9 +1257,31 @@ export default function StepForm() {
                     ))}
                   </div>
                   {!runData?.compliance.compliant && !isDemo && (
-                    <div className="alert-blocked flex items-start gap-2 mb-4">
-                      <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
-                      <p className="text-xs">{t("Résolvez tous les problèmes de conformité avant de clôturer le module.", "Resolve all compliance issues before closing the module.")}</p>
+                    <div className="space-y-2 mb-4">
+                      <div className="alert-blocked flex items-start gap-2">
+                        <AlertTriangle size={14} className="flex-shrink-0 mt-0.5" />
+                        <p className="text-xs">{t("Résolvez tous les problèmes de conformité avant de clôturer le module.", "Resolve all compliance issues before closing the module.")}</p>
+                      </div>
+                      {/* Show actionable resolution hints per issue */}
+                      {runData?.compliance.issuesFr?.some((i: string) => i.includes('non postée')) && (
+                        <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-md p-3 text-xs">
+                          <p className="font-semibold text-amber-800 dark:text-amber-300 mb-1">💡 {t("Comment résoudre : transactions non postées", "How to resolve: unposted transactions")}</p>
+                          <p className="text-amber-700 dark:text-amber-400">{t("Ce scénario simule une GR fantôme (réception non comptabilisée). Dans un vrai WMS, vous devez localiser et poster la transaction manquante via MB01/MIGO. Ici, retournez au tableau de bord, démarrez un nouveau scénario et veillez à poster chaque GR immédiatement après réception.", "This scenario simulates a ghost GR (unposted receipt). In a real WMS, you must locate and post the missing transaction via MB01/MIGO. Here, return to the dashboard, start a new scenario and make sure to post each GR immediately after receipt.")}</p>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/student/run/${runId}`)}
+                            className="mt-2 text-amber-800 dark:text-amber-300 underline text-xs font-semibold"
+                          >
+                            ← {t("Retour au Mission Control", "Back to Mission Control")}
+                          </button>
+                        </div>
+                      )}
+                      {runData?.compliance.issuesFr?.some((i: string) => i.includes('écart')) && (
+                        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md p-3 text-xs">
+                          <p className="font-semibold text-blue-800 dark:text-blue-300 mb-1">💡 {t("Comment résoudre : écarts d'inventaire", "How to resolve: inventory variances")}</p>
+                          <p className="text-blue-700 dark:text-blue-400">{t("Des écarts ont été détectés lors du Cycle Count. Retournez exécuter un nouveau CC pour les emplacements concernés et entrez la quantité physique réelle pour générer un ajustement (ADJ).", "Variances were detected during the Cycle Count. Go back and run a new CC for the affected locations, entering the actual physical quantity to generate an adjustment (ADJ).")}</p>
+                        </div>
+                      )}
                     </div>
                   )}
                   <input {...register("comment")} placeholder={t("Ex: Module complété avec succès", "Ex: Module completed successfully")} className="fiori-field-input" />

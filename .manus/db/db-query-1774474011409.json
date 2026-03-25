@@ -1,0 +1,18 @@
+{
+  "query": "SELECT id, name, email, role, isActive, createdAt FROM users WHERE email LIKE '%etudiant%' OR email LIKE '%test%' ORDER BY createdAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT id, name, email, role, isActive, createdAt FROM users WHERE email LIKE '%etudiant%' OR email LIKE '%test%' ORDER BY createdAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "1380044",
+      "name": "Marie Tremblay",
+      "email": "marie.tremblay.etudiant@gmail.com",
+      "role": "student",
+      "isActive": "1",
+      "createdAt": "2026-03-25 20:59:52"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\tisActive\tcreatedAt\n1380044\tMarie Tremblay\tmarie.tremblay.etudiant@gmail.com\tstudent\t1\t2026-03-25 20:59:52\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

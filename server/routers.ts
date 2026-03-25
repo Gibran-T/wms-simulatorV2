@@ -1015,7 +1015,8 @@ export const appRouter = router({
             throw new TRPCError({ code: "BAD_REQUEST", message: zoneCheck.reasonFr });
           }
         }
-        // Record movement: remove from fromBin (GR was posted there), add to toBin
+        // Record movement: debit fromBin (REC-01 → 0), credit toBin (STOCKAGE)
+        await addTransaction({ runId: input.runId, docType: "PUTAWAY_M1", moveType: "LT0A", sku: input.sku, bin: input.fromBin, qty: String(-input.qty), posted: true, docRef: input.docRef, comment: `Rangement sortie ${input.fromBin}` });
         await addTransaction({ runId: input.runId, docType: "PUTAWAY_M1", moveType: "LT0A", sku: input.sku, bin: input.toBin, qty: String(input.qty), posted: true, docRef: input.docRef, comment: `Rangement ${input.fromBin} → ${input.toBin}${input.comment ? " | " + input.comment : ""}` });
         await markStepComplete(input.runId, "PUTAWAY_M1");
         await markStepComplete(input.runId, "STOCK");
@@ -2102,8 +2103,8 @@ export const appRouter = router({
             id: q.id,
             questionFr: q.questionFr,
             questionEn: q.questionEn,
-            optionsFr: q.optionsFr as string[],
-            optionsEn: q.optionsEn as string[],
+            optionsFr: (typeof q.optionsFr === 'string' ? JSON.parse(q.optionsFr) : q.optionsFr) as string[],
+            optionsEn: (typeof q.optionsEn === 'string' ? JSON.parse(q.optionsEn) : q.optionsEn) as string[],
             difficulty: q.difficulty,
             orderIndex: q.orderIndex,
           })),
@@ -2114,7 +2115,8 @@ export const appRouter = router({
     getBestAttempt: protectedProcedure
       .input(z.object({ moduleId: z.number() }))
       .query(async ({ ctx, input }) => {
-        return getBestQuizAttempt(ctx.user.id, input.moduleId);
+        const attempt = await getBestQuizAttempt(ctx.user.id, input.moduleId);
+        return attempt ?? null;
       }),
 
     /** Get all attempts for current user + module */
@@ -2163,6 +2165,29 @@ export const appRouter = router({
           passed,
         });
         return { score, passed, correct, total: questions.length, passingScore: quiz.passingScore, feedback };
+      }),
+
+    /** Check a single answer for immediate feedback (does NOT save to DB) */
+    checkAnswer: protectedProcedure
+      .input(z.object({
+        moduleId: z.number(),
+        questionIndex: z.number(),
+        chosenIndex: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const quiz = await getQuizByModule(input.moduleId);
+        if (!quiz) throw new TRPCError({ code: "NOT_FOUND", message: "Quiz non trouvé" });
+        const full = await getQuizWithQuestions(quiz.id);
+        if (!full) throw new TRPCError({ code: "NOT_FOUND" });
+        const q = full.questions[input.questionIndex];
+        if (!q) throw new TRPCError({ code: "BAD_REQUEST", message: "Question introuvable" });
+        const isCorrect = input.chosenIndex === q.correctIndex;
+        return {
+          isCorrect,
+          correctIndex: q.correctIndex,
+          explanationFr: q.explanationFr,
+          explanationEn: q.explanationEn,
+        };
       }),
   }),
 });

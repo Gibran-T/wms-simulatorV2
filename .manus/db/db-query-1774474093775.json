@@ -1,0 +1,16 @@
+{
+  "query": "SELECT id, email, passwordHash, loginMethod FROM users WHERE email = 'marie.tremblay.etudiant@gmail.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT id, email, passwordHash, loginMethod FROM users WHERE email = 'marie.tremblay.etudiant@gmail.com';",
+  "rows": [
+    {
+      "id": "1380044",
+      "email": "marie.tremblay.etudiant@gmail.com",
+      "passwordHash": "$2b$10$Dr0SY0/HZmSS4kpZRU/Ix.eHLbGUCu5J7bso3xLRknQMdEtuX1FJi",
+      "loginMethod": "local"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tpasswordHash\tloginMethod\n1380044\tmarie.tremblay.etudiant@gmail.com\t$2b$10$Dr0SY0/HZmSS4kpZRU/Ix.eHLbGUCu5J7bso3xLRknQMdEtuX1FJi\tlocal\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}
