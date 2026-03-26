@@ -434,4 +434,4 @@
 - [x] Password recovery flow — "Mot de passe oublié" link on login + /forgot-password + /reset-password/:token + DB token table + requestPasswordReset + resetPasswordWithToken procedures
 - [x] Student number onboarding — N° étudiant field in registration form (optional, auto-saved via profiles.upsert after register)
 - [x] Bin zone hints in StepForm — binZoneHint config added to GR, PUTAWAY_M1, SO, PICKING_M1, GI, FIFO_PICK, M5_PUTAWAY; blue hint shown below each bin dropdown
-- [ ] Expert end-to-end validation run M1→M5
+- [x] Expert end-to-end validation run M1→M5 — PASS (3 bugs fixed: M2 GR routing, PUTAWAY_COMPLETED scoring rule, completeRun() missing in M2-M5 COMPLIANCE procedures)

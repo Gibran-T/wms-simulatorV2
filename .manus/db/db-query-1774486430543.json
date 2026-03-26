@@ -1,0 +1,70 @@
+{
+  "query": "\nSELECT \n  sr.id as run_id,\n  sr.scenarioId as scenario_id,\n  sr.isDemo as is_demo,\n  sr.status,\n  sr.startedAt as started_at,\n  sr.completedAt as completed_at,\n  u.name as student_name,\n  u.role,\n  COUNT(DISTINCT t.id) as transaction_count,\n  SUM(se.pointsDelta) as total_score\nFROM scenario_runs sr\nJOIN users u ON sr.userId = u.id\nLEFT JOIN transactions t ON t.runId = sr.id\nLEFT JOIN scoring_events se ON se.runId = sr.id\nWHERE u.name = 'Expert Validator'\nGROUP BY sr.id, sr.scenarioId, sr.isDemo, sr.status, sr.startedAt, sr.completedAt, u.name, u.role\nORDER BY sr.id;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute \nSELECT \n  sr.id as run_id,\n  sr.scenarioId as scenario_id,\n  sr.isDemo as is_demo,\n  sr.status,\n  sr.startedAt as started_at,\n  sr.completedAt as completed_at,\n  u.name as student_name,\n  u.role,\n  COUNT(DISTINCT t.id) as transaction_count,\n  SUM(se.pointsDelta) as total_score\nFROM scenario_runs sr\nJOIN users u ON sr.userId = u.id\nLEFT JOIN transactions t ON t.runId = sr.id\nLEFT JOIN scoring_events se ON se.runId = sr.id\nWHERE u.name = 'Expert Validator'\nGROUP BY sr.id, sr.scenarioId, sr.isDemo, sr.status, sr.startedAt, sr.completedAt, u.name, u.role\nORDER BY sr.id;\n",
+  "rows": [
+    {
+      "run_id": "240001",
+      "scenario_id": "1",
+      "is_demo": "0",
+      "status": "completed",
+      "started_at": "2026-03-25 23:49:29",
+      "completed_at": "2026-03-25 23:59:23",
+      "student_name": "Expert Validator",
+      "role": "student",
+      "transaction_count": "8",
+      "total_score": "600"
+    },
+    {
+      "run_id": "240002",
+      "scenario_id": "6",
+      "is_demo": "0",
+      "status": "in_progress",
+      "started_at": "2026-03-26 00:05:49",
+      "completed_at": "NULL",
+      "student_name": "Expert Validator",
+      "role": "student",
+      "transaction_count": "11",
+      "total_score": "715"
+    },
+    {
+      "run_id": "240003",
+      "scenario_id": "3",
+      "is_demo": "0",
+      "status": "completed",
+      "started_at": "2026-03-26 00:30:41",
+      "completed_at": "2026-03-26 00:34:18",
+      "student_name": "Expert Validator",
+      "role": "student",
+      "transaction_count": "10",
+      "total_score": "750"
+    },
+    {
+      "run_id": "240004",
+      "scenario_id": "34",
+      "is_demo": "0",
+      "status": "in_progress",
+      "started_at": "2026-03-26 00:40:34",
+      "completed_at": "NULL",
+      "student_name": "Expert Validator",
+      "role": "student",
+      "transaction_count": "0",
+      "total_score": "70"
+    },
+    {
+      "run_id": "240005",
+      "scenario_id": "37",
+      "is_demo": "0",
+      "status": "in_progress",
+      "started_at": "2026-03-26 00:49:40",
+      "completed_at": "NULL",
+      "student_name": "Expert Validator",
+      "role": "student",
+      "transaction_count": "2",
+      "total_score": "210"
+    }
+  ],
+  "messages": [],
+  "stdout": "run_id\tscenario_id\tis_demo\tstatus\tstarted_at\tcompleted_at\tstudent_name\trole\ttransaction_count\ttotal_score\n240001\t1\t0\tcompleted\t2026-03-25 23:49:29\t2026-03-25 23:59:23\tExpert Validator\tstudent\t8\t600\n240002\t6\t0\tin_progress\t2026-03-26 00:05:49\tNULL\tExpert Validator\tstudent\t11\t715\n240003\t3\t0\tcompleted\t2026-03-26 00:30:41\t2026-03-26 00:34:18\tExpert Validator\tstudent\t10\t750\n240004\t34\t0\tin_progress\t2026-03-26 00:40:34\tNULL\tExpert Validator\tstudent\t0\t70\n240005\t37\t0\tin_progress\t2026-03-26 00:49:40\tNULL\tExpert Validator\tstudent\t2\t210\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

@@ -1,0 +1,8 @@
+{
+  "query": "\nSELECT \n  sr.id as run_id,\n  sr.module_id,\n  sr.scenario_id,\n  sr.is_demo,\n  sr.created_at,\n  u.name as student_name,\n  u.role,\n  COUNT(DISTINCT t.id) as transaction_count,\n  SUM(se.points_delta) as total_score\nFROM scenario_runs sr\nJOIN users u ON sr.user_id = u.id\nLEFT JOIN transactions t ON t.run_id = sr.id\nLEFT JOIN scoring_events se ON se.run_id = sr.id\nWHERE u.name = 'Expert Validator'\nGROUP BY sr.id, sr.module_id, sr.scenario_id, sr.is_demo, sr.created_at, u.name, u.role\nORDER BY sr.id;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute \nSELECT \n  sr.id as run_id,\n  sr.module_id,\n  sr.scenario_id,\n  sr.is_demo,\n  sr.created_at,\n  u.name as student_name,\n  u.role,\n  COUNT(DISTINCT t.id) as transaction_count,\n  SUM(se.points_delta) as total_score\nFROM scenario_runs sr\nJOIN users u ON sr.user_id = u.id\nLEFT JOIN transactions t ON t.run_id = sr.id\nLEFT JOIN scoring_events se ON se.run_id = sr.id\nWHERE u.name = 'Expert Validator'\nGROUP BY sr.id, sr.module_id, sr.scenario_id, sr.is_demo, sr.created_at, u.name, u.role\nORDER BY sr.id;\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 2: Unknown column 'sr.user_id' in 'on clause'"
+  ]
+}

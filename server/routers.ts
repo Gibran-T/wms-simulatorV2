@@ -1882,6 +1882,7 @@ export const appRouter = router({
         }
         await markStepComplete(input.runId, "COMPLIANCE_ADV");
         if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "COMPLIANCE_ADV_COMPLETED", pointsDelta: 20, message: "Conformité avancée M2 validée" });
+        await completeRun(input.runId);
         return { success: true };
       }),
   }),
@@ -2014,6 +2015,7 @@ export const appRouter = router({
         }
         await markStepComplete(input.runId, "COMPLIANCE_M3");
         if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "COMPLIANCE_M3_COMPLETED", pointsDelta: 15, message: "Conformité Module 3 validée" });
+        await completeRun(input.runId);
         return { success: true };
       }),
   }),
@@ -2089,6 +2091,7 @@ export const appRouter = router({
         if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
         await markStepComplete(input.runId, "COMPLIANCE_M4");
         if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "COMPLIANCE_M4_COMPLETED", pointsDelta: 15, message: "Conformité Module 4 validée" });
+        await completeRun(input.runId);
         return { success: true };
       }),
   }),
@@ -2190,6 +2193,7 @@ export const appRouter = router({
         if (run.userId !== ctx.user.id && ctx.user.role !== "teacher" && ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
         await markStepComplete(input.runId, "COMPLIANCE_M5");
         if (!run.isDemo) await addScoringEvent({ runId: input.runId, eventType: "COMPLIANCE_M5_COMPLETED", pointsDelta: 20, message: "Validation finale M5 complétée" });
+        await completeRun(input.runId);
         return { success: true };
       }),
   }),
