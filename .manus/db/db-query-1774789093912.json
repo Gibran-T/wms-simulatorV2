@@ -1,0 +1,350 @@
+{
+  "query": "SELECT id, LEFT(name, 40) as name, LEFT(COALESCE(descriptionEn, 'NULL'), 55) as descEn FROM scenarios ORDER BY moduleId, id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT id, LEFT(name, 40) as name, LEFT(COALESCE(descriptionEn, 'NULL'), 55) as descEn FROM scenarios ORDER BY moduleId, id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Scénario 1 — Cycle propre",
+      "descEn": "NULL"
+    },
+    {
+      "id": "2",
+      "name": "Scénario 2 — Réception fantôme (GR non p",
+      "descEn": "NULL"
+    },
+    {
+      "id": "3",
+      "name": "Scénario 3 — Stock insuffisant",
+      "descEn": "NULL"
+    },
+    {
+      "id": "4",
+      "name": "Scénario 4 — Écart d'inventaire",
+      "descEn": "NULL"
+    },
+    {
+      "id": "5",
+      "name": "Scénario 5 — Non-conformités multiples",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30001",
+      "name": "Scénario 1 — Cycle propre",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30002",
+      "name": "Scénario 2 — Réception fantôme (GR non p",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30003",
+      "name": "Scénario 3 — Stock insuffisant",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30004",
+      "name": "Scénario 4 — Écart d'inventaire",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30005",
+      "name": "Scénario 5 — Non-conformités multiples",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60001",
+      "name": "Scénario 1 — Cycle propre",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60002",
+      "name": "Scénario 2 — Réception fantôme (GR non p",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60003",
+      "name": "Scénario 3 — Stock insuffisant",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60004",
+      "name": "Scénario 4 — Écart d'inventaire",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60005",
+      "name": "Scénario 5 — Non-conformités multiples",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60018",
+      "name": "Scénario 1 — Cycle propre",
+      "descEn": "Execute a complete PO→GR→SO→GI→Cycle Count cycle withou"
+    },
+    {
+      "id": "60019",
+      "name": "Scénario 2 — Réception fantôme (GR non p",
+      "descEn": "A GR was created but not posted. Detect the anomaly, po"
+    },
+    {
+      "id": "60020",
+      "name": "Scénario 3 — Stock insuffisant",
+      "descEn": "A SO was created for a quantity exceeding available sto"
+    },
+    {
+      "id": "60021",
+      "name": "Scénario 4 — Écart d'inventaire",
+      "descEn": "Physical count reveals a discrepancy against system sto"
+    },
+    {
+      "id": "60022",
+      "name": "Scénario 5 — Non-conformités multiples",
+      "descEn": "Multiple simultaneous anomalies: unposted GR, potential"
+    },
+    {
+      "id": "6",
+      "name": "M2 — Scénario 1 : Rangement structuré et",
+      "descEn": "NULL"
+    },
+    {
+      "id": "7",
+      "name": "M2 — Scénario 2 : Validation de la capac",
+      "descEn": "NULL"
+    },
+    {
+      "id": "8",
+      "name": "M2 — Scénario 3 : Application de la méth",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30006",
+      "name": "M2 — Scénario 1 : Rangement structuré et",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30007",
+      "name": "M2 — Scénario 2 : Validation de la capac",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30008",
+      "name": "M2 — Scénario 3 : Application de la méth",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60006",
+      "name": "M2 — Scénario 1 : Rangement structuré et",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60007",
+      "name": "M2 — Scénario 2 : Validation de la capac",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60008",
+      "name": "M2 — Scénario 3 : Application de la méth",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60023",
+      "name": "M2 — Scénario 1 : Rangement structuré et",
+      "descEn": "Receive goods and store them in the correct bin accordi"
+    },
+    {
+      "id": "60024",
+      "name": "M2 — Scénario 2 : Validation de la capac",
+      "descEn": "Attempt to store a quantity exceeding a bin's capacity."
+    },
+    {
+      "id": "60025",
+      "name": "M2 — Scénario 3 : Application de la méth",
+      "descEn": "Three lots of the same SKU are in stock. Follow FIFO or"
+    },
+    {
+      "id": "9",
+      "name": "M3 — Scénario 1 : Inventaire cyclique si",
+      "descEn": "NULL"
+    },
+    {
+      "id": "10",
+      "name": "M3 — Scénario 2 : Analyse d'écart et aju",
+      "descEn": "NULL"
+    },
+    {
+      "id": "11",
+      "name": "M3 — Scénario 3 : Réapprovisionnement se",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30009",
+      "name": "M3 — Scénario 1 : Inventaire cyclique si",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30010",
+      "name": "M3 — Scénario 2 : Analyse d'écart et aju",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30011",
+      "name": "M3 — Scénario 3 : Réapprovisionnement se",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60009",
+      "name": "M3 — Scénario 1 : Inventaire cyclique si",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60010",
+      "name": "M3 — Scénario 2 : Analyse d'écart et aju",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60011",
+      "name": "M3 — Scénario 3 : Réapprovisionnement se",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60026",
+      "name": "M3 — Scénario 1 : Inventaire cyclique si",
+      "descEn": "Perform a cycle count and analyze discrepancies between"
+    },
+    {
+      "id": "60027",
+      "name": "M3 — Scénario 2 : Analyse d'écart et aju",
+      "descEn": "Identify a significant discrepancy, provide a justifica"
+    },
+    {
+      "id": "60028",
+      "name": "M3 — Scénario 3 : Réapprovisionnement se",
+      "descEn": "Analyze inventory levels and generate a replenishment r"
+    },
+    {
+      "id": "34",
+      "name": "M4 — Scénario 1 : Analyse de la rotation",
+      "descEn": "NULL"
+    },
+    {
+      "id": "35",
+      "name": "M4 — Scénario 2 : Analyse du taux de ser",
+      "descEn": "NULL"
+    },
+    {
+      "id": "36",
+      "name": "M4 — Scénario 3 : Diagnostic global de p",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30012",
+      "name": "M4 — Scénario 1 : Analyse de la rotation",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30013",
+      "name": "M4 — Scénario 2 : Analyse du taux de ser",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30014",
+      "name": "M4 — Scénario 3 : Diagnostic global de p",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60012",
+      "name": "M4 — Scénario 1 : Analyse de la rotation",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60013",
+      "name": "M4 — Scénario 2 : Analyse du taux de ser",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60014",
+      "name": "M4 — Scénario 3 : Diagnostic global de p",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60029",
+      "name": "M4 — Scénario 1 : Analyse de la rotation",
+      "descEn": "Calculate and interpret the inventory turnover rate to "
+    },
+    {
+      "id": "60030",
+      "name": "M4 — Scénario 2 : Analyse du taux de ser",
+      "descEn": "Identify the root causes of a low service level and ana"
+    },
+    {
+      "id": "60031",
+      "name": "M4 — Scénario 3 : Diagnostic global de p",
+      "descEn": "Analyze multiple combined KPIs and propose a strategic "
+    },
+    {
+      "id": "37",
+      "name": "M5 — Scénario 1 : Cycle opérationnel com",
+      "descEn": "NULL"
+    },
+    {
+      "id": "38",
+      "name": "M5 — Scénario 2 : Gestion d'écarts et ré",
+      "descEn": "NULL"
+    },
+    {
+      "id": "39",
+      "name": "M5 — Scénario 3 : Analyse décisionnelle ",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30015",
+      "name": "M5 — Scénario 1 : Cycle opérationnel com",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30016",
+      "name": "M5 — Scénario 2 : Gestion d'écarts et ré",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30017",
+      "name": "M5 — Scénario 3 : Analyse décisionnelle ",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60015",
+      "name": "M5 — Scénario 1 : Cycle opérationnel com",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60016",
+      "name": "M5 — Scénario 2 : Gestion d'écarts et ré",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60017",
+      "name": "M5 — Scénario 3 : Analyse décisionnelle ",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60032",
+      "name": "M5 — Scénario 1 : Cycle opérationnel com",
+      "descEn": "Complete a full supplier to warehouse to customer cycle"
+    },
+    {
+      "id": "60033",
+      "name": "M5 — Scénario 2 : Gestion d'écarts et ré",
+      "descEn": "Manage a situation involving inventory discrepancies an"
+    },
+    {
+      "id": "60034",
+      "name": "M5 — Scénario 3 : Analyse décisionnelle ",
+      "descEn": "Analyze global performance indicators and formulate a j"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdescEn\n1\tScénario 1 — Cycle propre\tNULL\n2\tScénario 2 — Réception fantôme (GR non p\tNULL\n3\tScénario 3 — Stock insuffisant\tNULL\n4\tScénario 4 — Écart d'inventaire\tNULL\n5\tScénario 5 — Non-conformités multiples\tNULL\n30001\tScénario 1 — Cycle propre\tNULL\n30002\tScénario 2 — Réception fantôme (GR non p\tNULL\n30003\tScénario 3 — Stock insuffisant\tNULL\n30004\tScénario 4 — Écart d'inventaire\tNULL\n30005\tScénario 5 — Non-conformités multiples\tNULL\n60001\tScénario 1 — Cycle propre\tNULL\n60002\tScénario 2 — Réception fantôme (GR non p\tNULL\n60003\tScénario 3 — Stock insuffisant\tNULL\n60004\tScénario 4 — Écart d'inventaire\tNULL\n60005\tScénario 5 — Non-conformités multiples\tNULL\n60018\tScénario 1 — Cycle propre\tExecute a complete PO→GR→SO→GI→Cycle Count cycle withou\n60019\tScénario 2 — Réception fantôme (GR non p\tA GR was created but not posted. Detect the anomaly, po\n60020\tScénario 3 — Stock insuffisant\tA SO was created for a quantity exceeding available sto\n60021\tScénario 4 — Écart d'inventaire\tPhysical count reveals a discrepancy against system sto\n60022\tScénario 5 — Non-conformités multiples\tMultiple simultaneous anomalies: unposted GR, potential\n6\tM2 — Scénario 1 : Rangement structuré et\tNULL\n7\tM2 — Scénario 2 : Validation de la capac\tNULL\n8\tM2 — Scénario 3 : Application de la méth\tNULL\n30006\tM2 — Scénario 1 : Rangement structuré et\tNULL\n30007\tM2 — Scénario 2 : Validation de la capac\tNULL\n30008\tM2 — Scénario 3 : Application de la méth\tNULL\n60006\tM2 — Scénario 1 : Rangement structuré et\tNULL\n60007\tM2 — Scénario 2 : Validation de la capac\tNULL\n60008\tM2 — Scénario 3 : Application de la méth\tNULL\n60023\tM2 — Scénario 1 : Rangement structuré et\tReceive goods and store them in the correct bin accordi\n60024\tM2 — Scénario 2 : Validation de la capac\tAttempt to store a quantity exceeding a bin's capacity.\n60025\tM2 — Scénario 3 : Application de la méth\tThree lots of the same SKU are in stock. Follow FIFO or\n9\tM3 — Scénario 1 : Inventaire cyclique si\tNULL\n10\tM3 — Scénario 2 : Analyse d'écart et aju\tNULL\n11\tM3 — Scénario 3 : Réapprovisionnement se\tNULL\n30009\tM3 — Scénario 1 : Inventaire cyclique si\tNULL\n30010\tM3 — Scénario 2 : Analyse d'écart et aju\tNULL\n30011\tM3 — Scénario 3 : Réapprovisionnement se\tNULL\n60009\tM3 — Scénario 1 : Inventaire cyclique si\tNULL\n60010\tM3 — Scénario 2 : Analyse d'écart et aju\tNULL\n60011\tM3 — Scénario 3 : Réapprovisionnement se\tNULL\n60026\tM3 — Scénario 1 : Inventaire cyclique si\tPerform a cycle count and analyze discrepancies between\n60027\tM3 — Scénario 2 : Analyse d'écart et aju\tIdentify a significant discrepancy, provide a justifica\n60028\tM3 — Scénario 3 : Réapprovisionnement se\tAnalyze inventory levels and generate a replenishment r\n34\tM4 — Scénario 1 : Analyse de la rotation\tNULL\n35\tM4 — Scénario 2 : Analyse du taux de ser\tNULL\n36\tM4 — Scénario 3 : Diagnostic global de p\tNULL\n30012\tM4 — Scénario 1 : Analyse de la rotation\tNULL\n30013\tM4 — Scénario 2 : Analyse du taux de ser\tNULL\n30014\tM4 — Scénario 3 : Diagnostic global de p\tNULL\n60012\tM4 — Scénario 1 : Analyse de la rotation\tNULL\n60013\tM4 — Scénario 2 : Analyse du taux de ser\tNULL\n60014\tM4 — Scénario 3 : Diagnostic global de p\tNULL\n60029\tM4 — Scénario 1 : Analyse de la rotation\tCalculate and interpret the inventory turnover rate to \n60030\tM4 — Scénario 2 : Analyse du taux de ser\tIdentify the root causes of a low service level and ana\n60031\tM4 — Scénario 3 : Diagnostic global de p\tAnalyze multiple combined KPIs and propose a strategic \n37\tM5 — Scénario 1 : Cycle opérationnel com\tNULL\n38\tM5 — Scénario 2 : Gestion d'écarts et ré\tNULL\n39\tM5 — Scénario 3 : Analyse décisionnelle \tNULL\n30015\tM5 — Scénario 1 : Cycle opérationnel com\tNULL\n30016\tM5 — Scénario 2 : Gestion d'écarts et ré\tNULL\n30017\tM5 — Scénario 3 : Analyse décisionnelle \tNULL\n60015\tM5 — Scénario 1 : Cycle opérationnel com\tNULL\n60016\tM5 — Scénario 2 : Gestion d'écarts et ré\tNULL\n60017\tM5 — Scénario 3 : Analyse décisionnelle \tNULL\n60032\tM5 — Scénario 1 : Cycle opérationnel com\tComplete a full supplier to warehouse to customer cycle\n60033\tM5 — Scénario 2 : Gestion d'écarts et ré\tManage a situation involving inventory discrepancies an\n60034\tM5 — Scénario 3 : Analyse décisionnelle \tAnalyze global performance indicators and formulate a j\n",
+  "stderr": "",
+  "execution_time_ms": 236
+}

@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(CASE WHEN descriptionEn IS NOT NULL THEN 1 ELSE 0 END) as withEn, SUM(CASE WHEN descriptionEn IS NULL THEN 1 ELSE 0 END) as withoutEn FROM scenarios;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT COUNT(*) as total, SUM(CASE WHEN descriptionEn IS NOT NULL THEN 1 ELSE 0 END) as withEn, SUM(CASE WHEN descriptionEn IS NULL THEN 1 ELSE 0 END) as withoutEn FROM scenarios;",
+  "rows": [
+    {
+      "total": "68",
+      "withEn": "68",
+      "withoutEn": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\twithEn\twithoutEn\n68\t68\t0\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

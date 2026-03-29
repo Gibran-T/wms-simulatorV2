@@ -110,6 +110,7 @@ export const scenarios = mysqlTable("scenarios", {
   moduleId: int("moduleId").notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   descriptionFr: text("descriptionFr"),
+  descriptionEn: text("descriptionEn"),
   difficulty: mysqlEnum("difficulty", ["facile", "moyen", "difficile"]).default("moyen"),
   initialStateJson: json("initialStateJson"), // pre-loaded transactions/stock
   createdBy: int("createdBy").notNull(),

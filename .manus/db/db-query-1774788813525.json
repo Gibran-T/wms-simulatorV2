@@ -1,0 +1,18 @@
+{
+  "query": "SHOW COLUMNS FROM scenarios LIKE 'description%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SHOW COLUMNS FROM scenarios LIKE 'description%';",
+  "rows": [
+    {
+      "Field": "descriptionFr",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\ndescriptionFr\ttext\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 1547
+}

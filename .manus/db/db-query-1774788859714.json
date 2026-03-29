@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, quizId, LEFT(questionFr, 50) as qFr, LEFT(COALESCE(questionEn, 'NULL'), 50) as qEn FROM quiz_questions LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT id, quizId, LEFT(questionFr, 50) as qFr, LEFT(COALESCE(questionEn, 'NULL'), 50) as qEn FROM quiz_questions LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "quizId": "1",
+      "qFr": "Qu'est-ce qu'un WMS (Warehouse Management System) ",
+      "qEn": "What is a WMS (Warehouse Management System)?"
+    },
+    {
+      "id": "2",
+      "quizId": "1",
+      "qFr": "Dans le flux logistique standard, quelle est la sé",
+      "qEn": "In the standard logistics flow, what is the correc"
+    },
+    {
+      "id": "3",
+      "quizId": "1",
+      "qFr": "Qu'est-ce qu'un Goods Receipt (GR) dans un WMS ?",
+      "qEn": "What is a Goods Receipt (GR) in a WMS?"
+    },
+    {
+      "id": "4",
+      "quizId": "1",
+      "qFr": "Quelle est la conséquence d'un Goods Issue (GI) sa",
+      "qEn": "What is the consequence of a Goods Issue (GI) with"
+    },
+    {
+      "id": "5",
+      "quizId": "1",
+      "qFr": "Qu'est-ce qu'un inventaire cyclique (Cycle Count) ",
+      "qEn": "What is a Cycle Count and why is it preferred over"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tquizId\tqFr\tqEn\n1\t1\tQu'est-ce qu'un WMS (Warehouse Management System) \tWhat is a WMS (Warehouse Management System)?\n2\t1\tDans le flux logistique standard, quelle est la sé\tIn the standard logistics flow, what is the correc\n3\t1\tQu'est-ce qu'un Goods Receipt (GR) dans un WMS ?\tWhat is a Goods Receipt (GR) in a WMS?\n4\t1\tQuelle est la conséquence d'un Goods Issue (GI) sa\tWhat is the consequence of a Goods Issue (GI) with\n5\t1\tQu'est-ce qu'un inventaire cyclique (Cycle Count) \tWhat is a Cycle Count and why is it preferred over\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

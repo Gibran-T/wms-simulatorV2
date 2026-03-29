@@ -8,13 +8,15 @@ import { BookOpen, FlaskConical, ShieldCheck, Zap, AlertTriangle, Play, Lock, La
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Module2ModeSelectionPage() {
   const params = useParams<{ scenarioId: string }>();
   const scenarioId = parseInt(params.scenarioId ?? "0", 10);
   const [, navigate] = useLocation();
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const t = (fr: string, en: string) => language === "FR" ? fr : en;
   const [selectedMode, setSelectedMode] = useState<"evaluation" | "demonstration">("evaluation");
 
   const { data: scenarios } = trpc.scenarios.list.useQuery();
@@ -25,7 +27,7 @@ export default function Module2ModeSelectionPage() {
       navigate(`/student/module2/run/${data.runId}/putaway`);
     },
     onError: (err) => {
-      toast.error(err.message ?? "Erreur lors du démarrage");
+      toast.error(err.message ?? t("Erreur lors du démarrage", "Error starting simulation"));
     },
   });
 
@@ -35,7 +37,7 @@ export default function Module2ModeSelectionPage() {
     return (
       <FioriShell>
         <div className="flex items-center justify-center min-h-[60vh] text-muted-foreground">
-          Scénario introuvable.
+          {t("Scénario introuvable.", "Scenario not found.")}
         </div>
       </FioriShell>
     );
@@ -46,9 +48,11 @@ export default function Module2ModeSelectionPage() {
       <div className="max-w-2xl mx-auto py-10 px-4 space-y-6">
         {/* Breadcrumb */}
         <div className="text-xs text-muted-foreground flex items-center gap-1">
-          <span className="cursor-pointer hover:underline" onClick={() => navigate("/student/module2")}>Module 2</span>
+          <span className="cursor-pointer hover:underline" onClick={() => navigate("/student/module2")}>
+            {t("Module 2", "Module 2")}
+          </span>
           <span>›</span>
-          <span>Mode de simulation</span>
+          <span>{t("Mode de simulation", "Simulation Mode")}</span>
         </div>
 
         {/* Scenario card */}
@@ -59,9 +63,11 @@ export default function Module2ModeSelectionPage() {
                 <Layers className="w-4 h-4 text-white" />
               </div>
               <div>
-                <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">Scénario sélectionné</p>
+                <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">
+                  {t("Scénario sélectionné", "Selected Scenario")}
+                </p>
                 <CardTitle className="text-base">{scenario.name}</CardTitle>
-                <CardDescription className="text-xs">{scenario.difficulty ?? "facile"}</CardDescription>
+                <CardDescription className="text-xs">{scenario.difficulty ?? t("facile", "easy")}</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -69,7 +75,7 @@ export default function Module2ModeSelectionPage() {
 
         {/* Mode selection */}
         <div className="space-y-3">
-          <p className="text-sm font-semibold text-foreground">MODE DE SIMULATION :</p>
+          <p className="text-sm font-semibold text-foreground">{t("MODE DE SIMULATION :", "SIMULATION MODE:")}</p>
 
           {/* Evaluation mode */}
           <div
@@ -84,17 +90,22 @@ export default function Module2ModeSelectionPage() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-sm">Mode Évaluation</span>
-                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs" variant="outline">PAR DÉFAUT</Badge>
+                  <span className="font-semibold text-sm">{t("Mode Évaluation", "Evaluation Mode")}</span>
+                  <Badge className="bg-blue-100 text-blue-800 border-blue-200 text-xs" variant="outline">
+                    {t("PAR DÉFAUT", "DEFAULT")}
+                  </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Mode officiel avec score et blocage séquentiel. Les points sont calculés, les pénalités s'appliquent.
-                  <strong> Score maximum : 100 points.</strong>
+                  {t(
+                    "Mode officiel avec score et blocage séquentiel. Les points sont calculés, les pénalités s'appliquent.",
+                    "Official mode with score and sequential blocking. Points are calculated, penalties apply."
+                  )}
+                  <strong> {t("Score maximum : 100 points.", "Maximum score: 100 points.")}</strong>
                 </p>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> Score activé</span>
-                  <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-amber-500" /> Règles FIFO/Capacité</span>
-                  <span className="flex items-center gap-1"><BookOpen className="w-3 h-3 text-blue-500" /> Rapport final</span>
+                  <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3 text-emerald-500" /> {t("Score activé", "Score enabled")}</span>
+                  <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-amber-500" /> {t("Règles FIFO/Capacité", "FIFO/Capacity rules")}</span>
+                  <span className="flex items-center gap-1"><BookOpen className="w-3 h-3 text-blue-500" /> {t("Rapport final", "Final report")}</span>
                 </div>
               </div>
             </div>
@@ -117,21 +128,30 @@ export default function Module2ModeSelectionPage() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-sm">Mode Démonstration</span>
-                  <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-xs" variant="outline">ENSEIGNANTS</Badge>
+                  <span className="font-semibold text-sm">{t("Mode Démonstration", "Demonstration Mode")}</span>
+                  <Badge className="bg-purple-100 text-purple-800 border-purple-200 text-xs" variant="outline">
+                    {t("ENSEIGNANTS", "TEACHERS")}
+                  </Badge>
                   {!isTeacherOrAdmin && (
                     <span className="flex items-center gap-1 text-xs text-slate-500">
-                      <Lock className="w-3 h-3" /> Réservé
+                      <Lock className="w-3 h-3" /> {t("Réservé", "Restricted")}
                     </span>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Mode pédagogique libre. Aucun score enregistré, aucune pénalité, progression libre. Inclut les explications approfondies et la transparence du backend WMS.
+                  {t(
+                    "Mode pédagogique libre. Aucun score enregistré, aucune pénalité, progression libre. Inclut les explications approfondies et la transparence du backend WMS.",
+                    "Free pedagogical mode. No score recorded, no penalties, free progression. Includes in-depth explanations and WMS backend transparency."
+                  )}
                 </p>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1"><FlaskConical className="w-3 h-3 text-blue-500" /> Progression libre</span>
-                  <span className="flex items-center gap-1"><BookOpen className="w-3 h-3 text-purple-500" /> Explications pédagogiques</span>
-                  {!isTeacherOrAdmin && <span className="text-amber-600 flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Accès réservé aux enseignants</span>}
+                  <span className="flex items-center gap-1"><FlaskConical className="w-3 h-3 text-blue-500" /> {t("Progression libre", "Free progression")}</span>
+                  <span className="flex items-center gap-1"><BookOpen className="w-3 h-3 text-purple-500" /> {t("Explications pédagogiques", "Pedagogical explanations")}</span>
+                  {!isTeacherOrAdmin && (
+                    <span className="text-amber-600 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" /> {t("Accès réservé aux enseignants", "Restricted to teachers")}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -141,7 +161,7 @@ export default function Module2ModeSelectionPage() {
         {/* Actions */}
         <div className="flex items-center justify-between pt-2">
           <Button variant="outline" onClick={() => navigate("/student/module2")}>
-            ← Retour aux scénarios
+            ← {t("Retour aux scénarios", "Back to scenarios")}
           </Button>
           <Button
             className="gap-2 bg-blue-600 hover:bg-blue-700"
@@ -154,7 +174,9 @@ export default function Module2ModeSelectionPage() {
             }}
           >
             <Play className="w-4 h-4" />
-            {startRun.isPending ? "Démarrage..." : `Démarrer en mode ${selectedMode === "evaluation" ? "Évaluation" : "Démonstration"}`}
+            {startRun.isPending
+              ? t("Démarrage...", "Starting...")
+              : `${t("Démarrer en mode", "Start in")} ${selectedMode === "evaluation" ? t("Évaluation", "Evaluation") : t("Démonstration", "Demonstration")}`}
           </Button>
         </div>
       </div>

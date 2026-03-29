@@ -444,3 +444,17 @@
 - [ ] Fix 4: Persistent orange banner — hide when compliance.compliant === true
 - [ ] Final clean validation M1→M5 (no hotfix mode)
 - [ ] Final verdict report
+
+## Feature: Full Bilingual System FR/EN (2026-03-29)
+- [x] Seed: add descriptionEn to all 34 scenarios (M1-M5) — SQL UPDATE applied to all 68 rows
+- [x] Schema: add descriptionEn column to scenarios table (drizzle schema + DB column added)
+- [x] Routers: bilingualize all error messages — pickReason() helper + Accept-Language header wired
+- [x] rulesEngine: add reasonEn to ValidationResult interface + all canExecuteStep/validateGRZone/validatePutaway returns
+- [x] UI: ModeSelectionScreen — fully bilingual with useLanguage() + t()
+- [x] UI: Module2ModeSelectionPage — fully bilingual with useLanguage() + t()
+- [x] UI: Module3ModeSelectionPage — fully bilingual with useLanguage() + t()
+- [x] UI: ForgotPasswordPage — fully bilingual with useLanguage() + t()
+- [x] UI: ResetPasswordPage — fully bilingual with useLanguage() + t()
+- [x] Backend: error messages returned to frontend use { reasonFr, reasonEn } + pickReason(validation, req)
+- [x] tRPC client: sends Accept-Language header from localStorage lang preference
+- [x] Final validation: bilingual error messages confirmed (FR: "L'étape…" / EN: "Step…")

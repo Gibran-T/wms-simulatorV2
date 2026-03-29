@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 import { useState } from "react";
 import { BookOpen, GraduationCap, FlaskConical, ShieldCheck, Zap, AlertTriangle, Play } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ModeSelectionScreenProps {
   scenarioId: number;
@@ -15,6 +16,8 @@ interface ModeSelectionScreenProps {
 
 export default function ModeSelectionScreen({ scenarioId, scenarioName, scenarioDifficulty, onCancel }: ModeSelectionScreenProps) {
   const { user } = useAuth();
+  const { language } = useLanguage();
+  const t = (fr: string, en: string) => language === "FR" ? fr : en;
   const [, navigate] = useLocation();
   const isTeacherOrAdmin = user?.role === "teacher" || user?.role === "admin";
   const [selectedMode, setSelectedMode] = useState<"evaluation" | "demonstration">("evaluation");
@@ -24,7 +27,7 @@ export default function ModeSelectionScreen({ scenarioId, scenarioName, scenario
       navigate(`/student/run/${data.runId}`);
     },
     onError: (err) => {
-      toast.error(err.message ?? "Erreur lors du démarrage");
+      toast.error(err.message ?? t("Erreur lors du démarrage", "Error starting simulation"));
     },
   });
 
@@ -35,10 +38,10 @@ export default function ModeSelectionScreen({ scenarioId, scenarioName, scenario
 
   return (
     <FioriShell
-      title="Sélection du mode de simulation"
+      title={t("Sélection du mode de simulation", "Simulation Mode Selection")}
       breadcrumbs={[
-        { label: "Scénarios", href: "/student/scenarios" },
-        { label: "Mode de simulation" },
+        { label: t("Scénarios", "Scenarios"), href: "/student/scenarios" },
+        { label: t("Mode de simulation", "Simulation Mode") },
       ]}
     >
       <div className="max-w-2xl mx-auto">
@@ -49,7 +52,9 @@ export default function ModeSelectionScreen({ scenarioId, scenarioName, scenario
               <BookOpen size={18} className="text-white" />
             </div>
             <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">Scénario sélectionné</p>
+              <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                {t("Scénario sélectionné", "Selected Scenario")}
+              </p>
               <h2 className="text-[#0f2a44] font-bold text-base">{scenarioName}</h2>
               {scenarioDifficulty && (
                 <span className="text-[10px] text-gray-500 capitalize">{scenarioDifficulty}</span>
@@ -60,7 +65,9 @@ export default function ModeSelectionScreen({ scenarioId, scenarioName, scenario
 
         {/* Mode Selection */}
         <div className="mb-5">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Mode de simulation :</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+            {t("Mode de simulation :", "Simulation Mode:")}
+          </p>
 
           <div className="space-y-3">
             {/* Evaluation Mode */}
@@ -83,18 +90,30 @@ export default function ModeSelectionScreen({ scenarioId, scenarioName, scenario
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <ShieldCheck size={14} className="text-[#0070f2]" />
-                    <span className="text-sm font-bold text-[#0f2a44]">Mode Évaluation</span>
-                    <span className="text-[10px] bg-[#0070f2] text-white px-2 py-0.5 rounded-full font-semibold">PAR DÉFAUT</span>
+                    <span className="text-sm font-bold text-[#0f2a44]">
+                      {t("Mode Évaluation", "Evaluation Mode")}
+                    </span>
+                    <span className="text-[10px] bg-[#0070f2] text-white px-2 py-0.5 rounded-full font-semibold">
+                      {t("PAR DÉFAUT", "DEFAULT")}
+                    </span>
                   </div>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    Mode officiel avec score et blocage séquentiel. Les points sont calculés, les pénalités s'appliquent,
-                    et le flux est obligatoire (PO → GR → SO → GI → CC → Conformité).
-                    <strong className="text-[#0f2a44]"> Score maximum : 100 points.</strong>
+                    {t(
+                      "Mode officiel avec score et blocage séquentiel. Les points sont calculés, les pénalités s'appliquent, et le flux est obligatoire (PO → GR → SO → GI → CC → Conformité).",
+                      "Official mode with score and sequential blocking. Points are calculated, penalties apply, and the flow is mandatory (PO → GR → SO → GI → CC → Compliance)."
+                    )}
+                    <strong className="text-[#0f2a44]"> {t("Score maximum : 100 points.", "Maximum score: 100 points.")}</strong>
                   </p>
                   <div className="flex items-center gap-3 mt-2">
-                    <span className="flex items-center gap-1 text-[10px] text-[#107e3e]"><Zap size={10} /> Score activé</span>
-                    <span className="flex items-center gap-1 text-[10px] text-[#107e3e]"><ShieldCheck size={10} /> Blocage séquentiel</span>
-                    <span className="flex items-center gap-1 text-[10px] text-[#107e3e]"><GraduationCap size={10} /> Rapport final</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#107e3e]">
+                      <Zap size={10} /> {t("Score activé", "Score enabled")}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#107e3e]">
+                      <ShieldCheck size={10} /> {t("Blocage séquentiel", "Sequential blocking")}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#107e3e]">
+                      <GraduationCap size={10} /> {t("Rapport final", "Final report")}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -123,24 +142,38 @@ export default function ModeSelectionScreen({ scenarioId, scenarioName, scenario
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <FlaskConical size={14} className="text-[#5b4b8a]" />
-                    <span className="text-sm font-bold text-[#0f2a44]">Mode Démonstration</span>
-                    <span className="text-[10px] bg-[#5b4b8a] text-white px-2 py-0.5 rounded-full font-semibold">ENSEIGNANTS</span>
+                    <span className="text-sm font-bold text-[#0f2a44]">
+                      {t("Mode Démonstration", "Demonstration Mode")}
+                    </span>
+                    <span className="text-[10px] bg-[#5b4b8a] text-white px-2 py-0.5 rounded-full font-semibold">
+                      {t("ENSEIGNANTS", "TEACHERS")}
+                    </span>
                     {!isTeacherOrAdmin && (
-                      <span className="text-[10px] bg-[#f0f0f0] text-gray-500 px-2 py-0.5 rounded-full">🔒 Réservé</span>
+                      <span className="text-[10px] bg-[#f0f0f0] text-gray-500 px-2 py-0.5 rounded-full">
+                        🔒 {t("Réservé", "Restricted")}
+                      </span>
                     )}
                   </div>
                   <p className="text-xs text-gray-600 leading-relaxed">
-                    Mode pédagogique libre. Aucun score enregistré, aucune pénalité, progression libre entre les étapes.
-                    Inclut des explications approfondies et la transparence du backend WMS pour chaque transaction.
+                    {t(
+                      "Mode pédagogique libre. Aucun score enregistré, aucune pénalité, progression libre entre les étapes. Inclut des explications approfondies et la transparence du backend WMS pour chaque transaction.",
+                      "Free pedagogical mode. No score recorded, no penalties, free progression between steps. Includes in-depth explanations and WMS backend transparency for each transaction."
+                    )}
                   </p>
                   <div className="flex items-center gap-3 mt-2">
-                    <span className="flex items-center gap-1 text-[10px] text-[#5b4b8a]"><FlaskConical size={10} /> Progression libre</span>
-                    <span className="flex items-center gap-1 text-[10px] text-[#5b4b8a]"><BookOpen size={10} /> Explications pédagogiques</span>
-                    <span className="flex items-center gap-1 text-[10px] text-gray-400">Score non enregistré</span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#5b4b8a]">
+                      <FlaskConical size={10} /> {t("Progression libre", "Free progression")}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] text-[#5b4b8a]">
+                      <BookOpen size={10} /> {t("Explications pédagogiques", "Pedagogical explanations")}
+                    </span>
+                    <span className="flex items-center gap-1 text-[10px] text-gray-400">
+                      {t("Score non enregistré", "Score not recorded")}
+                    </span>
                   </div>
                   {!isTeacherOrAdmin && (
                     <p className="text-[10px] text-[#e9730c] mt-1.5 flex items-center gap-1">
-                      <AlertTriangle size={10} /> Accès réservé aux enseignants et administrateurs.
+                      <AlertTriangle size={10} /> {t("Accès réservé aux enseignants et administrateurs.", "Access restricted to teachers and administrators.")}
                     </p>
                   )}
                 </div>
@@ -153,13 +186,13 @@ export default function ModeSelectionScreen({ scenarioId, scenarioName, scenario
         {selectedMode === "demonstration" && isTeacherOrAdmin && (
           <div className="bg-[#ede7f6] border border-[#5b4b8a]/20 rounded-md p-4 mb-5">
             <p className="text-xs font-semibold text-[#5b4b8a] mb-1 flex items-center gap-1.5">
-              <FlaskConical size={12} /> Mode Démonstration — Informations importantes
+              <FlaskConical size={12} /> {t("Mode Démonstration — Informations importantes", "Demonstration Mode — Important Information")}
             </p>
             <ul className="text-xs text-[#5b4b8a]/80 space-y-1">
-              <li>• Cette session ne sera <strong>pas comptabilisée</strong> dans les statistiques d'évaluation.</li>
-              <li>• Les étapes peuvent être exécutées dans n'importe quel ordre (avertissements affichés).</li>
-              <li>• Chaque formulaire inclut des explications pédagogiques détaillées et la logique WMS.</li>
-              <li>• Idéal pour les présentations en classe ou l'exploration libre du système.</li>
+              <li>• {t("Cette session ne sera ", "This session will ")}<strong>{t("pas comptabilisée", "not be counted")}</strong>{t(" dans les statistiques d'évaluation.", " in evaluation statistics.")}</li>
+              <li>• {t("Les étapes peuvent être exécutées dans n'importe quel ordre (avertissements affichés).", "Steps can be executed in any order (warnings displayed).")}</li>
+              <li>• {t("Chaque formulaire inclut des explications pédagogiques détaillées et la logique WMS.", "Each form includes detailed pedagogical explanations and WMS logic.")}</li>
+              <li>• {t("Idéal pour les présentations en classe ou l'exploration libre du système.", "Ideal for classroom presentations or free system exploration.")}</li>
             </ul>
           </div>
         )}
@@ -170,7 +203,7 @@ export default function ModeSelectionScreen({ scenarioId, scenarioName, scenario
             onClick={onCancel}
             className="text-xs text-gray-500 hover:text-[#0070f2] transition-colors"
           >
-            ← Retour aux scénarios
+            ← {t("Retour aux scénarios", "Back to scenarios")}
           </button>
           <button
             onClick={handleStart}
@@ -182,9 +215,9 @@ export default function ModeSelectionScreen({ scenarioId, scenarioName, scenario
             }`}
           >
             {startRun.isPending ? (
-              <><div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" /> Démarrage...</>
+              <><div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" /> {t("Démarrage...", "Starting...")}</>
             ) : (
-              <><Play size={13} /> Démarrer en mode {selectedMode === "demonstration" ? "Démonstration" : "Évaluation"}</>
+              <><Play size={13} /> {t("Démarrer en mode", "Start in")} {selectedMode === "demonstration" ? t("Démonstration", "Demonstration") : t("Évaluation", "Evaluation")}</>
             )}
           </button>
         </div>

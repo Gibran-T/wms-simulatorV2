@@ -95,6 +95,7 @@ export interface ValidationResult {
   allowed: boolean;
   reason?: string;
   reasonFr?: string;
+  reasonEn?: string;
 }
 
 // ─── Module 1: Zone Validation ───────────────────────────────────────────────
@@ -108,6 +109,7 @@ export function validateGRZone(bin: string): ZoneValidationResult {
       allowed: false,
       reason: `GR must use a RECEPTION bin (${RECEPTION_BINS.join(", ")}). Got: "${bin}"`,
       reasonFr: `La réception (GR) doit utiliser un emplacement de la zone RÉCEPTION (${RECEPTION_BINS.join(", ")}). Emplacement saisi : "${bin}" — les marchandises reçues ne peuvent pas aller directement au stock.`,
+      reasonEn: `Goods Receipt must use a RECEPTION bin (${RECEPTION_BINS.join(", ")}). Entered bin: "${bin}" — received goods cannot go directly to stock.`,
       fieldError: { field: "bin", expected: RECEPTION_BINS.join(" ou "), actual: bin },
     };
   }
@@ -120,6 +122,7 @@ export function validatePutawayM1Zone(fromBin: string, toBin: string): ZoneValid
       allowed: false,
       reason: `Putaway fromBin must be a RECEPTION bin. Got: "${fromBin}"`,
       reasonFr: `Le rangement doit partir d'un emplacement RÉCEPTION (${RECEPTION_BINS.join(", ")}). Emplacement source : "${fromBin}"`,
+      reasonEn: `Putaway source bin must be a RECEPTION bin (${RECEPTION_BINS.join(", ")}). Source bin entered: "${fromBin}"`,
       fieldError: { field: "fromBin", expected: RECEPTION_BINS.join(" ou "), actual: fromBin },
     };
   }
@@ -129,6 +132,7 @@ export function validatePutawayM1Zone(fromBin: string, toBin: string): ZoneValid
       allowed: false,
       reason: `Putaway toBin must be a STOCKAGE, PICKING, or RESERVE bin. Got: "${toBin}"`,
       reasonFr: `Le rangement doit aller vers un emplacement STOCKAGE, PICKING ou RÉSERVE. Emplacement destination : "${toBin}" — les marchandises ne peuvent pas rester en zone RÉCEPTION ni aller directement en EXPÉDITION.`,
+      reasonEn: `Putaway destination must be a STOCKAGE, PICKING, or RESERVE bin. Destination "${toBin}" is invalid — goods cannot remain in RECEPTION or go directly to DISPATCH.`,
       fieldError: { field: "toBin", expected: "STOCKAGE / PICKING / RESERVE", actual: toBin },
     };
   }
@@ -142,6 +146,7 @@ export function validatePickingM1Zone(fromBin: string, toBin: string): ZoneValid
       allowed: false,
       reason: `Picking fromBin must be a STOCKAGE/PICKING/RESERVE bin. Got: "${fromBin}"`,
       reasonFr: `Le prélèvement doit partir d'un emplacement STOCKAGE, PICKING ou RÉSERVE. Emplacement source : "${fromBin}"`,
+      reasonEn: `Picking source bin must be a STOCKAGE, PICKING, or RESERVE bin. Source bin "${fromBin}" is invalid.`,
       fieldError: { field: "fromBin", expected: "STOCKAGE / PICKING / RESERVE", actual: fromBin },
     };
   }
@@ -150,6 +155,7 @@ export function validatePickingM1Zone(fromBin: string, toBin: string): ZoneValid
       allowed: false,
       reason: `Picking toBin must be an EXPEDITION bin (${EXPEDITION_BINS.join(", ")}). Got: "${toBin}"`,
       reasonFr: `Le prélèvement doit aller vers un emplacement EXPÉDITION (${EXPEDITION_BINS.join(", ")}). Emplacement destination : "${toBin}" — les marchandises prélevées doivent être déposées au quai d'expédition.`,
+      reasonEn: `Picking destination must be a DISPATCH bin (${EXPEDITION_BINS.join(", ")}). Destination "${toBin}" is invalid — picked goods must be staged at the dispatch dock.`,
       fieldError: { field: "toBin", expected: EXPEDITION_BINS.join(" ou "), actual: toBin },
     };
   }
@@ -162,6 +168,7 @@ export function validateGIZone(bin: string): ZoneValidationResult {
       allowed: false,
       reason: `GI must use an EXPEDITION bin (${EXPEDITION_BINS.join(", ")}). Got: "${bin}"`,
       reasonFr: `La sortie marchandises (GI) doit utiliser un emplacement EXPÉDITION (${EXPEDITION_BINS.join(", ")}). Emplacement saisi : "${bin}" — les marchandises doivent être au quai d'expédition avant la sortie.`,
+      reasonEn: `Goods Issue must use a DISPATCH bin (${EXPEDITION_BINS.join(", ")}). Bin "${bin}" is invalid — goods must be at the dispatch dock before issuing.`,
       fieldError: { field: "bin", expected: EXPEDITION_BINS.join(" ou "), actual: bin },
     };
   }
@@ -171,7 +178,7 @@ export function validateGIZone(bin: string): ZoneValidationResult {
 // ─── Module 1: canExecuteStep ─────────────────────────────────────────────────
 export function canExecuteStep(step: StepCode, state: RunState): ValidationResult {
   const stepDef = MODULE1_STEPS.find((s) => s.code === step);
-  if (!stepDef) return { allowed: false, reason: "Unknown step", reasonFr: "Étape inconnue" };
+  if (!stepDef) return { allowed: false, reason: "Unknown step", reasonFr: "Étape inconnue", reasonEn: "Unknown step" };
 
   if (stepDef.prerequisite && !state.completedSteps.includes(stepDef.prerequisite)) {
     const prereqDef = MODULE1_STEPS.find((s) => s.code === stepDef.prerequisite);
@@ -179,6 +186,7 @@ export function canExecuteStep(step: StepCode, state: RunState): ValidationResul
       allowed: false,
       reason: `Step ${stepDef.prerequisite} must be completed first`,
       reasonFr: `L'étape "${prereqDef?.labelFr}" doit être complétée en premier`,
+      reasonEn: `Step "${prereqDef?.labelEn}" must be completed first`,
     };
   }
 
@@ -189,6 +197,7 @@ export function canExecuteStep(step: StepCode, state: RunState): ValidationResul
         allowed: false,
         reason: "No posted Purchase Order found in this run",
         reasonFr: "Aucun Bon de commande (PO) posté trouvé dans cette session",
+        reasonEn: "No posted Purchase Order (PO) found in this run — create a PO first.",
       };
     }
   }
@@ -200,6 +209,7 @@ export function canExecuteStep(step: StepCode, state: RunState): ValidationResul
         allowed: false,
         reason: "No posted Goods Receipt found — receive goods first",
         reasonFr: "Aucune GR postée — réceptionnez les marchandises au quai avant le rangement",
+        reasonEn: "No posted Goods Receipt (GR) found — receive goods at the dock before putaway.",
       };
     }
     // Verify GR was posted to a RECEPTION bin
@@ -211,6 +221,7 @@ export function canExecuteStep(step: StepCode, state: RunState): ValidationResul
         allowed: false,
         reason: `GR must have been posted to a RECEPTION bin (${RECEPTION_BINS.join(", ")}) before putaway`,
         reasonFr: `La GR doit avoir été postée vers un emplacement RÉCEPTION (${RECEPTION_BINS.join(", ")}) avant le rangement`,
+        reasonEn: `GR must have been posted to a RECEPTION bin (${RECEPTION_BINS.join(", ")}) before putaway.`,
       };
     }
   }
@@ -220,8 +231,9 @@ export function canExecuteStep(step: StepCode, state: RunState): ValidationResul
     if (!hasPutaway) {
       return {
         allowed: false,
-        reason: "PUTAWAY must be completed before checking available stock",
+        reason: "Putaway must be completed before checking stock availability",
         reasonFr: "Le rangement (PUTAWAY) doit être complété avant de vérifier le stock disponible",
+        reasonEn: "Putaway must be completed before verifying stock availability.",
       };
     }
     // Stock is in STOCKAGE/PICKING/RESERVE bins after putaway
@@ -234,6 +246,7 @@ export function canExecuteStep(step: StepCode, state: RunState): ValidationResul
         allowed: false,
         reason: "No stock available in warehouse bins after putaway",
         reasonFr: "Aucun stock disponible dans les emplacements entrepôt après rangement",
+        reasonEn: "No stock available in warehouse bins after putaway.",
       };
     }
   }
@@ -245,6 +258,7 @@ export function canExecuteStep(step: StepCode, state: RunState): ValidationResul
         allowed: false,
         reason: "No posted Sales Order found — create SO before picking",
         reasonFr: "Aucune Commande client (SO) postée — créez la SO avant le prélèvement",
+        reasonEn: "No posted Sales Order (SO) found — create a SO before picking.",
       };
     }
   }
@@ -256,6 +270,7 @@ export function canExecuteStep(step: StepCode, state: RunState): ValidationResul
         allowed: false,
         reason: "PICKING must be completed before Goods Issue",
         reasonFr: "Le prélèvement (PICKING) doit être complété avant la sortie marchandises (GI)",
+        reasonEn: "Picking must be completed before Goods Issue (GI).",
       };
     }
     // Verify picking was done to an EXPEDITION bin
@@ -268,6 +283,7 @@ export function canExecuteStep(step: StepCode, state: RunState): ValidationResul
         allowed: false,
         reason: `Picking must have been posted to an EXPEDITION bin (${EXPEDITION_BINS.join(", ")}) before GI`,
         reasonFr: `Le prélèvement doit avoir été posté vers un emplacement EXPÉDITION (${EXPEDITION_BINS.join(", ")}) avant la GI`,
+        reasonEn: `Picking must have been posted to a DISPATCH bin (${EXPEDITION_BINS.join(", ")}) before Goods Issue.`,
       };
     }
   }
@@ -323,6 +339,7 @@ export function validatePutaway(ctx: PutawayContext): PutawayValidationResult {
       allowed: false,
       reason: `Bin "${ctx.toBin}" does not exist in the warehouse master`,
       reasonFr: `L'emplacement "${ctx.toBin}" n'existe pas dans le référentiel entrepôt`,
+      reasonEn: `Bin "${ctx.toBin}" does not exist in the warehouse master data.`,
     };
   }
 
@@ -334,6 +351,7 @@ export function validatePutaway(ctx: PutawayContext): PutawayValidationResult {
       allowed: false,
       reason: `Bin "${ctx.toBin}" capacity exceeded: ${currentLoad + ctx.qty} > ${maxCap}`,
       reasonFr: `Capacité de l'emplacement "${ctx.toBin}" dépassée : ${currentLoad + ctx.qty} / ${maxCap} unités — débordement de ${currentLoad + ctx.qty - maxCap} unités`,
+      reasonEn: `Bin "${ctx.toBin}" capacity exceeded: ${currentLoad + ctx.qty} / ${maxCap} units — overflow of ${currentLoad + ctx.qty - maxCap} units.`,
       penaltyEvent: "CAPACITY_OVERFLOW",
       penaltyPoints: -10,
     };
@@ -349,6 +367,7 @@ export function validatePutaway(ctx: PutawayContext): PutawayValidationResult {
       allowed: false,
       reason: `FIFO violation: lot ${oldest.lotNumber} (received ${oldest.receivedAt.toISOString()}) must be placed before ${ctx.lotNumber}`,
       reasonFr: `Violation FIFO : le lot ${oldest.lotNumber} (reçu le ${oldest.receivedAt.toLocaleDateString("fr-CA")}) doit être rangé avant le lot ${ctx.lotNumber}`,
+      reasonEn: `FIFO violation: lot ${oldest.lotNumber} (received ${oldest.receivedAt.toLocaleDateString("en-CA")}) must be placed before lot ${ctx.lotNumber}.`,
       penaltyEvent: "FIFO_VIOLATION",
       penaltyPoints: -15,
     };
@@ -360,7 +379,7 @@ export function validatePutaway(ctx: PutawayContext): PutawayValidationResult {
 // ─── Module 2: canExecuteStep ─────────────────────────────────────────────────
 export function canExecuteStepM2(step: StepCode, state: RunState): ValidationResult {
   const stepDef = MODULE2_STEPS.find((s) => s.code === step);
-  if (!stepDef) return { allowed: false, reason: "Unknown M2 step", reasonFr: "Étape M2 inconnue" };
+  if (!stepDef) return { allowed: false, reason: "Unknown M2 step", reasonFr: "Étape M2 inconnue", reasonEn: "Unknown M2 step" };
 
   if (stepDef.prerequisite && !state.completedSteps.includes(stepDef.prerequisite)) {
     const prereqDef = MODULE2_STEPS.find((s) => s.code === stepDef.prerequisite);
@@ -368,6 +387,7 @@ export function canExecuteStepM2(step: StepCode, state: RunState): ValidationRes
       allowed: false,
       reason: `Step ${stepDef.prerequisite} must be completed first`,
       reasonFr: `L'étape "${prereqDef?.labelFr}" doit être complétée en premier`,
+      reasonEn: `Step "${prereqDef?.labelEn}" must be completed first`,
     };
   }
 
@@ -378,6 +398,7 @@ export function canExecuteStepM2(step: StepCode, state: RunState): ValidationRes
         allowed: false,
         reason: "No posted Goods Receipt — receive goods before putaway",
         reasonFr: "Aucune GR postée — réceptionnez les marchandises avant le rangement",
+        reasonEn: "No posted Goods Receipt — receive goods before putaway.",
       };
     }
   }
@@ -389,6 +410,7 @@ export function canExecuteStepM2(step: StepCode, state: RunState): ValidationRes
         allowed: false,
         reason: "Putaway must be completed before FIFO pick",
         reasonFr: "Le rangement doit être complété avant le prélèvement FIFO",
+        reasonEn: "Putaway must be completed before FIFO picking.",
       };
     }
   }
@@ -442,6 +464,7 @@ export function validateVarianceEntry(
       allowed: false,
       reason: `Variance of ${varianceQty} exceeds threshold (${M3_VARIANCE_THRESHOLD}); justification required`,
       reasonFr: `L'écart de ${varianceQty} dépasse le seuil (${M3_VARIANCE_THRESHOLD}) — une justification est obligatoire`,
+      reasonEn: `Variance of ${varianceQty} exceeds the threshold (${M3_VARIANCE_THRESHOLD}) — a justification is required.`,
     };
   }
   return { allowed: true };
@@ -457,6 +480,7 @@ export function validateAdjustment(
       allowed: false,
       reason: `Adjustment qty (${adjustmentQty}) must equal variance qty (${varianceQty})`,
       reasonFr: `La quantité d'ajustement (${adjustmentQty}) doit correspondre à l'écart (${varianceQty})`,
+      reasonEn: `Adjustment quantity (${adjustmentQty}) must match the variance quantity (${varianceQty}).`,
     };
   }
   return { allowed: true };
@@ -499,7 +523,7 @@ export function computeReplenishmentSuggestion(input: ReplenishmentInput): Reple
 // ─── Module 3: Step Sequence Validation ──────────────────────────────────────
 export function canExecuteStepM3(step: StepCode, completedSteps: StepCode[]): ValidationResult {
   const stepDef = MODULE3_STEPS.find((s) => s.code === step);
-  if (!stepDef) return { allowed: false, reason: "Unknown M3 step", reasonFr: "Étape M3 inconnue" };
+  if (!stepDef) return { allowed: false, reason: "Unknown M3 step", reasonFr: "Étape M3 inconnue", reasonEn: "Unknown M3 step" };
 
   if (stepDef.prerequisite && !completedSteps.includes(stepDef.prerequisite as StepCode)) {
     const prereqDef = MODULE3_STEPS.find((s) => s.code === stepDef.prerequisite);
@@ -507,6 +531,7 @@ export function canExecuteStepM3(step: StepCode, completedSteps: StepCode[]): Va
       allowed: false,
       reason: `Step ${stepDef.prerequisite} must be completed first`,
       reasonFr: `L'étape "${prereqDef?.labelFr}" doit être complétée en premier`,
+      reasonEn: `Step "${prereqDef?.labelEn}" must be completed first`,
     };
   }
   return { allowed: true };
@@ -594,6 +619,7 @@ export function canIssueStock(
       allowed: false,
       reason: `Insufficient stock: ${available} available, ${qty} requested`,
       reasonFr: `Stock insuffisant : ${available} disponible, ${qty} demandé — approvisionnement requis`,
+      reasonEn: `Insufficient stock: ${available} available, ${qty} requested — replenishment required.`,
     };
   }
   return { allowed: true };

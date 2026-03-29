@@ -1,0 +1,80 @@
+{
+  "query": "SELECT id, LEFT(name, 45) as name, LEFT(COALESCE(descriptionEn, 'NULL'), 50) as descEn FROM scenarios ORDER BY moduleId, id LIMIT 14;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user M2p26uMeyZfN57L.7f2cda2e67ce --database S5Kvdsbv47gJwCwLVS8V8T --execute SELECT id, LEFT(name, 45) as name, LEFT(COALESCE(descriptionEn, 'NULL'), 50) as descEn FROM scenarios ORDER BY moduleId, id LIMIT 14;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Scénario 1 — Cycle propre",
+      "descEn": "NULL"
+    },
+    {
+      "id": "2",
+      "name": "Scénario 2 — Réception fantôme (GR non postée",
+      "descEn": "NULL"
+    },
+    {
+      "id": "3",
+      "name": "Scénario 3 — Stock insuffisant",
+      "descEn": "NULL"
+    },
+    {
+      "id": "4",
+      "name": "Scénario 4 — Écart d'inventaire",
+      "descEn": "NULL"
+    },
+    {
+      "id": "5",
+      "name": "Scénario 5 — Non-conformités multiples",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30001",
+      "name": "Scénario 1 — Cycle propre",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30002",
+      "name": "Scénario 2 — Réception fantôme (GR non postée",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30003",
+      "name": "Scénario 3 — Stock insuffisant",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30004",
+      "name": "Scénario 4 — Écart d'inventaire",
+      "descEn": "NULL"
+    },
+    {
+      "id": "30005",
+      "name": "Scénario 5 — Non-conformités multiples",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60001",
+      "name": "Scénario 1 — Cycle propre",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60002",
+      "name": "Scénario 2 — Réception fantôme (GR non postée",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60003",
+      "name": "Scénario 3 — Stock insuffisant",
+      "descEn": "NULL"
+    },
+    {
+      "id": "60004",
+      "name": "Scénario 4 — Écart d'inventaire",
+      "descEn": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tdescEn\n1\tScénario 1 — Cycle propre\tNULL\n2\tScénario 2 — Réception fantôme (GR non postée\tNULL\n3\tScénario 3 — Stock insuffisant\tNULL\n4\tScénario 4 — Écart d'inventaire\tNULL\n5\tScénario 5 — Non-conformités multiples\tNULL\n30001\tScénario 1 — Cycle propre\tNULL\n30002\tScénario 2 — Réception fantôme (GR non postée\tNULL\n30003\tScénario 3 — Stock insuffisant\tNULL\n30004\tScénario 4 — Écart d'inventaire\tNULL\n30005\tScénario 5 — Non-conformités multiples\tNULL\n60001\tScénario 1 — Cycle propre\tNULL\n60002\tScénario 2 — Réception fantôme (GR non postée\tNULL\n60003\tScénario 3 — Stock insuffisant\tNULL\n60004\tScénario 4 — Écart d'inventaire\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

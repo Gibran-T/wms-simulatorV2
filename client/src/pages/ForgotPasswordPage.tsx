@@ -10,6 +10,7 @@ import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Loader2, KeyRound, ArrowLeft, Mail, CheckCircle2, Copy } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FormData {
   email: string;
@@ -18,6 +19,8 @@ interface FormData {
 export default function ForgotPasswordPage() {
   const [resetUrl, setResetUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const { language } = useLanguage();
+  const t = (fr: string, en: string) => language === "FR" ? fr : en;
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
 
@@ -26,11 +29,11 @@ export default function ForgotPasswordPage() {
       if (data.resetUrl) {
         setResetUrl(data.resetUrl);
       } else {
-        toast.success("Demande envoyée. Votre enseignant a été notifié.");
+        toast.success(t("Demande envoyée. Votre enseignant a été notifié.", "Request sent. Your teacher has been notified."));
       }
     },
     onError: (err) => {
-      toast.error(err.message || "Erreur lors de la demande de réinitialisation.");
+      toast.error(err.message || t("Erreur lors de la demande de réinitialisation.", "Error during reset request."));
     },
   });
 
@@ -45,7 +48,7 @@ export default function ForgotPasswordPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Impossible de copier le lien.");
+      toast.error(t("Impossible de copier le lien.", "Unable to copy the link."));
     }
   };
 
@@ -58,10 +61,13 @@ export default function ForgotPasswordPage() {
             <KeyRound className="w-7 h-7 text-primary" />
           </div>
           <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "'Space Grotesk', system-ui, sans-serif" }}>
-            Mot de passe oublié
+            {t("Mot de passe oublié", "Forgot Password")}
           </h1>
           <p className="text-muted-foreground text-sm mt-2">
-            Entrez votre adresse email pour générer un lien de réinitialisation.
+            {t(
+              "Entrez votre adresse email pour générer un lien de réinitialisation.",
+              "Enter your email address to generate a reset link."
+            )}
           </p>
         </div>
 
@@ -71,17 +77,17 @@ export default function ForgotPasswordPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-1.5">
-                  Adresse email
+                  {t("Adresse email", "Email address")}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <input
                     type="email"
-                    placeholder="votre.email@exemple.com"
+                    placeholder={t("votre.email@exemple.com", "your.email@example.com")}
                     className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
                     {...register("email", {
-                      required: "L'email est requis",
-                      pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Email invalide" },
+                      required: t("L'email est requis", "Email is required"),
+                      pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: t("Email invalide", "Invalid email") },
                     })}
                   />
                 </div>
@@ -96,9 +102,9 @@ export default function ForgotPasswordPage() {
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {requestReset.isPending ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Génération du lien...</>
+                  <><Loader2 className="w-4 h-4 animate-spin" /> {t("Génération du lien...", "Generating link...")}</>
                 ) : (
-                  "Générer le lien de réinitialisation"
+                  t("Générer le lien de réinitialisation", "Generate reset link")
                 )}
               </button>
             </form>
@@ -108,16 +114,19 @@ export default function ForgotPasswordPage() {
               <div className="flex items-start gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                 <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Lien généré avec succès</p>
+                  <p className="text-sm font-semibold text-foreground">{t("Lien généré avec succès", "Link generated successfully")}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Votre enseignant a été notifié. Vous pouvez également utiliser le lien ci-dessous directement.
+                    {t(
+                      "Votre enseignant a été notifié. Vous pouvez également utiliser le lien ci-dessous directement.",
+                      "Your teacher has been notified. You can also use the link below directly."
+                    )}
                   </p>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1.5 uppercase tracking-wide">
-                  Lien de réinitialisation (valide 1 heure)
+                  {t("Lien de réinitialisation (valide 1 heure)", "Reset link (valid 1 hour)")}
                 </label>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 px-3 py-2 rounded-lg border border-border bg-secondary text-xs text-muted-foreground font-mono break-all">
@@ -126,7 +135,7 @@ export default function ForgotPasswordPage() {
                   <button
                     onClick={copyToClipboard}
                     className="flex-shrink-0 p-2 rounded-lg border border-border hover:bg-secondary transition-colors"
-                    title="Copier le lien"
+                    title={t("Copier le lien", "Copy link")}
                   >
                     {copied ? (
                       <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -141,7 +150,7 @@ export default function ForgotPasswordPage() {
                 href={resetUrl}
                 className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
               >
-                Réinitialiser mon mot de passe →
+                {t("Réinitialiser mon mot de passe →", "Reset my password →")}
               </a>
             </div>
           )}
@@ -151,7 +160,7 @@ export default function ForgotPasswordPage() {
         <div className="text-center mt-4">
           <Link href="/login" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-3.5 h-3.5" />
-            Retour à la connexion
+            {t("Retour à la connexion", "Back to login")}
           </Link>
         </div>
       </div>

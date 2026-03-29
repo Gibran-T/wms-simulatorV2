@@ -119,6 +119,7 @@ async function seed() {
       moduleId: 1,
       name: "Scénario 1 — Cycle propre",
       descriptionFr: "Exécutez un cycle complet PO→GR→SO→GI→Cycle Count sans erreur. Objectif : maîtriser le flux standard.",
+      descriptionEn: "Execute a complete PO→GR→SO→GI→Cycle Count cycle without errors. Objective: master the standard logistics flow.",
       difficulty: "facile" as const,
       initialStateJson: { preloadedTransactions: [], context: "Entrepôt vide — démarrage à zéro." },
       createdBy: 1,
@@ -127,6 +128,7 @@ async function seed() {
       moduleId: 1,
       name: "Scénario 2 — Réception fantôme (GR non postée)",
       descriptionFr: "Une GR a été créée mais non postée. Détectez l'anomalie, postez la transaction et continuez le cycle.",
+      descriptionEn: "A GR was created but not posted. Detect the anomaly, post the transaction, and continue the cycle.",
       difficulty: "moyen" as const,
       initialStateJson: {
         preloadedTransactions: [
@@ -141,6 +143,7 @@ async function seed() {
       moduleId: 1,
       name: "Scénario 3 — Stock insuffisant",
       descriptionFr: "Un SO a été créé pour une quantité supérieure au stock disponible. Gérez le backorder et approvisionnez.",
+      descriptionEn: "A SO was created for a quantity exceeding available stock. Manage the backorder and replenish inventory.",
       difficulty: "moyen" as const,
       initialStateJson: {
         preloadedTransactions: [
@@ -155,6 +158,7 @@ async function seed() {
       moduleId: 1,
       name: "Scénario 4 — Écart d'inventaire",
       descriptionFr: "Le comptage physique révèle un écart par rapport au stock système. Résolvez avec une transaction ADJ.",
+      descriptionEn: "Physical count reveals a discrepancy against system stock. Resolve it with an ADJ transaction.",
       difficulty: "difficile" as const,
       initialStateJson: {
         preloadedTransactions: [
@@ -169,6 +173,7 @@ async function seed() {
       moduleId: 1,
       name: "Scénario 5 — Non-conformités multiples",
       descriptionFr: "Plusieurs anomalies simultanées : GR non postée, stock négatif potentiel, écart inventaire. Résolvez dans l'ordre.",
+      descriptionEn: "Multiple simultaneous anomalies: unposted GR, potential negative stock, inventory discrepancy. Resolve them in the correct order.",
       difficulty: "difficile" as const,
       initialStateJson: {
         preloadedTransactions: [
@@ -193,6 +198,7 @@ async function seed() {
       moduleId: 2,
       name: "M2 — Scénario 1 : Rangement structuré et affectation d'emplacement",
       descriptionFr: "Recevez une marchandise et rangez-la dans le bon bin selon les règles de capacité et de zone. Objectif : maîtriser le putaway LT01.",
+      descriptionEn: "Receive goods and store them in the correct bin according to capacity and zone rules. Objective: master the LT01 putaway process.",
       difficulty: "facile" as const,
       initialStateJson: {
         preloadedTransactions: [
@@ -209,6 +215,7 @@ async function seed() {
       moduleId: 2,
       name: "M2 — Scénario 2 : Validation de la capacité d'emplacement",
       descriptionFr: "Tentez de ranger une quantité dépassant la capacité d'un bin. Le système doit détecter le dépassement et proposer une alternative.",
+      descriptionEn: "Attempt to store a quantity exceeding a bin's capacity. The system must detect the overflow and suggest an alternative location.",
       difficulty: "moyen" as const,
       initialStateJson: {
         preloadedTransactions: [
@@ -225,6 +232,7 @@ async function seed() {
       moduleId: 2,
       name: "M2 — Scénario 3 : Application de la méthode FIFO en gestion multi-lots",
       descriptionFr: "Trois lots du même SKU sont en stock. Respectez l'ordre FIFO lors du rangement et de la préparation de commande.",
+      descriptionEn: "Three lots of the same SKU are in stock. Follow FIFO order during putaway and order picking.",
       difficulty: "difficile" as const,
       initialStateJson: {
         preloadedTransactions: [
@@ -255,6 +263,7 @@ async function seed() {
       moduleId: 3,
       name: "M3 — Scénario 1 : Inventaire cyclique simple",
       descriptionFr: "Réaliser un inventaire cyclique et analyser les écarts entre stock système et stock physique.",
+      descriptionEn: "Perform a cycle count and analyze discrepancies between system stock and physical stock.",
       difficulty: "facile" as const,
       initialStateJson: {
         preloadedTransactions: [
@@ -276,6 +285,7 @@ async function seed() {
       moduleId: 3,
       name: "M3 — Scénario 2 : Analyse d'écart et ajustement d'inventaire",
       descriptionFr: "Identifier un écart significatif, fournir une justification et procéder à l'ajustement conforme aux règles internes.",
+      descriptionEn: "Identify a significant discrepancy, provide a justification, and perform the adjustment in compliance with internal rules.",
       difficulty: "moyen" as const,
       initialStateJson: {
         preloadedTransactions: [
@@ -297,6 +307,7 @@ async function seed() {
       moduleId: 3,
       name: "M3 — Scénario 3 : Réapprovisionnement selon paramètres Min/Max et stock de sécurité",
       descriptionFr: "Analyser les niveaux d'inventaire et générer une recommandation de réapprovisionnement conforme aux paramètres définis.",
+      descriptionEn: "Analyze inventory levels and generate a replenishment recommendation aligned with the defined Min/Max and safety stock parameters.",
       difficulty: "difficile" as const,
       initialStateJson: {
         preloadedTransactions: [
@@ -359,6 +370,7 @@ async function seed() {
       moduleId: m4.id,
       name: "M4 \u2014 Sc\u00e9nario 1 : Analyse de la rotation des stocks",
       descriptionFr: "Calculer et interpr\u00e9ter le taux de rotation des stocks afin d'identifier une situation de surstock ou sous-performance.",
+      descriptionEn: "Calculate and interpret the inventory turnover rate to identify overstock or underperformance situations.",
       difficulty: "facile" as const,
       isActive: true,
       createdBy: 1,
@@ -367,6 +379,7 @@ async function seed() {
       moduleId: m4.id,
       name: "M4 \u2014 Sc\u00e9nario 2 : Analyse du taux de service et des erreurs op\u00e9rationnelles",
       descriptionFr: "Identifier les causes d'un faible taux de service et analyser l'impact des erreurs logistiques sur la performance globale.",
+      descriptionEn: "Identify the root causes of a low service level and analyze the impact of logistics errors on overall performance.",
       difficulty: "moyen" as const,
       isActive: true,
       createdBy: 1,
@@ -375,6 +388,7 @@ async function seed() {
       moduleId: m4.id,
       name: "M4 \u2014 Sc\u00e9nario 3 : Diagnostic global de performance logistique",
       descriptionFr: "Analyser plusieurs indicateurs combin\u00e9s et proposer une d\u00e9cision strat\u00e9gique bas\u00e9e sur les donn\u00e9es observ\u00e9es.",
+      descriptionEn: "Analyze multiple combined KPIs and propose a strategic decision based on the observed data.",
       difficulty: "difficile" as const,
       isActive: true,
       createdBy: 1,
@@ -382,7 +396,7 @@ async function seed() {
   ];
 
   for (const s of m4Scenarios) {
-    await db.insert(scenarios).values(s).onDuplicateKeyUpdate({ set: { descriptionFr: s.descriptionFr, difficulty: s.difficulty } });
+    await db.insert(scenarios).values(s).onDuplicateKeyUpdate({ set: { descriptionFr: s.descriptionFr, descriptionEn: s.descriptionEn, difficulty: s.difficulty } });
   }
 
   // ─── Module 5 ───────────────────────────────────────────────────────────────
@@ -402,6 +416,7 @@ async function seed() {
       moduleId: m5.id,
       name: "M5 \u2014 Sc\u00e9nario 1 : Cycle op\u00e9rationnel complet",
       descriptionFr: "R\u00e9aliser un cycle complet fournisseur \u2192 entrep\u00f4t \u2192 client en respectant les r\u00e8gles op\u00e9rationnelles.",
+      descriptionEn: "Complete a full supplier to warehouse to customer cycle following all operational rules.",
       difficulty: "moyen" as const,
       isActive: true,
       createdBy: 1,
@@ -410,6 +425,7 @@ async function seed() {
       moduleId: m5.id,
       name: "M5 \u2014 Sc\u00e9nario 2 : Gestion d'\u00e9carts et r\u00e9ajustement",
       descriptionFr: "G\u00e9rer une situation incluant des \u00e9carts d'inventaire et proposer des actions correctives.",
+      descriptionEn: "Manage a situation involving inventory discrepancies and propose corrective actions.",
       difficulty: "difficile" as const,
       isActive: true,
       createdBy: 1,
@@ -418,6 +434,7 @@ async function seed() {
       moduleId: m5.id,
       name: "M5 \u2014 Sc\u00e9nario 3 : Analyse d\u00e9cisionnelle strat\u00e9gique",
       descriptionFr: "Analyser les indicateurs de performance globaux et formuler une d\u00e9cision strat\u00e9gique justifi\u00e9e.",
+      descriptionEn: "Analyze global performance indicators and formulate a justified strategic decision.",
       difficulty: "difficile" as const,
       isActive: true,
       createdBy: 1,
@@ -425,7 +442,7 @@ async function seed() {
   ];
 
   for (const s of m5Scenarios) {
-    await db.insert(scenarios).values(s).onDuplicateKeyUpdate({ set: { descriptionFr: s.descriptionFr, difficulty: s.difficulty } });
+    await db.insert(scenarios).values(s).onDuplicateKeyUpdate({ set: { descriptionFr: s.descriptionFr, descriptionEn: s.descriptionEn, difficulty: s.difficulty } });
   }
 
   console.log("\u2705 Seed complete: 5 modules, 10 SKUs, 13 bins, 5 M1 scenarios, 3 M2 scenarios, 3 M3 scenarios, 3 M4 scenarios, 3 M5 scenarios");

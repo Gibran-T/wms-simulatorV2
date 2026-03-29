@@ -42,6 +42,10 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
+      headers() {
+        const lang = localStorage.getItem("wms_language") ?? "FR";
+        return { "accept-language": lang === "EN" ? "en" : "fr" };
+      },
       fetch(input, init) {
         return globalThis.fetch(input, {
           ...(init ?? {}),
