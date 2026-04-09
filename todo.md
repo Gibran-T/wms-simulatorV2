@@ -458,3 +458,10 @@
 - [x] Backend: error messages returned to frontend use { reasonFr, reasonEn } + pickReason(validation, req)
 - [x] tRPC client: sends Accept-Language header from localStorage lang preference
 - [x] Final validation: bilingual error messages confirmed (FR: "L'étape…" / EN: "Step…")
+
+## Production Account Seed (2026-04-08)
+- [x] Seed default student account: student@concorde.ca / Student123!
+- [x] Seed teacher/admin account: prof@concorde.ca / Teacher123!
+- [x] Seed FR student account: etudiant@concorde.ca / Student123!
+- [x] Verified live login — student dashboard accessible at /student/scenarios
+- [x] All 5 modules visible with 20 scenarios each (M1–M5)
