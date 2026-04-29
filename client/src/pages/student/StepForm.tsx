@@ -798,13 +798,15 @@ export default function StepForm() {
   const submitM5Decision = trpc.m5.submitDecision.useMutation({ onSuccess: handleSuccess, onError: handleError });
   const submitComplianceM5 = trpc.m5.submitComplianceM5.useMutation({ onSuccess: handleSuccess, onError: handleError });
 
-  const { register, handleSubmit, watch, setValue, formState: { errors: formErrors } } = useForm<FormValues>();
+  const { register, handleSubmit, watch, setValue, reset, formState: { errors: formErrors } } = useForm<FormValues>();
   // Expose setValue for testing/automation
   if (typeof window !== 'undefined') (window as any).__rhfSetValue = setValue;
   const [feedbackPanel, setFeedbackPanel] = useState<{ data: any } | null>(null);
   const [showGlossary, setShowGlossary] = useState(false);
 
   function handleSuccess(data: any) {
+    // Fix 3: Reset all form fields (dropdowns, inputs) after successful submission
+    reset({ sku: "", bin: "", fromBin: "", toBin: "", qty: "", docRef: "", comment: "", lotNumber: "", physicalQty: "", systemQty: "", countedQty: "", minQty: "", maxQty: "", safetyStock: "", studentQty: "", varianceQty: "", justification: "", studentAnswer: "" });
     // Show persistent feedback panel
     setFeedbackPanel({ data });
     refetch();

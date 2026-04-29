@@ -32,6 +32,7 @@ import {
   markStepComplete,
   postTransaction,
   resolveCycleCount,
+  resolveAllCycleCountsByRun,
   startRun,
   updateUserRole,
   upsertModuleProgress,
@@ -1222,11 +1223,12 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         await addTransaction({ runId: input.runId, docType: "ADJ", moveType: "701", sku: input.sku, bin: input.bin, qty: String(input.qty), posted: true, docRef: input.docRef, comment: input.comment ?? null });
+        // Fix 4: Auto-resolve all pending cycle count variances for this run after ADJ is posted
+        await resolveAllCycleCountsByRun(input.runId);
         return { success: true };
       }),
   }),
-
-  // ─── Cycle Counts ────────────────────────────────────────────────────────────
+  // ─── Cycle Counts ─────────────────────────────────────────────────────────────
   cycleCounts: router({
     list: protectedProcedure
       .input(z.object({ runId: z.number() }))

@@ -435,6 +435,13 @@ export async function resolveCycleCount(ccId: number) {
   await db.update(cycleCounts).set({ resolved: true }).where(eq(cycleCounts.id, ccId));
 }
 
+// Fix 4: Resolve all unresolved cycle counts for a run (called after ADJ is posted)
+export async function resolveAllCycleCountsByRun(runId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(cycleCounts).set({ resolved: true }).where(and(eq(cycleCounts.runId, runId), eq(cycleCounts.resolved, false)));
+}
+
 // ─── Progress ─────────────────────────────────────────────────────────────────
 export async function getProgressByRun(runId: number) {
   const db = await getDb();

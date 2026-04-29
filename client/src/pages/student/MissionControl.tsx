@@ -343,6 +343,83 @@ export default function MissionControl() {
           </div>
         </div>
 
+        {/* ── Odoo Lab Banner (M2, M3, M5 only) ── */}
+        {(moduleId === 2 || moduleId === 3 || moduleId === 5) && (
+          <div className="bg-emerald-950 border border-emerald-700 rounded-md px-5 py-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <div className="w-8 h-8 rounded-full bg-emerald-700 flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">O</span>
+                </div>
+              </div>
+              <div className="flex-1">
+                <p className="text-emerald-200 text-xs font-bold uppercase tracking-wider mb-1">
+                  🟢 {t("LABORATOIRE ODOO — Environnement WMS Industriel", "ODOO LAB — Industrial WMS Environment")}
+                </p>
+                <p className="text-emerald-300 text-xs mb-3">
+                  {moduleId === 2 && t(
+                    "M2 — Exécution avancée : Ouvrez Odoo pour visualiser la hiérarchie de l'entrepôt (Zones → Racks → Bins) et exécuter les opérations de Putaway dans un environnement WMS réel utilisé par des milliers d'entreprises.",
+                    "M2 — Advanced Execution: Open Odoo to visualize the warehouse hierarchy (Zones → Racks → Bins) and execute Putaway operations in a real WMS environment used by thousands of companies."
+                  )}
+                  {moduleId === 3 && t(
+                    "M3 — Contrôle des stocks : Ouvrez Odoo pour effectuer un Inventaire Tournant (Cycle Count) en temps réel, visualiser les écarts et appliquer les ajustements dans un environnement WMS industriel open-source.",
+                    "M3 — Stock Control: Open Odoo to perform a live Cycle Count, visualize variances and apply adjustments in an open-source industrial WMS environment."
+                  )}
+                  {moduleId === 5 && t(
+                    "M5 — Simulation intégrée : Ouvrez Odoo pour utiliser la traçabilité par Lot/Numéro de série afin d'identifier l'origine de la crise et documenter les actions correctives.",
+                    "M5 — Integrated Simulation: Open Odoo to use Lot/Serial Number traceability to identify the crisis origin and document corrective actions."
+                  )}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href="https://demo.odoo.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-md transition-colors"
+                  >
+                    {t("Ouvrir le Lab Odoo →", "Open Odoo Lab →")}
+                  </a>
+                  {moduleId === 2 && (
+                    <a
+                      href="https://demo.odoo.com/odoo/inventory"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 bg-emerald-900 hover:bg-emerald-800 border border-emerald-600 text-emerald-200 text-xs font-semibold px-4 py-2 rounded-md transition-colors"
+                    >
+                      {t("Inventaire → Opérations → Transferts", "Inventory → Operations → Transfers")}
+                    </a>
+                  )}
+                  {moduleId === 3 && (
+                    <a
+                      href="https://demo.odoo.com/odoo/inventory/inventory-adjustments"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 bg-emerald-900 hover:bg-emerald-800 border border-emerald-600 text-emerald-200 text-xs font-semibold px-4 py-2 rounded-md transition-colors"
+                    >
+                      {t("Inventaire → Ajustements de stock", "Inventory → Stock Adjustments")}
+                    </a>
+                  )}
+                  {moduleId === 5 && (
+                    <a
+                      href="https://demo.odoo.com/odoo/inventory/products"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 bg-emerald-900 hover:bg-emerald-800 border border-emerald-600 text-emerald-200 text-xs font-semibold px-4 py-2 rounded-md transition-colors"
+                    >
+                      {t("Inventaire → Produits → Traçabilité Lots", "Inventory → Products → Lot Traceability")}
+                    </a>
+                  )}
+                </div>
+              </div>
+              <div className="flex-shrink-0 text-right">
+                <p className="text-emerald-400 text-[10px] font-semibold uppercase tracking-wider">{t("Plateforme", "Platform")}</p>
+                <p className="text-emerald-200 text-xs font-bold">Odoo 17</p>
+                <p className="text-emerald-400 text-[10px]">Open-Source</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ── Compliance Alert ── */}
         {!isCompliant && (
           <div className={`flex items-start gap-3 ${
