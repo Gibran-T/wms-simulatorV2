@@ -560,6 +560,21 @@ export function isModule3Unlocked(
 }
 
 // ─── Inventory Calculation ────────────────────────────────────────────────────
+//
+// Transaction qty sign convention:
+//   GR       : +qty  (stock IN to reception bin)
+//   PUTAWAY_M1 debit  : -qty  (stock OUT of reception bin)  → += applies the negative
+//   PUTAWAY_M1 credit : +qty  (stock IN to storage bin)     → += applies the positive
+//   PUTAWAY  debit    : -qty  (stock OUT of fromBin)        → += applies the negative
+//   PUTAWAY  credit   : +qty  (stock IN to toBin)           → += applies the positive
+//   PICKING  debit    : -qty  (stock OUT of source/STOCKAGE)→ += applies the negative ← FIX
+//   PICKING_M1 credit : +qty  (stock IN to EXPÉDITION bin)  → += applies the positive
+//   GI       : +qty  (stock deducted from EXPÉDITION)       → -= applies the deduction
+//   ADJ      : ±qty  (inventory adjustment, signed)         → += applies the signed delta
+//
+// IMPORTANT: PICKING and PUTAWAY debit records already carry a NEGATIVE qty.
+// Using += on a negative qty is the correct way to deduct from the source bin.
+// Using -= on a negative qty would DOUBLE-NEGATE and INFLATE total stock. ← the original bug
 export function calculateInventory(
   transactions: Array<{ docType: string; sku: string; bin: string; qty: number; posted: boolean }>
 ): Record<string, number> {
@@ -570,15 +585,23 @@ export function calculateInventory(
     const key = `${tx.sku}::${tx.bin}`;
     if (!(key in inventory)) inventory[key] = 0;
 
-    if (tx.docType === "GR" || tx.docType === "ADJ" || tx.docType === "PUTAWAY" || tx.docType === "PUTAWAY_M1") {
+    if (
+      tx.docType === "GR" ||
+      tx.docType === "ADJ" ||
+      tx.docType === "PUTAWAY" ||
+      tx.docType === "PUTAWAY_M1" ||
+      tx.docType === "PICKING" ||
+      tx.docType === "PICKING_M1"
+    ) {
+      // All of these use signed qty: positive = stock IN, negative = stock OUT.
+      // PICKING debit records carry qty = -N (already negative), so += correctly deducts.
+      // PICKING_M1 credit records carry qty = +N, so += correctly credits the destination.
+      // PUTAWAY debit records carry qty = -N, so += correctly deducts from source.
+      // PUTAWAY credit records carry qty = +N, so += correctly credits the destination.
       inventory[key] += Number(tx.qty);
-    } else if (tx.docType === "PICKING_M1") {
-      // PICKING_M1 is the ARRIVAL transaction posted to toBin (expedition bin)
-      // qty is stored as positive — it CREDITS the expedition bin
-      inventory[key] += Number(tx.qty);
-    } else if (tx.docType === "GI" || tx.docType === "PICKING") {
-      // PICKING deducts from source bin (fromBin, qty stored as negative)
-      // GI deducts from expedition bin (finalizes the physical exit)
+    } else if (tx.docType === "GI") {
+      // GI stores qty as a POSITIVE number (the quantity shipped out).
+      // We must subtract it from the expedition bin to finalize the physical exit.
       inventory[key] -= Number(tx.qty);
     }
   }
@@ -588,6 +611,11 @@ export function calculateInventory(
 
 /**
  * Calculates total load per bin (all SKUs combined) for capacity checks.
+ *
+ * Uses the same sign convention as calculateInventory:
+ *   PICKING debit  : qty = -N  → += correctly reduces source bin load
+ *   PICKING_M1 credit: qty = +N → += correctly increases destination bin load
+ *   GI             : qty = +N  → -= correctly reduces expedition bin load
  */
 export function calculateBinLoad(
   transactions: Array<{ docType: string; bin: string; qty: number; posted: boolean }>
@@ -595,10 +623,17 @@ export function calculateBinLoad(
   const load: Record<string, number> = {};
   for (const tx of transactions) {
     if (!tx.posted) continue;
-    if (tx.docType === "PUTAWAY" || tx.docType === "PUTAWAY_M1" || tx.docType === "GR" || tx.docType === "PICKING_M1") {
-      // PICKING_M1 credits the expedition bin (arrival)
+    if (
+      tx.docType === "PUTAWAY" ||
+      tx.docType === "PUTAWAY_M1" ||
+      tx.docType === "GR" ||
+      tx.docType === "PICKING" ||
+      tx.docType === "PICKING_M1"
+    ) {
+      // Signed qty: PICKING debit is already -N, PICKING_M1 credit is +N
       load[tx.bin] = (load[tx.bin] ?? 0) + Number(tx.qty);
-    } else if (tx.docType === "GI" || tx.docType === "PICKING") {
+    } else if (tx.docType === "GI") {
+      // GI stores positive qty; subtract to reduce expedition bin load
       load[tx.bin] = (load[tx.bin] ?? 0) - Number(tx.qty);
     }
   }

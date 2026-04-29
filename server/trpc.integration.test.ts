@@ -307,6 +307,71 @@ describe("M1 Integration — Full Cycle PO→GR→PUTAWAY→STOCK→SO→PICKING
       const r = validatePickingM1Zone("B-01-R1-L1", "B-01-R1-L2");
       expect(r.allowed).toBe(false);
     });
+
+    // ── Stock invariant: Picking is a TRANSFER, total stock must not change ──
+    it("calculateInventory: PICKING debit correctly deducts from source bin", () => {
+      // PICKING debit record: docType="PICKING", qty=-60 (already negative)
+      const txs = [
+        { docType: "PICKING", sku: "SKU-001", bin: "B-01-R1-L1", qty: -60, posted: true },
+      ];
+      const inv = calculateInventory(txs);
+      // Source bin must be REDUCED by 60
+      expect(inv["SKU-001::B-01-R1-L1"]).toBe(-60);
+    });
+
+    it("calculateInventory: PICKING_M1 credit correctly adds to destination bin", () => {
+      // PICKING_M1 credit record: docType="PICKING_M1", qty=+60 (positive)
+      const txs = [
+        { docType: "PICKING_M1", sku: "SKU-001", bin: "EXP-01", qty: 60, posted: true },
+      ];
+      const inv = calculateInventory(txs);
+      // Destination bin must be CREDITED by 60
+      expect(inv["SKU-001::EXP-01"]).toBe(60);
+    });
+
+    it("calculateInventory: total stock is UNCHANGED after a full PICKING transfer", () => {
+      // Simulate: 100 units in STOCKAGE, pick 60 to EXPÉDITION
+      const txs = [
+        // GR: +100 to REC-01
+        { docType: "GR",        sku: "SKU-001", bin: "REC-01",     qty: 100, posted: true },
+        // PUTAWAY: -100 from REC-01, +100 to B-01-R1-L1
+        { docType: "PUTAWAY_M1", sku: "SKU-001", bin: "REC-01",     qty: -100, posted: true },
+        { docType: "PUTAWAY_M1", sku: "SKU-001", bin: "B-01-R1-L1", qty: 100, posted: true },
+        // PICKING: -60 from B-01-R1-L1 (debit), +60 to EXP-01 (credit)
+        { docType: "PICKING",    sku: "SKU-001", bin: "B-01-R1-L1", qty: -60, posted: true },
+        { docType: "PICKING_M1", sku: "SKU-001", bin: "EXP-01",     qty: 60,  posted: true },
+      ];
+      const inv = calculateInventory(txs);
+      // STOCKAGE should have 40 remaining
+      expect(inv["SKU-001::B-01-R1-L1"]).toBe(40);
+      // EXPÉDITION should have 60
+      expect(inv["SKU-001::EXP-01"]).toBe(60);
+      // REC-01 should be 0 (GR +100, PUTAWAY debit -100)
+      expect(inv["SKU-001::REC-01"]).toBe(0);
+      // TOTAL across all bins must equal original GR qty (100)
+      const total = Object.values(inv).reduce((sum: number, q) => sum + (q as number), 0);
+      expect(total).toBe(100);
+    });
+
+    it("calculateInventory: total stock is ZERO after full cycle GR→PUTAWAY→PICKING→GI", () => {
+      // Full cycle: receive 100, putaway, pick 60, GI 60
+      const txs = [
+        { docType: "GR",         sku: "SKU-001", bin: "REC-01",     qty: 100, posted: true },
+        { docType: "PUTAWAY_M1", sku: "SKU-001", bin: "REC-01",     qty: -100, posted: true },
+        { docType: "PUTAWAY_M1", sku: "SKU-001", bin: "B-01-R1-L1", qty: 100, posted: true },
+        { docType: "PICKING",    sku: "SKU-001", bin: "B-01-R1-L1", qty: -60, posted: true },
+        { docType: "PICKING_M1", sku: "SKU-001", bin: "EXP-01",     qty: 60,  posted: true },
+        { docType: "GI",         sku: "SKU-001", bin: "EXP-01",     qty: 60,  posted: true },
+      ];
+      const inv = calculateInventory(txs);
+      // After GI: STOCKAGE=40, EXPÉDITION=0, REC-01=0
+      expect(inv["SKU-001::B-01-R1-L1"]).toBe(40);
+      expect(inv["SKU-001::EXP-01"]).toBe(0);
+      expect(inv["SKU-001::REC-01"]).toBe(0);
+      // Total = 40 (the 40 units still in STOCKAGE)
+      const total = Object.values(inv).reduce((sum: number, q) => sum + (q as number), 0);
+      expect(total).toBe(40);
+    });
   });
 
   // ── Step 7: GI ──────────────────────────────────────────────────────────────

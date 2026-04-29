@@ -1245,29 +1245,77 @@ export default function StepForm() {
             </div>
 
             {/* Context Panel: Stock for evaluation mode */}
-            {(["gi","cc","so","putaway_m1","picking_m1","fifo_pick","m5_putaway","m5_cycle_count"].includes(step?.toLowerCase() ?? "")) && !isDemo && (
-              <div className="mx-4 mt-4 bg-primary/5 border border-primary/20 rounded-md p-3">
-                <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-1">
-                  📊 {t("Stock actuel par emplacement", "Current stock by location")}
-                </p>
-                {Object.entries(runData?.inventory ?? {}).filter(([, qty]) => (qty as number) > 0).length === 0 ? (
-                  <p className="text-[10px] text-destructive">
-                    ⚠ {t("Aucun stock disponible — vérifiez que la GR a été validée.", "No stock available — verify that GR was validated.")}
+            {(["gi","cc","so","putaway_m1","picking_m1","fifo_pick","m5_putaway","m5_cycle_count"].includes(step?.toLowerCase() ?? "")) && !isDemo && (() => {
+              const inv = runData?.inventory ?? {};
+              const RECEPTION_BINS_UI  = ["REC-01", "REC-02"];
+              const STOCKAGE_BINS_UI   = Object.keys(inv).map(k => k.split("::")[1]).filter(b => b && !RECEPTION_BINS_UI.includes(b) && !b.startsWith("EXP") && !b.startsWith("PICK") && !b.startsWith("RES"));
+              const EXPEDITION_BINS_UI = ["EXP-01", "EXP-02"];
+              const sumZone = (bins: string[]) =>
+                Object.entries(inv)
+                  .filter(([k, q]) => bins.some(b => k.endsWith(`::${b}`)) && (q as number) > 0)
+                  .reduce((s, [, q]) => s + (q as number), 0);
+              const sumAll = (filterFn: (bin: string) => boolean) =>
+                Object.entries(inv)
+                  .filter(([k, q]) => filterFn(k.split("::")[1] ?? "") && (q as number) > 0)
+                  .reduce((s, [, q]) => s + (q as number), 0);
+              const stockageTotal = sumAll(b => !RECEPTION_BINS_UI.includes(b) && !b.startsWith("EXP") && !b.startsWith("PICK") && !b.startsWith("RES"));
+              const expeditionTotal = sumZone(EXPEDITION_BINS_UI);
+              const receptionTotal = sumZone(RECEPTION_BINS_UI);
+              const grandTotal = Object.entries(inv).filter(([, q]) => (q as number) > 0).reduce((s, [, q]) => s + (q as number), 0);
+              const hasStock = grandTotal > 0;
+              return (
+                <div className="mx-4 mt-4 bg-primary/5 border border-primary/20 rounded-md p-3">
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-wider mb-2">
+                    📊 {t("Stock actuel par zone", "Current stock by zone")}
                   </p>
-                ) : (
-                  <div className="space-y-0.5">
-                    {Object.entries(runData?.inventory ?? {}).filter(([, qty]) => (qty as number) > 0).map(([key, qty]) => {
-                      const [sku, bin] = key.split("::");
-                      return (
-                        <p key={key} className="text-[10px] font-mono">
-                          <span className="text-primary font-semibold">{sku}</span> @ <span className="text-green-600 dark:text-green-400">{bin}</span> — <strong className="text-foreground">{qty as number} {t("unités", "units")}</strong>
-                        </p>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
+                  {!hasStock ? (
+                    <p className="text-[10px] text-destructive">
+                      ⚠ {t("Aucun stock disponible — vérifiez que la GR a été validée.", "No stock available — verify that GR was validated.")}
+                    </p>
+                  ) : (
+                    <div className="space-y-1">
+                      {/* Zone summary table */}
+                      <div className="grid grid-cols-2 gap-x-3 text-[10px] font-mono border border-border rounded overflow-hidden">
+                        {receptionTotal > 0 && (
+                          <>
+                            <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 font-semibold">{t("RÉCEPTION", "RECEPTION")}</span>
+                            <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/30 text-right text-blue-700 dark:text-blue-300">{receptionTotal} {t("u.", "u.")}</span>
+                          </>
+                        )}
+                        {stockageTotal > 0 && (
+                          <>
+                            <span className="px-2 py-0.5 bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 font-semibold">{t("STOCKAGE", "STORAGE")}</span>
+                            <span className="px-2 py-0.5 bg-green-50 dark:bg-green-950/30 text-right text-green-700 dark:text-green-300">{stockageTotal} {t("u.", "u.")}</span>
+                          </>
+                        )}
+                        {expeditionTotal > 0 && (
+                          <>
+                            <span className="px-2 py-0.5 bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-semibold">{t("EXPÉDITION", "DISPATCH")}</span>
+                            <span className="px-2 py-0.5 bg-purple-50 dark:bg-purple-950/30 text-right text-purple-700 dark:text-purple-300">{expeditionTotal} {t("u.", "u.")}</span>
+                          </>
+                        )}
+                        <span className="px-2 py-0.5 bg-muted font-bold border-t border-border">{t("TOTAL", "TOTAL")}</span>
+                        <span className="px-2 py-0.5 bg-muted font-bold border-t border-border text-right">{grandTotal} {t("u.", "u.")}</span>
+                      </div>
+                      {/* Per-bin detail */}
+                      <details className="text-[10px]">
+                        <summary className="cursor-pointer text-muted-foreground hover:text-foreground">{t("Détail par emplacement", "Detail by location")}</summary>
+                        <div className="mt-1 space-y-0.5 pl-2">
+                          {Object.entries(inv).filter(([, qty]) => (qty as number) > 0).map(([key, qty]) => {
+                            const [sku, bin] = key.split("::");
+                            return (
+                              <p key={key} className="font-mono">
+                                <span className="text-primary font-semibold">{sku}</span> @ <span className="text-green-600 dark:text-green-400">{bin}</span> — <strong className="text-foreground">{qty as number} {t("u.", "u.")}</strong>
+                              </p>
+                            );
+                          })}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <form onSubmit={handleSubmit(onSubmit)} className="p-5 space-y-4">
               {/* ── Compliance / Auto steps ─────────────────────────────── */}
