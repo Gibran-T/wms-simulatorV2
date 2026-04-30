@@ -465,3 +465,28 @@
 - [x] Seed FR student account: etudiant@concorde.ca / Student123!
 - [x] Verified live login — student dashboard accessible at /student/scenarios
 - [x] All 5 modules visible with 20 scenarios each (M1–M5)
+
+## Phase 9: Stock Fix & QA Walkthrough
+- [x] Fix PICKING double-negation bug in calculateInventory (rulesEngine.ts)
+- [x] Fix calculateBinLoad same double-negation bug
+- [x] Add 4 stock invariant tests (218/218 tests pass)
+- [x] Update StepForm.tsx to show per-location stock breakdown (STOCKAGE / EXPÉDITION / TOTAL)
+- [ ] Re-initialize webdev project to restore deployment connection
+- [ ] Save checkpoint with stock fix via webdev_save_checkpoint
+- [ ] Publish live deployment with stock fix
+- [ ] Verify PICKING stock fix on live UI: STOCKAGE 40 + EXP 60 = TOTAL 100
+- [ ] Complete M1 Scenarios 1-5 full walkthrough with QA
+- [ ] Complete M2-M5 full walkthrough with QA
+- [ ] Write and deliver final QA + readiness report
+
+## Phase 9: Stock Fix and QA Walkthrough
+- [x] Fix PICKING double-negation bug in calculateInventory (rulesEngine.ts)
+- [x] Fix calculateBinLoad same double-negation bug
+- [x] Add 4 stock invariant tests (218/218 tests pass)
+- [x] Update StepForm.tsx to show per-location stock breakdown
+- [ ] Re-initialize webdev project to restore deployment connection
+- [ ] Save checkpoint with stock fix via webdev_save_checkpoint
+- [ ] Publish live deployment with stock fix
+- [ ] Verify PICKING stock fix on live UI: STOCKAGE 40 + EXP 60 = TOTAL 100
+- [ ] Complete M1-M5 full walkthrough with QA
+- [ ] Write and deliver final QA + readiness report
