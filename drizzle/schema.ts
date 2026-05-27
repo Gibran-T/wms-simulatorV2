@@ -59,6 +59,8 @@ export const profiles = mysqlTable("profiles", {
   userId: int("userId").notNull().unique(),
   cohortId: int("cohortId"),
   studentNumber: varchar("studentNumber", { length: 64 }),
+  silverCertified: boolean("silverCertified").default(false).notNull(),
+  goldCertified: boolean("goldCertified").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

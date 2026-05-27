@@ -15,9 +15,9 @@ export const MODULE1_SCORING: ScoringRule[] = [
   { eventType: "GR_COMPLETED", points: 10, descriptionFr: "Réception marchandises (GR) complétée" },
   { eventType: "PUTAWAY_COMPLETED", points: 10, descriptionFr: "Rangement en emplacement (PUTAWAY) complété" },
   { eventType: "SO_COMPLETED", points: 10, descriptionFr: "Commande client (SO) complétée" },
-  { eventType: "GI_COMPLETED", points: 15, descriptionFr: "Sortie marchandises (GI) sans stock négatif" },
+  { eventType: "GI_COMPLETED", points: 10, descriptionFr: "Sortie marchandises (GI) sans stock négatif" },
   { eventType: "CC_COMPLETED", points: 10, descriptionFr: "Comptage cyclique (Cycle Count) complété" },
-  { eventType: "COMPLIANCE_OK", points: 5, descriptionFr: "Conformité système validée" },
+  { eventType: "COMPLIANCE_OK", points: 40, descriptionFr: "Conformité système validée" },
   // M2 specific
   { eventType: "FIFO_PICK_COMPLETED", points: 15, descriptionFr: "Prélèvement FIFO complété avec lot correct" },
   { eventType: "STOCK_ACCURACY_COMPLETED", points: 10, descriptionFr: "Précision stock validée" },

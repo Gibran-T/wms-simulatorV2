@@ -176,11 +176,14 @@ export default function RunReport() {
   const recordModulePass = trpc.warehouse.recordModulePass.useMutation();
 
   useEffect(() => {
-    if (!data || data.run.isDemo || data.run.status !== "completed") return;
-    const moduleId = data.scenario?.moduleId ?? 1;
-    recordModulePass.mutate({ moduleId, score: data.totalScore });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data?.run?.id]);
+    if (data && scenario && !run.isDemo && run.status === "completed" && totalScore !== undefined) {
+      recordModulePass.mutate({ moduleId: scenario.moduleId, score: totalScore });
+    }
+  }, [data, scenario, run.isDemo, run.status, totalScore, recordModulePass]);
+
+
+
+
 
   if (isLoading || detailLoading) return (
     <FioriShell title={t("Rapport Final", "Final Report")} breadcrumbs={[
@@ -253,6 +256,22 @@ export default function RunReport() {
               : compliance.compliant ? `✅ ${t("Module complété avec succès", "Module completed successfully")}`
               : `⚠ ${t("Module complété — Non conforme", "Module completed — Non-compliant")}`}
           </p>
+
+          {/* Certification Unlock Message */}
+          {detail?.certificationUnlocked && (
+            <div className="mt-4">
+              <p className="text-white/80 text-sm font-semibold mb-2">
+                {t("Certification M1 débloquée !", "M1 Certification Unlocked!")}
+              </p>
+              <button
+                onClick={() => navigate("/student/certifications")}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+              >
+                {t("Voir ma certification M1", "View my M1 Certification")}
+              </button>
+            </div>
+          )}
+
         </div>
 
         {/* Scores détaillés par étape */}

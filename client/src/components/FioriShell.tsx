@@ -88,6 +88,7 @@ export default function FioriShell({ children, title, breadcrumbs }: FioriShellP
         { href: "/student/scenarios", label: t("Mes Scénarios", "My Scenarios"), icon: BookOpen },
         { href: "/student/slides", label: t("Slides", "Slides"), icon: Presentation },
         { href: "/student/glossary", label: t("Glossaire", "Glossary"), icon: BookMarked },
+        { href: "/student/certifications", label: t("Mes Certifications", "My Certifications"), icon: ShieldCheck },
       ];
 
   if (isAdmin) {

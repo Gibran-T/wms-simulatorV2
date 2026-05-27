@@ -56,6 +56,12 @@ import {
   getQuizAttemptsByUser,
   getBestQuizAttempt,
   saveQuizAttempt,
+  checkM1QuizPassed,
+  checkAllM1ScenariosCompleted,
+  checkM1ComplianceValidated,
+  checkNoUnresolvedBlockers,
+  unlockSilverCertification,
+  unlockGoldCertification,
 } from "./db";
 import {
   calculateBinLoad,
@@ -683,6 +689,12 @@ export const appRouter = router({
         const state = await buildRunState(input.runId);
         const compliance = checkCompliance(state);
 
+        // Check if M1 Silver Certification is unlocked
+        const silverCertified = await checkM1QuizPassed(ctx.user.id) &&
+                                await checkAllM1ScenariosCompleted(ctx.user.id) &&
+                                await checkM1ComplianceValidated(ctx.user.id) &&
+                                await checkNoUnresolvedBlockers(ctx.user.id);
+
         // ── Determine module from scenario ──────────────────────────────────
         const scenario = await getScenarioById(run.scenarioId);
         const moduleId = scenario?.moduleId ?? 1;
@@ -895,6 +907,7 @@ export const appRouter = router({
           totalErrors: errors.length,
           stepsCompleted: state.completedSteps.length,
           totalSteps: MODULE1_STEPS.length,
+          certificationUnlocked: silverCertified,
         };
       }),
 
@@ -1453,6 +1466,21 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         const passed = input.score >= 60;
         await upsertModuleProgress({ userId: ctx.user.id, moduleId: input.moduleId, passed, bestScore: input.score, completedAt: passed ? new Date() : undefined });
+
+        // Check for M1 Silver Certification unlock conditions
+        if (input.moduleId === 1) {
+          const m1QuizPassed = await checkM1QuizPassed(ctx.user.id);
+          const allM1ScenariosCompleted = await checkAllM1ScenariosCompleted(ctx.user.id);
+          const m1ComplianceValidated = await checkM1ComplianceValidated(ctx.user.id);
+          const noUnresolvedBlockers = await checkNoUnresolvedBlockers(ctx.user.id);
+
+          if (m1QuizPassed && allM1ScenariosCompleted && m1ComplianceValidated && noUnresolvedBlockers) {
+            await unlockSilverCertification(ctx.user.id);
+          }
+        }
+
+        // TODO: Implement Gold Certification logic for M5 completion
+
         return { passed };
       }),
   }),

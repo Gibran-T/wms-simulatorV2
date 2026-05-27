@@ -18,6 +18,8 @@ import {
   transactions,
   users,
   preAuthorizedEmails,
+  quizzes,
+  quizAttempts,
   type InsertUser,
   type InsertPreAuthorizedEmail,
 } from "../drizzle/schema";
@@ -917,3 +919,113 @@ export async function markPasswordResetTokenUsed(tokenId: number) {
   const { passwordResetTokens } = await import("../drizzle/schema");
   await db.update(passwordResetTokens).set({ usedAt: new Date() }).where(eq(passwordResetTokens.id, tokenId));
 }
+
+// ─── Certification Logic ──────────────────────────────────────────────────────
+
+
+
+
+export async function checkM1QuizPassed(userId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const m1Quiz = await db.select().from(quizzes).where(eq(quizzes.moduleId, 1)).limit(1);
+  if (m1Quiz.length === 0) return false; // M1 quiz not found
+
+  const bestAttempt = await db.select()
+    .from(quizAttempts)
+    .where(and(eq(quizAttempts.userId, userId), eq(quizAttempts.quizId, m1Quiz[0].id)))
+    .orderBy(quizAttempts.score.desc())
+    .limit(1);
+
+  return bestAttempt.length > 0 && bestAttempt[0].score >= 60; // Assuming 60 is passing score
+}
+
+export async function checkAllM1ScenariosCompleted(userId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  const m1Scenarios = await db.select({ id: scenarios.id }).from(scenarios).where(eq(scenarios.moduleId, 1));
+  if (m1Scenarios.length === 0) return false; // No M1 scenarios defined
+
+  const completedRuns = await db.select({ scenarioId: scenarioRuns.scenarioId })
+    .from(scenarioRuns)
+    .where(and(eq(scenarioRuns.userId, userId), eq(scenarioRuns.status, "completed")));
+
+  const completedScenarioIds = new Set(completedRuns.map(run => run.scenarioId));
+
+  return m1Scenarios.every(scenario => completedScenarioIds.has(scenario.id));
+}
+
+export async function checkM1ComplianceValidated(userId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  const m1Scenarios = await db.select({ id: scenarios.id }).from(scenarios).where(eq(scenarios.moduleId, 1));
+  if (m1Scenarios.length === 0) return false;
+
+  for (const scenario of m1Scenarios) {
+    const latestRun = await db.select()
+      .from(scenarioRuns)
+      .where(and(eq(scenarioRuns.userId, userId), eq(scenarioRuns.scenarioId, scenario.id), eq(scenarioRuns.status, "completed")))
+      .orderBy(scenarioRuns.completedAt.desc())
+      .limit(1);
+
+    if (latestRun.length === 0) return false; // Scenario not completed
+
+    const complianceStep = await db.select()
+      .from(progress)
+      .where(and(eq(progress.runId, latestRun[0].id), eq(progress.stepCode, "COMPLIANCE"), eq(progress.completed, true)))
+      .limit(1);
+
+    if (complianceStep.length === 0) return false; // Compliance not validated for this scenario
+  }
+
+  return true;
+}
+
+export async function checkNoUnresolvedBlockers(userId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  // Check for unposted transactions in any completed M1 scenario runs
+  const m1Scenarios = await db.select({ id: scenarios.id }).from(scenarios).where(eq(scenarios.moduleId, 1));
+  if (m1Scenarios.length === 0) return false;
+
+  for (const scenario of m1Scenarios) {
+    const latestRun = await db.select()
+      .from(scenarioRuns)
+      .where(and(eq(scenarioRuns.userId, userId), eq(scenarioRuns.scenarioId, scenario.id), eq(scenarioRuns.status, "completed")))
+      .orderBy(scenarioRuns.completedAt.desc())
+      .limit(1);
+
+    if (latestRun.length === 0) continue; // Scenario not completed, so no blockers to check for this scenario
+
+    const unpostedTransactions = await db.select()
+      .from(transactions)
+      .where(and(eq(transactions.runId, latestRun[0].id), eq(transactions.posted, false)));
+
+    if (unpostedTransactions.length > 0) return false; // Unposted transactions found
+
+    // Check for unresolved cycle counts
+    const unresolvedCycleCounts = await db.select()
+      .from(cycleCounts)
+      .where(and(eq(cycleCounts.runId, latestRun[0].id), eq(cycleCounts.resolved, false)));
+
+    if (unresolvedCycleCounts.length > 0) return false; // Unresolved cycle counts found
+  }
+
+  return true;
+}
+
+export async function unlockSilverCertification(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(profiles).set({ silverCertified: true }).where(eq(profiles.userId, userId));
+}
+
+export async function unlockGoldCertification(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(profiles).set({ goldCertified: true }).where(eq(profiles.userId, userId));
+}
+
