@@ -577,6 +577,17 @@ export const appRouter = router({
         await removePreAuthorizedEmail(input.id);
         return { success: true };
       }),
+    
+    // Reset student certification state (admin only, for validation)
+    resetStudentCertification: protectedProcedure
+      .input(z.object({ email: z.string().email() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        const user = await getUserByEmail(input.email);
+        if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+        await upsertProfile(user.id, { silverCertified: false, goldCertified: false });
+        return { success: true, message: `Certification reset for ${input.email}` };
+      })
   }),
 
   // ─── Runs ────────────────────────────────────────────────────────────────────
