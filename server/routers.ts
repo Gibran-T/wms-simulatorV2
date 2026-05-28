@@ -587,6 +587,116 @@ export const appRouter = router({
         if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
         await upsertProfile(user.id, { silverCertified: false, goldCertified: false });
         return { success: true, message: `Certification reset for ${input.email}` };
+      }),
+    
+    // Comprehensive admin cleanup: recalculate certifications and generate audit report
+    cleanupAndAudit: protectedProcedure
+      .input(z.object({ 
+        dryRun: z.boolean().optional().default(true)
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+        
+        // Official real students to preserve
+        const officialStudents = [
+          'fredlolabio@gmail.com',
+          'aissatasoukeinacamara@gmail.com',
+          'nappodaniella@gmail.com',
+          'dcparedes2010@gmail.com',
+          'francisagbodjan10@gmail.com'
+        ];
+        
+        // Test/demo/QA account patterns
+        const testPatterns = ['test', 'demo', 'qa', 'pedagogical', 'student@concorde', 'prof@concorde', 'etudiant@concorde', 'student@manus'];
+        
+        const allUsers = await getAllUsers();
+        const auditReport = {
+          timestamp: new Date().toISOString(),
+          dryRun: input.dryRun,
+          accountsModified: [] as any[],
+          accountsPreserved: [] as any[],
+          accountsMovedToQA: [] as any[],
+          certificationChanges: [] as any[]
+        };
+        
+        // Process each user
+        for (const user of allUsers) {
+          if (user.role === 'admin' || user.role === 'teacher') continue; // Skip non-students
+          
+          const isOfficialStudent = officialStudents.includes(user.email);
+          const isTestAccount = testPatterns.some(p => user.email.toLowerCase().includes(p));
+          
+          // Get current profile
+          const profile = await getProfileByUserId(user.id);
+          const currentSilver = profile?.silverCertified ?? false;
+          const currentGold = profile?.goldCertified ?? false;
+          
+          // Recalculate eligibility
+          const quizPassed = await checkM1QuizPassed(user.id);
+          const scenariosCompleted = await checkAllM1ScenariosCompleted(user.id);
+          const complianceValidated = await checkM1ComplianceValidated(user.id);
+          const noBlockers = await checkNoUnresolvedBlockers(user.id);
+          
+          const shouldHaveSilver = quizPassed && scenariosCompleted && complianceValidated && noBlockers;
+          
+          // Check if certification state is stale
+          const silverIsStale = currentSilver !== shouldHaveSilver;
+          
+          if (isOfficialStudent) {
+            auditReport.accountsPreserved.push({
+              email: user.email,
+              name: user.name,
+              silverCertified: currentSilver,
+              shouldHaveSilver,
+              reason: 'Official student - preserved'
+            });
+          } else if (isTestAccount) {
+            auditReport.accountsMovedToQA.push({
+              email: user.email,
+              name: user.name,
+              reason: 'Test/demo account - marked for QA cohort'
+            });
+          } else if (silverIsStale) {
+            auditReport.certificationChanges.push({
+              email: user.email,
+              name: user.name,
+              silverBefore: currentSilver,
+              silverAfter: shouldHaveSilver,
+              goldBefore: currentGold,
+              goldAfter: false,
+              quizPassed,
+              scenariosCompleted,
+              complianceValidated,
+              noBlockers,
+              reason: 'Stale certification flag - recalculated'
+            });
+            
+            if (!input.dryRun) {
+              await upsertProfile(user.id, { 
+                silverCertified: shouldHaveSilver,
+                goldCertified: false
+              });
+              auditReport.accountsModified.push({
+                email: user.email,
+                name: user.name,
+                action: 'Certification recalculated',
+                details: auditReport.certificationChanges[auditReport.certificationChanges.length - 1]
+              });
+            }
+          }
+        }
+        
+        return {
+          success: true,
+          auditReport,
+          summary: {
+            totalUsersProcessed: allUsers.length,
+            accountsModified: auditReport.accountsModified.length,
+            accountsPreserved: auditReport.accountsPreserved.length,
+            accountsMovedToQA: auditReport.accountsMovedToQA.length,
+            certificationChanges: auditReport.certificationChanges.length
+          }
+        };
       })
   }),
 
